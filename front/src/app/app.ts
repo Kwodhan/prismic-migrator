@@ -1,12 +1,10 @@
-import { Component, signal } from '@angular/core';
-import { RouterOutlet } from '@angular/router';
+import { Component } from '@angular/core';
+import { AssetMigration } from './components/asset-migration/asset-migration';
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet],
+  imports: [AssetMigration],
   templateUrl: './app.html',
   styleUrl: './app.css'
 })
-export class App {
-  protected readonly title = signal('prismic-migrator');
-}
+export class App {}

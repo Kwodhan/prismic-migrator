@@ -1,0 +1,38 @@
+<mat-form-field class="w-full" appearance="outline">
+  <mat-label>Rechercher un fichier</mat-label>
+  <mat-icon matPrefix class="mr-2">search</mat-icon>
+  <input matInput type="text" [(ngModel)]="filter" placeholder="nom du fichier..." />
+  @if (filter()) {
+    <button matSuffix mat-icon-button (click)="filter.set('')">
+      <mat-icon>close</mat-icon>
+    </button>
+  }
+</mat-form-field>
+
+@if (visibleAssets().length === 0) {
+  <div class="flex flex-col items-center justify-center py-12 text-gray-400 gap-2">
+    <mat-icon class="text-4xl">image_not_supported</mat-icon>
+    <span class="text-sm">Aucun asset disponible</span>
+  </div>
+} @else {
+  <ul class="grid grid-cols-2 gap-3 list-none p-0 m-0">
+    @for (asset of visibleAssets(); track asset.id) {
+      <li class="flex flex-col items-center gap-2 p-2 rounded-lg border border-gray-200 bg-gray-50 transition-all duration-150"
+          [attr.draggable]="draggable() ? true : false"
+          (dragstart)="draggable() && onDragStart($event, asset)"
+          [class.cursor-grab]="draggable()"
+          [class.hover:shadow-md]="draggable()"
+          [class.hover:border-blue-300]="draggable()"
+          [class.active:opacity-50]="draggable()">
+        <img [src]="asset.url" [alt]="asset.filename"
+             draggable="false"
+             class="w-full h-10 object-scale-down rounded" />
+        <span class="text-xs text-center text-gray-600 break-all w-full px-1">{{ asset.filename }}</span>
+      </li>
+    }
+  </ul>
+}
+
+@if (hasMore()) {
+  <div #sentinel class="h-10 w-full"></div>
+}
