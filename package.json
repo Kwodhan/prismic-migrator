@@ -1,0 +1,17 @@
+{
+  "name": "prismic-migrator",
+  "version": "0.0.0",
+  "private": true,
+  "workspaces": [
+    "front",
+    "back"
+  ],
+  "scripts": {
+    "front": "npm run start -w front",
+    "back": "npm run dev -w back",
+    "dev": "concurrently \"npm run front\" \"npm run back\""
+  },
+  "devDependencies": {
+    "concurrently": "^9.2.1"
+  }
+}
