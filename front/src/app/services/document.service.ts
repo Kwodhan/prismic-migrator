@@ -1,16 +1,15 @@
 import {Injectable} from '@angular/core';
 import {HttpClient} from '@angular/common/http';
 import {map, Observable} from 'rxjs';
+import { API_URL } from '../constants/api';
 
 export interface PrismicDocument {
   id: string;
   uid: string | null;
   type: string;
-  lang: string;
   url: string | null;
   first_publication_date: string | null;
   last_publication_date: string | null;
-  data: Record<string, unknown>;
 }
 
 export interface PaginatedDocuments {
@@ -26,7 +25,7 @@ interface CustomType { id: string; label: string; }
   providedIn: 'root'
 })
 export class DocumentService {
-  private readonly apiUrl = 'http://localhost:3001';
+  private readonly apiUrl = API_URL;
 
   constructor(private readonly http: HttpClient) {
   }

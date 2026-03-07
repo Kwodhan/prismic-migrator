@@ -30,4 +30,14 @@ export class DocumentController {
     res.json(result);
   };
 
+  /**
+   * POST /documents/:id/migrate
+   * Migre un document depuis le repository source vers le repository de destination
+   */
+  migrateDocument = async (req: Request, res: Response): Promise<void> => {
+    const id = req.params['id'] as string;
+    const result = await this.migratorDocument.migrateDocument(id);
+    res.json(result);
+  };
+
 }

@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, shareReplay } from 'rxjs';
+import { API_URL } from '../constants/api';
 
 export interface RepositoryConfig {
   sourceRepository: string;
@@ -11,7 +12,7 @@ export interface RepositoryConfig {
   providedIn: 'root'
 })
 export class ConfigService {
-  private readonly apiUrl = 'http://localhost:3001';
+  private readonly apiUrl = API_URL;
   private readonly config$: Observable<RepositoryConfig>;
 
   constructor(private readonly http: HttpClient) {

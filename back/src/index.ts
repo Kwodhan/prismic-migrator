@@ -47,14 +47,15 @@ const proxyUrl = process.env.PROXY_HOST
     ? `${process.env.PROXY_PROTOCOL || 'http'}://${process.env.PROXY_HOST}:${process.env.PROXY_PORT || 8080}`
     : undefined;
 
-// ...existing code...
 
 const migratorDocument = new PrismicMigratorDocument(
     process.env.SOURCE_REPOSITORY_NAME!,
     process.env.SOURCE_CONTENT_TOKEN!,
     process.env.DESTINATION_REPOSITORY_NAME!,
     process.env.DESTINATION_CONTENT_TOKEN!,
+    process.env.DESTINATION_WRITE_TOKEN!,
     proxyUrl,
+    axiosInstance,
 );
 
 const assetController = new AssetController(migratorAsset);
@@ -86,6 +87,7 @@ app.put('/custom-types/:id/update', customTypeController.updateCustomType);
 
 app.get('/documents/source', documentController.getSourceDocuments);
 app.get('/documents/target', documentController.getTargetDocuments);
+app.post('/documents/:id/migrate', documentController.migrateDocument);
 
 app.listen(PORT, () => {
     console.log(`Server running on http://localhost:${PORT}`);
