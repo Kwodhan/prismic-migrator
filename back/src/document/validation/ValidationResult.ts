@@ -6,6 +6,7 @@ export interface ValidationIssue {
   validator: string;
   message: string;
   fixable: boolean;
+  fixed?: boolean;
   fixDescription?: string;
   context?: Record<string, unknown>;
 }

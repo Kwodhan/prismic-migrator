@@ -8,9 +8,10 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatAutocompleteModule } from '@angular/material/autocomplete';
-import { MatSnackBar } from '@angular/material/snack-bar';
+import { MatDialog } from '@angular/material/dialog';
 import { DocumentList } from '../document-list/document-list';
 import { DocumentMigrationResult, DocumentService, PrismicDocument } from '../../../services/document.service';
+import { DocumentValidationDialogComponent } from '../document-validation-dialog/document-validation-dialog.component';
 
 @Component({
   selector: 'target-document-list',
@@ -20,29 +21,18 @@ import { DocumentMigrationResult, DocumentService, PrismicDocument } from '../..
 })
 export class TargetDocumentList extends DocumentList implements OnInit, OnDestroy {
   private readonly documentService = inject(DocumentService);
-  private readonly snackBar = inject(MatSnackBar);
+  private readonly dialog = inject(MatDialog);
 
   isDragOver = signal(false);
   migrating = signal(false);
 
   private readonly onDragEnd = (): void => this.isDragOver.set(false);
 
-  ngOnInit(): void {
-    document.addEventListener('dragend', this.onDragEnd);
-  }
+  ngOnInit(): void { document.addEventListener('dragend', this.onDragEnd); }
+  ngOnDestroy(): void { document.removeEventListener('dragend', this.onDragEnd); }
 
-  ngOnDestroy(): void {
-    document.removeEventListener('dragend', this.onDragEnd);
-  }
-
-  onDragOver(event: DragEvent): void {
-    event.preventDefault();
-    this.isDragOver.set(true);
-  }
-
-  onDragLeave(): void {
-    this.isDragOver.set(false);
-  }
+  onDragOver(event: DragEvent): void { event.preventDefault(); this.isDragOver.set(true); }
+  onDragLeave(): void { this.isDragOver.set(false); }
 
   onDrop(event: DragEvent): void {
     event.preventDefault();
@@ -57,24 +47,31 @@ export class TargetDocumentList extends DocumentList implements OnInit, OnDestro
     this.documentService.migrateDocument(doc.id).subscribe({
       next: (result: DocumentMigrationResult) => {
         this.migrating.set(false);
-        if (result.success) {
-          this.refreshNeeded.emit();
-          this.snackBar.open(`✅ "${doc.uid ?? doc.id}" migré avec succès`, 'Fermer', {
-            duration: 4000, panelClass: ['snack-success'],
-            horizontalPosition: 'end', verticalPosition: 'top',
-          });
-        } else {
-          this.snackBar.open(`⚠️ Échec : ${result.error ?? 'erreur inconnue'}`, 'Fermer', {
-            duration: 6000, panelClass: ['snack-error'],
-            horizontalPosition: 'end', verticalPosition: 'top',
-          });
-        }
+        if (result.success) this.refreshNeeded.emit();
+
+        this.dialog.open(DocumentValidationDialogComponent, {
+          width: '700px',
+          maxWidth: '95vw',
+          data: {
+            success: result.success,
+            validation: result.validation,
+            docLabel: doc.uid ?? doc.id,
+            docTargetId: result.id,
+            targetRepo: this.repository(),
+          },
+        });
       },
       error: () => {
         this.migrating.set(false);
-        this.snackBar.open('⚠️ Erreur lors de la migration', 'Fermer', {
-          duration: 6000, panelClass: ['snack-error'],
-          horizontalPosition: 'end', verticalPosition: 'top',
+        this.dialog.open(DocumentValidationDialogComponent, {
+          width: '700px',
+          maxWidth: '95vw',
+          data: {
+            success: false,
+            validation: null,
+            docLabel: doc.uid ?? doc.id,
+            targetRepo: this.repository(),
+          },
         });
       },
     });

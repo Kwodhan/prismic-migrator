@@ -38,15 +38,45 @@ export class AssetValidator implements DocumentValidator {
     }
 
     /**
+     * Détecte si un noeud est un RTImageNode dans un richText.
+     * Discriminant : type === 'image' + id + url + dimensions.
+     */
+    private isRichTextImageNode(node: unknown): node is prismic.RTImageNode {
+        if (!node || typeof node !== 'object' || Array.isArray(node)) return false;
+        const n = node as Record<string, unknown>;
+        return (
+            n['type'] === 'image' &&
+            typeof n['id'] === 'string' &&
+            typeof n['url'] === 'string' &&
+            typeof n['dimensions'] === 'object' &&
+            n['dimensions'] !== null
+        );
+    }
+
+    /**
+     * Parcourt un tableau de noeuds richText et collecte les RTImageNode.
+     */
+    private extractImagesFromRichText(nodes: unknown[]): prismic.FilledImageFieldImage[] {
+        const found: prismic.FilledImageFieldImage[] = [];
+        for (const node of nodes) {
+            if (this.isRichTextImageNode(node)) {
+                found.push(node as unknown as prismic.FilledImageFieldImage);
+            }
+        }
+        return found;
+    }
+
+    /**
      * Parcourt récursivement les données du document et collecte toutes les images.
-     * Ignore les tableaux de noeuds richText (tableaux dont les items ont un champ "type" string).
+     * Traite maintenant aussi les richText au lieu de les ignorer.
      */
     private extractImages(data: unknown, found: prismic.FilledImageFieldImage[] = []): prismic.FilledImageFieldImage[] {
         if (!data || typeof data !== 'object') return found;
 
         if (Array.isArray(data)) {
-            // Ignorer les richText : tableau dont le premier élément a un champ "type" string
+            // RichText : tableau dont le premier élément a un champ "type" string
             if (data.length > 0 && typeof (data[0] as Record<string, unknown>)['type'] === 'string') {
+                found.push(...this.extractImagesFromRichText(data));
                 return found;
             }
             for (const item of data) {
@@ -59,8 +89,14 @@ export class AssetValidator implements DocumentValidator {
         for (const key of Object.keys(obj)) {
             const value = obj[key];
             if (this.isImageField(value)) {
-                found.push(value);
-                // Chercher aussi les thumbnails : autres clés de l'ImageField avec mêmes propriétés
+                // Créer une copie de l'image sans les clés thumbnails avant de push
+                const imageOnly = Object.fromEntries(
+                    Object.entries(value as unknown as Record<string, unknown>)
+                        .filter(([, v]) => !this.isImageField(v))
+                ) as unknown as prismic.FilledImageFieldImage;
+                found.push(imageOnly);
+
+                // Collecter les thumbnails séparément
                 for (const thumbKey of Object.keys(value as object)) {
                     const thumb = (value as unknown as Record<string, unknown>)[thumbKey];
                     if (this.isImageField(thumb)) {
@@ -85,9 +121,9 @@ export class AssetValidator implements DocumentValidator {
             severity: 'WARNING',
             code: 'ASSET_NOT_FOUND',
             validator: "AssetValidator",
-            message: `Asset non vérifié dans la destination : ${img.url}`,
+            message: `Asset "${img.url}" non trouvé dans la destination `,
             fixable: true,
-            fixDescription: `Trouver l'image dans les assets déja présentes; Si non trouvé alors télécharger et uploader l'asset vers le repository de destination`,
+            fixed: false,
             context: {id: img.id, url: img.url},
         }));
 
@@ -135,44 +171,79 @@ export class AssetValidator implements DocumentValidator {
         return null;
     }
 
-    private async updateImages(data: unknown, idsToFix: Set<string>): Promise<unknown> {
-        if (!data || typeof data !== 'object') return data;
-
-        if (Array.isArray(data)) {
-            if (data.length > 0 && typeof (data[0] as Record<string, unknown>)['type'] === 'string') {
-                return data;
-            }
-            return Promise.all(data.map(item => this.updateImages(item, idsToFix)));
-        }
-
-        if (this.isImageField(data)) {
-            if (idsToFix.has((data as prismic.FilledImageFieldImage).id)) {
-                const targetAsset = await this.findMatchingAssetUrl((data as prismic.FilledImageFieldImage).id, (data as prismic.FilledImageFieldImage).alt);
-                return targetAsset ?? {};
-            }
-            return data;
-        }
-
-        const obj = data as Record<string, unknown>;
-        const result: Record<string, unknown> = {};
-        for (const key of Object.keys(obj)) {
-            result[key] = await this.updateImages(obj[key], idsToFix);
-        }
-        return result;
-    }
-
-    async fix(doc: prismic.PrismicDocument, issues: ValidationIssue[]): Promise<prismic.PrismicDocument> {
+    private async updateImages(data: unknown, issues: ValidationIssue[]): Promise<unknown> {
         const idsToFix = new Set<string>(
             issues
                 .filter(i => i.code === 'ASSET_NOT_FOUND' && i.context?.['id'])
                 .map(i => i.context!['id'] as string)
         );
+        if (idsToFix.size === 0) return data;
+        if (!data || typeof data !== 'object') return data;
 
-        if (idsToFix.size === 0) return doc;
+        if (Array.isArray(data)) {
+            // RichText : traiter chaque noeud individuellement pour mettre à jour les RTImageNode
+            if (data.length > 0 && typeof (data[0] as Record<string, unknown>)['type'] === 'string') {
+                return Promise.all(data.map(async node => {
+                    if (this.isRichTextImageNode(node) && idsToFix.has(node.id)) {
+                        const targetAsset = await this.findMatchingAssetUrl(node.id, node.alt);
+                        if (targetAsset) {
+                            const issue = issues.find(i => i.context?.['id'] === node.id);
+                            if (issue) {
+                                issue.fixDescription = `Asset trouvé : "${targetAsset.url}"`;
+                                issue.fixed = true;
+                            }
+                            return {
+                                ...node,
+                                id: targetAsset.id,
+                                url: targetAsset.url,
+                                dimensions: targetAsset.dimensions
+                            };
+                        }
+                    }
+                    return node;
+                }));
+            }
+            return Promise.all(data.map(item => this.updateImages(item, issues)));
+        }
 
+        if (this.isImageField(data)) {
+            const img = data as prismic.FilledImageFieldImage;
+            let result: Record<string, unknown> = {};
+            // Traiter l'image principale
+            if (idsToFix.has(img.id)) {
+                const targetAsset = await this.findMatchingAssetUrl(img.id, img.alt);
+                if (targetAsset) {
+                    const issue = issues.find(i => i.context?.['id'] === img.id);
+                    if (issue) {
+                        issue.fixDescription = `Asset trouvé : "${targetAsset.url}"`;
+                        issue.fixed = true;
+                    }
+                    result = {...(targetAsset as unknown as Record<string, unknown>)};
+                }
+
+                for (const thumbKey of Object.keys(img as unknown as Record<string, unknown>)) {
+                    const thumb = (img as unknown as Record<string, unknown>)[thumbKey];
+                    if (this.isImageField(thumb)) {
+                        result[thumbKey] = await this.updateImages(thumb, issues);
+                    }
+                }
+            }
+            return result;
+        }
+
+        const obj = data as Record<string, unknown>;
+        const result: Record<string, unknown> = {};
+        for (const key of Object.keys(obj)) {
+            result[key] = await this.updateImages(obj[key], issues);
+        }
+        return result;
+    }
+
+    async fix(doc: prismic.PrismicDocument, issues: ValidationIssue[]): Promise<prismic.PrismicDocument> {
+        const data = await this.updateImages(doc.data, issues) as Record<string, unknown>;
         return {
             ...doc,
-            data: await this.updateImages(doc.data, idsToFix) as Record<string, unknown>,
+            data
         };
     }
 }

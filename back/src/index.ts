@@ -66,10 +66,6 @@ const documentController = new DocumentController(migratorDocument);
 app.use(cors());
 app.use(express.json());
 
-app.get('/health', (_req, res) => {
-    res.json({status: 'ok'});
-});
-
 app.get('/config', (_req, res) => {
     res.json({
         sourceRepository: process.env.SOURCE_REPOSITORY_NAME!,

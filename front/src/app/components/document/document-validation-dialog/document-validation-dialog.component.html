@@ -1,0 +1,88 @@
+<h2 mat-dialog-title class="flex items-center gap-2">
+  <mat-icon [class.text-green-500]="data.success" [class.text-red-500]="!data.success">
+    {{ data.success ? 'check_circle' : 'error' }}
+  </mat-icon>
+  {{ data.success ? 'Migration réussie' : 'Échec de migration' }} — {{ data.docLabel }}
+</h2>
+
+<mat-dialog-content class="flex flex-col gap-4 py-4">
+
+  @if (!data.validation) {
+    <p class="text-sm text-gray-500">Erreur réseau — le serveur est inaccessible.</p>
+  }
+
+  @if (blockingIssues.length) {
+    <div class="flex flex-col gap-2">
+      <h3 class="text-sm font-semibold text-red-600 flex items-center gap-1">
+        <mat-icon style="font-size:16px;width:16px;height:16px">block</mat-icon>
+        Bloquants ({{ blockingIssues.length }})
+      </h3>
+      @for (issue of blockingIssues; track $index) {
+        <div class="flex items-start gap-3 px-3 py-2 rounded-lg bg-red-50 border border-red-200">
+          <mat-icon class="text-red-500 shrink-0" style="font-size:18px;width:18px;height:18px">error</mat-icon>
+          <div class="flex flex-col gap-0.5 min-w-0">
+            <span class="text-sm font-medium text-gray-800">{{ issue.message }}</span>
+            <span class="text-xs text-gray-400">{{ issue.validator }} — {{ issue.code }}</span>
+            @if (issue.fixDescription) {
+              <span class="text-xs mt-1 flex items-center gap-1"
+                    [class.text-green-600]="issue.fixed" [class.text-gray-500]="!issue.fixed">
+                <mat-icon style="font-size:13px;width:13px;height:13px">{{ issue.fixed ? 'check_circle' : 'build' }}</mat-icon>
+                {{ issue.fixDescription }}
+              </span>
+            }
+          </div>
+        </div>
+      }
+    </div>
+  }
+
+  @if (warningIssues.length) {
+    <div class="flex flex-col gap-2">
+      <h3 class="text-sm font-semibold text-orange-500 flex items-center gap-1">
+        <mat-icon style="font-size:16px;width:16px;height:16px">warning</mat-icon>
+        Avertissements ({{ warningIssues.length }})
+      </h3>
+      @for (issue of warningIssues; track $index) {
+        <div class="flex items-start gap-3 px-3 py-2 rounded-lg border"
+             [class.bg-green-50]="issue.fixed" [class.border-green-200]="issue.fixed"
+             [class.bg-orange-50]="!issue.fixed" [class.border-orange-200]="!issue.fixed">
+          <mat-icon style="font-size:18px;width:18px;height:18px"
+                    [class.text-green-500]="issue.fixed" [class.text-orange-400]="!issue.fixed">
+            {{ issue.fixed ? 'check_circle' : 'warning_amber' }}
+          </mat-icon>
+          <div class="flex flex-col gap-0.5 min-w-0">
+            <span class="text-sm font-medium text-gray-800">{{ issue.message }}</span>
+            <span class="text-xs text-gray-400">{{ issue.validator }} — {{ issue.code }}</span>
+            @if (issue.fixDescription) {
+              <span class="text-xs mt-1 flex items-center gap-1"
+                    [class.text-green-600]="issue.fixed" [class.text-gray-500]="!issue.fixed">
+                <mat-icon style="font-size:13px;width:13px;height:13px">{{ issue.fixed ? 'check_circle' : 'build' }}</mat-icon>
+                {{ issue.fixDescription }}
+              </span>
+            }
+          </div>
+        </div>
+      }
+    </div>
+  }
+
+  @if (!blockingIssues.length && !warningIssues.length && data.success) {
+    <p class="text-sm text-gray-500 flex items-center gap-2">
+      <mat-icon class="text-green-500">check_circle</mat-icon>
+      Aucun problème détecté.
+    </p>
+  }
+
+</mat-dialog-content>
+
+<mat-dialog-actions align="end" class="gap-2">
+  @if (data.success) {
+    <a [href]="migrationUrl" target="_blank" rel="noopener noreferrer"
+       mat-stroked-button color="primary" class="flex items-center gap-1">
+      <mat-icon style="font-size:16px;width:16px;height:16px">open_in_new</mat-icon>
+      Voir dans Prismic
+    </a>
+  }
+  <button mat-button mat-dialog-close>Fermer</button>
+</mat-dialog-actions>
+

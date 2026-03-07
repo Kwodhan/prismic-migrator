@@ -111,10 +111,11 @@ export class PrismicMigratorDocument {
 
 
     async migrateDocument(id: string): Promise<DocumentMigrationResult> {
+        let validationResult: ValidationResult | undefined;
         try {
             const doc = await this.sourcePrismicClient.getByID(id);
 
-            const validationResult: ValidationResult = await this.buildValidationPipeline().run(doc);
+            validationResult = await this.buildValidationPipeline().run(doc);
             const {
                 result: validation,
                 doc: fixedDoc
@@ -146,12 +147,25 @@ export class PrismicMigratorDocument {
 
             return {success: true, id: data.id, validation};
         } catch (error) {
-            return {
-                success: false,
-                error: axios.isAxiosError(error)
-                    ? `${error.response?.status} - ${JSON.stringify(error.response?.data)}`
-                    : String(error),
+            const errorMessage = axios.isAxiosError(error)
+                ? `${error.response?.status} - ${JSON.stringify(error.response?.data)}`
+                : String(error);
+
+            const failedValidation: ValidationResult = {
+                valid: false,
+                issues: [
+                    ...(validationResult?.issues ?? []),
+                    {
+                        severity: 'BLOCKING',
+                        code: 'MIGRATION_API_ERROR',
+                        validator: 'MigrationAPI',
+                        message: errorMessage,
+                        fixable: false,
+                    },
+                ],
             };
+
+            return {success: false, error: 'MIGRATION_API_ERROR', validation: failedValidation};
         }
     }
 }

@@ -39,9 +39,12 @@ export class ValidationPipeline {
             }
         }
 
-        // Re-valider après les fix pour obtenir l'état final
-        const result = await this.run(fixedDoc);
-        return {result, doc: fixedDoc};
+        const reValidation = await this.run(fixedDoc);
+        const result: ValidationResult = {
+            valid: reValidation.valid,
+            issues,
+        };
+        return { result, doc: fixedDoc };
     }
 }
 
