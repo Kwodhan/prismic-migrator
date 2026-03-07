@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import {AssetMigration} from '../../components/asset-migration/asset-migration';
+import {AssetMigration} from '../../components/asset/asset-migration/asset-migration';
 
 @Component({
   selector: 'app-asset-page',

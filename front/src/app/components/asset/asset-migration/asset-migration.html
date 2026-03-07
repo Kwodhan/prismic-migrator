@@ -1,0 +1,33 @@
+@if (loading()) {
+  <div class="flex items-center justify-center h-full">
+    <mat-progress-bar mode="indeterminate" class="w-64" />
+  </div>
+} @else {
+  <div class="flex gap-4 h-full px-6 pb-6 overflow-hidden">
+
+    <div class="flex-1 flex flex-col gap-4 overflow-y-auto bg-white rounded-xl shadow p-4">
+      <h2 class="text-lg font-semibold text-gray-700 border-b pb-2 flex items-center gap-2">
+        <mat-icon>folder</mat-icon> Source
+        @if (sourceRepository()) {
+          <span class="text-lg font-normal text-gray-400">— {{ sourceRepository() }}</span>
+        }
+      </h2>
+      <source-asset-list [assets]="sourceAssets()" (refreshNeeded)="loadSourceAssets()"/>
+    </div>
+
+    <div class="w-px bg-gray-200"></div>
+
+    <div class="flex-1 flex flex-col gap-2 overflow-y-auto bg-white rounded-xl shadow p-4">
+      <h2 class="text-lg font-semibold text-gray-700 border-b pb-2 flex items-center gap-2">
+        <mat-icon>cloud_upload</mat-icon> Target
+        @if (targetRepository()) {
+          <span class="text-lg font-normal text-gray-400">— {{ targetRepository() }}</span>
+        }
+      </h2>
+      <target-asset-list [assets]="targetAssets()" (refreshNeeded)="loadTargetAssets()" />
+    </div>
+
+  </div>
+}
+
+
