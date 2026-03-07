@@ -120,7 +120,7 @@ export class AssetValidator implements DocumentValidator {
         const issues: ValidationIssue[] = images.map(img => ({
             severity: 'WARNING',
             code: 'ASSET_NOT_FOUND',
-            validator: "AssetValidator",
+            validator: this.constructor.name,
             message: `Asset "${img.url}" non trouvé dans la destination `,
             fixable: true,
             fixed: false,

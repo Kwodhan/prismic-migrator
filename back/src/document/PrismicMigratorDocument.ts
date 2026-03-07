@@ -3,6 +3,10 @@ import {fetch, ProxyAgent} from 'undici';
 import axios, {AxiosInstance} from 'axios';
 import {AssetValidator, ValidationPipeline, ValidationResult,} from './validation';
 import {PrismicMigratorAssets} from "../asset/PrismicMigratorAssets";
+import {LinkDocumentValidator} from "./validation/validators/LinkDocumentValidator";
+import {LinkMediaValidator} from "./validation/validators/LinkMediaValidator";
+import {CustomTypeValidator} from "./validation/validators/CustomTypeValidator";
+import {PrismicMigratorCustomType} from "../custom-type/PrismicMigratorCustomType";
 
 export interface PrismicDocument {
     id: string;
@@ -37,6 +41,7 @@ export class PrismicMigratorDocument {
     private readonly destinationPrismicClient: prismic.Client;
     private readonly axiosInstance: AxiosInstance;
     private readonly migratorAsset: PrismicMigratorAssets;
+    private readonly migratorCustomType: PrismicMigratorCustomType;
 
     constructor(
         sourceRepositoryName: string,
@@ -52,6 +57,13 @@ export class PrismicMigratorDocument {
         this.destinationWriteToken = destinationWriteToken;
         this.axiosInstance = axiosInstance;
         this.migratorAsset = new PrismicMigratorAssets(
+            sourceRepositoryName,
+            sourceWriteToken,
+            destinationRepositoryName,
+            destinationWriteToken,
+            axiosInstance
+        );
+        this.migratorCustomType = new PrismicMigratorCustomType(
             sourceRepositoryName,
             sourceWriteToken,
             destinationRepositoryName,
@@ -103,9 +115,13 @@ export class PrismicMigratorDocument {
 
     private buildValidationPipeline(): ValidationPipeline {
         return new ValidationPipeline([
-            new AssetValidator(
-                this.migratorAsset
+            new CustomTypeValidator(this.migratorCustomType),
+            new AssetValidator(this.migratorAsset),
+            new LinkDocumentValidator(
+                this.sourcePrismicClient,
+                this.destinationPrismicClient,
             ),
+            new LinkMediaValidator(this.migratorAsset),
         ]);
     }
 
@@ -115,15 +131,12 @@ export class PrismicMigratorDocument {
         try {
             const doc = await this.sourcePrismicClient.getByID(id);
 
-            validationResult = await this.buildValidationPipeline().run(doc);
-            const {
-                result: validation,
-                doc: fixedDoc
-            } = await this.buildValidationPipeline().runWithFix(doc, validationResult.issues);
+            const { result: validation, doc: fixedDoc } = await this.buildValidationPipeline().runWithFix(doc);
+            validationResult = validation;
 
             // Refuser uniquement si des BLOCKING subsistent après les fix
-            if (!validation.valid) {
-                return {success: false, error: 'VALIDATION_FAILED', validation};
+            if (!validationResult.valid) {
+                return {success: false, error: 'VALIDATION_FAILED', validation: validationResult};
             }
             const body = {
                 title: fixedDoc.uid ?? fixedDoc.id,
@@ -145,7 +158,7 @@ export class PrismicMigratorDocument {
                 }
             );
 
-            return {success: true, id: data.id, validation};
+            return {success: true, id: data.id, validation: validationResult};
         } catch (error) {
             const errorMessage = axios.isAxiosError(error)
                 ? `${error.response?.status} - ${JSON.stringify(error.response?.data)}`
