@@ -19,6 +19,12 @@ export interface PaginatedDocuments {
   totalDocuments: number;
 }
 
+export interface DocumentMigrationResult {
+  success: boolean;
+  id?: string;
+  error?: string;
+}
+
 interface CustomType { id: string; label: string; }
 
 @Injectable({
@@ -40,6 +46,10 @@ export class DocumentService {
     return this.http.get<CustomType[]>(`${this.apiUrl}/custom-types/target`).pipe(
       map(types => Object.fromEntries(types.map(t => [t.id, t.label])))
     );
+  }
+
+  migrateDocument(id: string): Observable<DocumentMigrationResult> {
+    return this.http.post<DocumentMigrationResult>(`${this.apiUrl}/documents/${id}/migrate`, {});
   }
 
   getSourceDocuments(page = 1, type = ''): Observable<PaginatedDocuments> {

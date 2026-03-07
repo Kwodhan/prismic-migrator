@@ -9,6 +9,7 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatAutocompleteModule } from '@angular/material/autocomplete';
 import { DocumentList } from '../document-list/document-list';
+import { PrismicDocument } from '../../../services/document.service';
 
 @Component({
   selector: 'source-document-list',
@@ -16,4 +17,8 @@ import { DocumentList } from '../document-list/document-list';
   templateUrl: './source-document-list.html',
   styleUrl: './source-document-list.css',
 })
-export class SourceDocumentList extends DocumentList {}
+export class SourceDocumentList extends DocumentList {
+  onDragStart(event: DragEvent, doc: PrismicDocument): void {
+    event.dataTransfer?.setData('application/json', JSON.stringify(doc));
+  }
+}
