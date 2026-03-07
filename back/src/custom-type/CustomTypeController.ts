@@ -25,5 +25,25 @@ export class CustomTypeController {
     const customTypes = await this.migratorCustomType.getTargetCustomTypes();
     res.json(customTypes);
   };
+
+  /**
+   * POST /custom-types/:id/migrate
+   * Migre un custom type depuis le repository source vers le repository de destination
+   */
+  migrateCustomType = async (req: Request, res: Response): Promise<void> => {
+    const id = req.params['id'] as string;
+    const result = await this.migratorCustomType.migrateCustomType(id);
+    res.json(result);
+  };
+
+  /**
+   * PUT /custom-types/:id/update
+   * Met à jour un custom type existant dans le repository de destination
+   */
+  updateCustomType = async (req: Request, res: Response): Promise<void> => {
+    const id = req.params['id'] as string;
+    const result = await this.migratorCustomType.updateCustomType(id);
+    res.json(result);
+  };
 }
 

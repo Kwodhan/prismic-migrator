@@ -10,6 +10,14 @@ export interface CustomType {
   status: boolean;
 }
 
+export interface MigrationResult {
+  success: boolean;
+  id?: string;
+  label?: string;
+  target?: CustomType;
+  error?: string;
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -24,6 +32,14 @@ export class CustomTypeService {
 
   getTargetCustomTypes(): Observable<CustomType[]> {
     return this.http.get<CustomType[]>(`${this.apiUrl}/custom-types/target`);
+  }
+
+  migrateCustomType(id: string): Observable<MigrationResult> {
+    return this.http.post<MigrationResult>(`${this.apiUrl}/custom-types/${id}/migrate`, {});
+  }
+
+  updateCustomType(id: string): Observable<MigrationResult> {
+    return this.http.put<MigrationResult>(`${this.apiUrl}/custom-types/${id}/update`, {});
   }
 }
 

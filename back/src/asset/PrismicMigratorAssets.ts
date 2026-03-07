@@ -1,6 +1,5 @@
 import axios, {AxiosInstance} from 'axios';
 import FormData from 'form-data';
-import https from 'node:https';
 
 
 interface AssetFile {
@@ -24,23 +23,12 @@ export class PrismicMigratorAssets {
   private readonly destinationToken: string;
   private readonly axiosInstance: AxiosInstance;
 
-  constructor(sourceRepositoryName: string, sourceToken: string, destinationRepository: string, destinationToken: string) {
+  constructor(sourceRepositoryName: string, sourceToken: string, destinationRepository: string, destinationToken: string, axiosInstance: AxiosInstance) {
     this.sourceRepositoryName = sourceRepositoryName;
     this.sourceToken = sourceToken;
     this.destinationRepository = destinationRepository;
     this.destinationToken = destinationToken;
-    console.log('[Proxy] host:', process.env.PROXY_HOST);
-
-    this.axiosInstance = axios.create({
-      httpsAgent: new https.Agent({ rejectUnauthorized: false }),
-      proxy: process.env.PROXY_HOST ? {
-        host: process.env.PROXY_HOST,
-        port: Number(process.env.PROXY_PORT) || 8080,
-        protocol: process.env.PROXY_PROTOCOL || 'http',
-      } : false,
-    });
-
-
+    this.axiosInstance = axiosInstance;
   }
 
   /**
