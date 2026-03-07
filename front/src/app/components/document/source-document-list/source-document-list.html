@@ -1,0 +1,77 @@
+<div class="flex items-center gap-2 w-full">
+  <mat-form-field class="flex-1" appearance="outline">
+    <mat-label>Filtrer par type</mat-label>
+    <mat-icon matPrefix class="mr-2">filter_list</mat-icon>
+    <input matInput
+           #typeInput
+           type="text"
+           [(ngModel)]="filterType"
+           [matAutocomplete]="autoSource"
+           placeholder="Tous les types..." />
+    @if (filterType()) {
+      <button matSuffix mat-icon-button
+              (mousedown)="$event.preventDefault()"
+              (click)="onTypeCleared()"
+              matTooltip="Réinitialiser">
+        <mat-icon>close</mat-icon>
+      </button>
+    }
+    <mat-autocomplete #autoSource="matAutocomplete"
+                      (optionSelected)="onTypeSelected($event.option.value)">
+      @for (type of filteredTypes(); track type.id) {
+        <mat-option [value]="type.id">
+          <span class="font-medium">{{ type.label }}</span>
+          <span class="text-xs text-gray-400 ml-2">{{ type.id }}</span>
+        </mat-option>
+      }
+    </mat-autocomplete>
+  </mat-form-field>
+  <button mat-icon-button (click)="refreshNeeded.emit()" matTooltip="Rafraîchir">
+    <mat-icon>refresh</mat-icon>
+  </button>
+</div>
+
+@if (documents().length === 0 && !loading()) {
+  <div class="flex flex-col items-center justify-center py-12 text-gray-400 gap-2">
+    <mat-icon class="text-4xl">article</mat-icon>
+    <span class="text-sm">Aucun document source disponible</span>
+  </div>
+} @else {
+  <ul class="flex flex-col gap-2 list-none p-0 m-0">
+    @for (doc of documents(); track doc.id) {
+      <li class="flex items-center justify-between gap-2 px-3 py-2 rounded-lg border border-gray-200 bg-gray-50
+                 transition-all duration-150 hover:shadow-md hover:border-blue-300">
+        <div class="flex items-center gap-2 min-w-0">
+          <mat-icon class="text-blue-400 shrink-0">article</mat-icon>
+          <div class="flex flex-col min-w-0">
+            <span class="text-sm font-medium text-gray-800 truncate">{{ doc.uid ?? doc.id }}</span>
+            <span class="text-xs text-gray-400 truncate">{{ doc.type }}</span>
+          </div>
+        </div>
+        <div class="flex items-center gap-2 shrink-0">
+          <span class="text-xs px-2 py-0.5 rounded-full bg-blue-100 text-blue-600">
+            {{ doc.type }}
+          </span>
+          <span class="text-xs text-gray-400">{{ doc.last_publication_date | date:'dd/MM/yy' }}</span>
+          <a [href]="'https://' + repository() + '.prismic.io/builder/pages/' + doc.id + '?s=published'"
+             target="_blank" rel="noopener noreferrer"
+             matTooltip="Voir dans Prismic"
+             (click)="$event.stopPropagation()"
+             class="text-gray-400 hover:text-blue-500 leading-none">
+            <mat-icon style="font-size: 14px; width: 14px; height: 14px; line-height: 14px;">open_in_new</mat-icon>
+          </a>
+        </div>
+      </li>
+    }
+  </ul>
+}
+
+@if (loading()) {
+  <div class="flex justify-center py-4">
+    <mat-progress-bar mode="indeterminate" class="w-full" />
+  </div>
+}
+
+@if (hasMore() && !loading()) {
+  <div #sentinel class="h-10 w-full"></div>
+}

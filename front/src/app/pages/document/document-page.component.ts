@@ -1,8 +1,9 @@
 import { Component } from '@angular/core';
+import { DocumentMigration } from '../../components/document/document-migration/document-migration';
 
 @Component({
   selector: 'app-document-page',
-  imports: [],
+  imports: [DocumentMigration],
   templateUrl: './document-page.component.html',
   styleUrl: './document-page.component.css',
 })
