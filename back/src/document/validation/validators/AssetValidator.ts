@@ -1,7 +1,8 @@
 import {DocumentValidator} from '../DocumentValidator';
 import {ValidationIssue, ValidationResult} from '../ValidationResult';
 import * as prismic from '@prismicio/client';
-import {AxiosInstance} from 'axios';
+import {FilledImageFieldImage} from '@prismicio/client';
+import {PrismicMigratorAssets} from "../../../asset/PrismicMigratorAssets";
 
 /**
  * Parcourt récursivement les champs du document à la recherche de références
@@ -15,9 +16,7 @@ import {AxiosInstance} from 'axios';
  */
 export class AssetValidator implements DocumentValidator {
     constructor(
-        private readonly destinationRepositoryName: string,
-        private readonly destinationToken: string,
-        private readonly axiosInstance: AxiosInstance,
+        private readonly prismicMigratorAssets: PrismicMigratorAssets,
     ) {
     }
 
@@ -96,46 +95,84 @@ export class AssetValidator implements DocumentValidator {
     }
 
     /**
-     * Parcourt récursivement les données et remplace les images dont l'id
-     * est dans idsToRemove par un objet image vide.
+     * Cherche dans les assets du repository de destination un asset dont l'URL
+     * contient le même nom de fichier que l'asset source.
+     *
+     * Format URL source : https://images.prismic.io/${repository}/${id}_${nom}.ext
+     * On extrait ${nom} et on cherche une URL target qui le contient via regex.
+     *
+     * @returns l'URL de l'asset trouvé dans la destination, ou null si absent
      */
-    private removeImages(data: unknown, idsToRemove: Set<string>): unknown {
+    private async findMatchingAssetUrl(id: string, alt: string | null): Promise<FilledImageFieldImage | null> {
+        // 1. Chercher les infos de l'image source à partir de son id
+        const sourceAssets = await this.prismicMigratorAssets.getSourceAssets();
+        const sourceAsset = sourceAssets.find(a => a.id === id);
+        if (!sourceAsset) return null;
+
+        // 2. Récupérer le filename
+        const filename = sourceAsset.filename;
+
+        // 3. Chercher dans les assets target un fichier avec ce nom
+        const targetAssets = await this.prismicMigratorAssets.getTargetAssets();
+        const match = targetAssets.find(a => a.filename === filename);
+
+        // 4 & 5. Si trouvé, construire et retourner le FilledImageFieldImage
+        if (match) {
+            return {
+                id: match.id,
+                url: match.url,
+                dimensions: {
+                    width: match.width,
+                    height: match.height,
+                },
+                edit: {x: 0, y: 0, zoom: 1, background: 'transparent'},
+                alt: alt ?? null,
+                copyright: null,
+            };
+        }
+
+        // 6. Pas trouvé
+        return null;
+    }
+
+    private async updateImages(data: unknown, idsToFix: Set<string>): Promise<unknown> {
         if (!data || typeof data !== 'object') return data;
 
         if (Array.isArray(data)) {
-            // Ignorer les richText
             if (data.length > 0 && typeof (data[0] as Record<string, unknown>)['type'] === 'string') {
                 return data;
             }
-            return data.map(item => this.removeImages(item, idsToRemove));
+            return Promise.all(data.map(item => this.updateImages(item, idsToFix)));
         }
 
         if (this.isImageField(data)) {
-            if (idsToRemove.has((data as prismic.FilledImageFieldImage).id)) {
-                return {};  // image vide
+            if (idsToFix.has((data as prismic.FilledImageFieldImage).id)) {
+                const targetAsset = await this.findMatchingAssetUrl((data as prismic.FilledImageFieldImage).id, (data as prismic.FilledImageFieldImage).alt);
+                return targetAsset ?? {};
             }
+            return data;
         }
 
         const obj = data as Record<string, unknown>;
         const result: Record<string, unknown> = {};
         for (const key of Object.keys(obj)) {
-            result[key] = this.removeImages(obj[key], idsToRemove);
+            result[key] = await this.updateImages(obj[key], idsToFix);
         }
         return result;
     }
 
     async fix(doc: prismic.PrismicDocument, issues: ValidationIssue[]): Promise<prismic.PrismicDocument> {
-        const idsToRemove = new Set<string>(
+        const idsToFix = new Set<string>(
             issues
                 .filter(i => i.code === 'ASSET_NOT_FOUND' && i.context?.['id'])
                 .map(i => i.context!['id'] as string)
         );
 
-        if (idsToRemove.size === 0) return doc;
+        if (idsToFix.size === 0) return doc;
 
         return {
             ...doc,
-            data: this.removeImages(doc.data, idsToRemove) as Record<string, unknown>,
+            data: await this.updateImages(doc.data, idsToFix) as Record<string, unknown>,
         };
     }
 }

@@ -3,6 +3,9 @@ import FormData from 'form-data';
 
 
 interface AssetFile {
+  height: number;
+  width: number;
+  alt: string | null;
   id: string;
   url: string;
   filename: string;

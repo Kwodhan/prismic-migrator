@@ -2,6 +2,7 @@ import * as prismic from '@prismicio/client';
 import {fetch, ProxyAgent} from 'undici';
 import axios, {AxiosInstance} from 'axios';
 import {AssetValidator, ValidationPipeline, ValidationResult,} from './validation';
+import {PrismicMigratorAssets} from "../asset/PrismicMigratorAssets";
 
 export interface PrismicDocument {
     id: string;
@@ -30,28 +31,34 @@ const PAGE_SIZE = 30;
 const MIGRATION_API_URL = 'https://migration.prismic.io';
 
 export class PrismicMigratorDocument {
-    private readonly sourceRepositoryName: string;
-    private readonly sourceToken: string;
     private readonly destinationRepositoryName: string;
     private readonly destinationWriteToken: string;
     private readonly sourcePrismicClient: prismic.Client;
     private readonly destinationPrismicClient: prismic.Client;
     private readonly axiosInstance: AxiosInstance;
+    private readonly migratorAsset: PrismicMigratorAssets;
 
     constructor(
         sourceRepositoryName: string,
         sourceContentToken: string,
+        sourceWriteToken: string,
         destinationRepositoryName: string,
         destinationContentToken: string,
         destinationWriteToken: string,
+        axiosInstance: AxiosInstance,
         proxyUrl?: string,
-        axiosInstance?: AxiosInstance,
     ) {
-        this.sourceRepositoryName = sourceRepositoryName;
-        this.sourceToken = sourceContentToken;
         this.destinationRepositoryName = destinationRepositoryName;
         this.destinationWriteToken = destinationWriteToken;
-        this.axiosInstance = axiosInstance ?? axios.create();
+        this.axiosInstance = axiosInstance;
+        this.migratorAsset = new PrismicMigratorAssets(
+            sourceRepositoryName,
+            sourceWriteToken,
+            destinationRepositoryName,
+            destinationWriteToken,
+            axiosInstance
+        );
+
 
         const fetchFn = proxyUrl
             ? (url: string, init?: Parameters<typeof fetch>[1]) =>
@@ -97,9 +104,7 @@ export class PrismicMigratorDocument {
     private buildValidationPipeline(): ValidationPipeline {
         return new ValidationPipeline([
             new AssetValidator(
-                this.destinationRepositoryName,
-                this.destinationWriteToken,
-                this.axiosInstance,
+                this.migratorAsset
             ),
         ]);
     }
@@ -119,7 +124,6 @@ export class PrismicMigratorDocument {
             if (!validation.valid) {
                 return {success: false, error: 'VALIDATION_FAILED', validation};
             }
-            console.log(fixedDoc.lang)
             const body = {
                 title: fixedDoc.uid ?? fixedDoc.id,
                 type: fixedDoc.type,

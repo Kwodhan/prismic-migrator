@@ -51,11 +51,12 @@ const proxyUrl = process.env.PROXY_HOST
 const migratorDocument = new PrismicMigratorDocument(
     process.env.SOURCE_REPOSITORY_NAME!,
     process.env.SOURCE_CONTENT_TOKEN!,
+    process.env.SOURCE_WRITE_TOKEN!,
     process.env.DESTINATION_REPOSITORY_NAME!,
     process.env.DESTINATION_CONTENT_TOKEN!,
     process.env.DESTINATION_WRITE_TOKEN!,
-    proxyUrl,
     axiosInstance,
+    proxyUrl,
 );
 
 const assetController = new AssetController(migratorAsset);
