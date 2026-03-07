@@ -14,6 +14,7 @@ export class DocumentList {
   loading = input<boolean>(false);
   types = input<DocumentType[]>([]);
   repository = input<string>('');
+  initialType = input<string>('');
 
   readonly refreshNeeded = output<void>();
   readonly pageNeeded = output<number>();
@@ -44,6 +45,10 @@ export class DocumentList {
   }
 
   constructor() {
+    effect(() => {
+      const initial = this.initialType();
+      if (initial) this.filterType.set(initial);
+    });
 
     effect(() => {
       const sentinel = this.sentinel();

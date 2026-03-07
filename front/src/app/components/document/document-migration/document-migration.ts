@@ -1,5 +1,6 @@
 import { Component, inject, OnInit, signal } from '@angular/core';
 import { forkJoin } from 'rxjs';
+import { ActivatedRoute, Router } from '@angular/router';
 
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatIconModule } from '@angular/material/icon';
@@ -18,6 +19,8 @@ import { DocumentType } from '../document-list/document-list';
 export class DocumentMigration implements OnInit {
   private readonly documentService = inject(DocumentService);
   private readonly configService = inject(ConfigService);
+  private readonly route = inject(ActivatedRoute);
+  private readonly router = inject(Router);
 
   sourceDocuments = signal<PrismicDocument[]>([]);
   targetDocuments = signal<PrismicDocument[]>([]);
@@ -42,9 +45,16 @@ export class DocumentMigration implements OnInit {
   targetTypes = signal<DocumentType[]>([]);
 
   ngOnInit(): void {
+    const params = this.route.snapshot.queryParamMap;
+    const initialSourceType = params.get('sourceType') ?? '';
+    const initialTargetType = params.get('targetType') ?? '';
+
+    this.sourceSearch.set(initialSourceType);
+    this.targetSearch.set(initialTargetType);
+
     forkJoin({
-      source: this.documentService.getSourceDocuments(1),
-      target: this.documentService.getTargetDocuments(1),
+      source: this.documentService.getSourceDocuments(1, initialSourceType),
+      target: this.documentService.getTargetDocuments(1, initialTargetType),
       config: this.configService.getConfig(),
       sourceTypes: this.documentService.getSourceTypes(),
       targetTypes: this.documentService.getTargetTypes(),
@@ -75,8 +85,21 @@ export class DocumentMigration implements OnInit {
     });
   }
 
+  private updateQueryParams(): void {
+    this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: {
+        sourceType: this.sourceSearch() || null,
+        targetType: this.targetSearch() || null,
+      },
+      queryParamsHandling: 'merge',
+      replaceUrl: true,
+    });
+  }
+
   onSourceSearch(search: string): void {
     this.sourceSearch.set(search);
+    this.updateQueryParams();
     this.sourceDocuments.set([]);
     this.sourcePage.set(1);
     this.sourceLoading.set(true);
@@ -91,6 +114,7 @@ export class DocumentMigration implements OnInit {
 
   onTargetSearch(search: string): void {
     this.targetSearch.set(search);
+    this.updateQueryParams();
     this.targetDocuments.set([]);
     this.targetPage.set(1);
     this.targetLoading.set(true);

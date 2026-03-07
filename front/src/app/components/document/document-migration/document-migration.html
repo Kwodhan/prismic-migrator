@@ -20,6 +20,7 @@
         [loading]="sourceLoading()"
         [types]="sourceTypes()"
         [repository]="sourceRepository()"
+        [initialType]="sourceSearch()"
         (refreshNeeded)="refreshSource()"
         (pageNeeded)="loadSourcePage($event)"
         (searchChanged)="onSourceSearch($event)" />
@@ -42,6 +43,7 @@
         [loading]="targetLoading()"
         [types]="targetTypes()"
         [repository]="targetRepository()"
+        [initialType]="targetSearch()"
         (refreshNeeded)="refreshTarget()"
         (pageNeeded)="loadTargetPage($event)"
         (searchChanged)="onTargetSearch($event)" />

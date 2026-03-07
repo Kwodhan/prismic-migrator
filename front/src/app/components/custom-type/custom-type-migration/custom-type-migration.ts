@@ -1,5 +1,6 @@
 import { Component, inject, OnInit, signal } from '@angular/core';
 import { forkJoin } from 'rxjs';
+import { ActivatedRoute, Router } from '@angular/router';
 import { CustomType, CustomTypeService } from '../../../services/custom-type.service';
 import { ConfigService } from '../../../services/config.service';
 import { SourceCustomTypeList } from '../source-custom-type-list/source-custom-type-list';
@@ -16,14 +17,22 @@ import { MatIconModule } from '@angular/material/icon';
 export class CustomTypeMigration implements OnInit {
   private readonly customTypeService = inject(CustomTypeService);
   private readonly configService = inject(ConfigService);
+  private readonly route = inject(ActivatedRoute);
+  private readonly router = inject(Router);
 
   sourceCustomTypes = signal<CustomType[]>([]);
   targetCustomTypes = signal<CustomType[]>([]);
   loading = signal(true);
   sourceRepository = signal('');
   targetRepository = signal('');
+  sourceFilter = signal('');
+  targetFilter = signal('');
 
   ngOnInit(): void {
+    const params = this.route.snapshot.queryParamMap;
+    this.sourceFilter.set(params.get('sourceFilter') ?? '');
+    this.targetFilter.set(params.get('targetFilter') ?? '');
+
     forkJoin({
       source: this.customTypeService.getSourceCustomTypes(),
       target: this.customTypeService.getTargetCustomTypes(),
@@ -34,6 +43,28 @@ export class CustomTypeMigration implements OnInit {
       this.sourceRepository.set(config.sourceRepository);
       this.targetRepository.set(config.destinationRepository);
       this.loading.set(false);
+    });
+  }
+
+  onSourceFilterChange(filter: string): void {
+    this.sourceFilter.set(filter);
+    this.updateQueryParams();
+  }
+
+  onTargetFilterChange(filter: string): void {
+    this.targetFilter.set(filter);
+    this.updateQueryParams();
+  }
+
+  private updateQueryParams(): void {
+    this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: {
+        sourceFilter: this.sourceFilter() || null,
+        targetFilter: this.targetFilter() || null,
+      },
+      queryParamsHandling: 'merge',
+      replaceUrl: true,
     });
   }
 

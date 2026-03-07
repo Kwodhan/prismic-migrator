@@ -7,8 +7,10 @@ export const PAGE_SIZE = 20;
 export class CustomTypeList {
   customTypes = input<CustomType[]>([]);
   repository = input<string>('');
+  initialFilter = input<string>('');
 
   readonly refreshNeeded = output<void>();
+  readonly filterChanged = output<string>();
 
   readonly filter = signal('');
   readonly page = signal(1);
@@ -25,6 +27,18 @@ export class CustomTypeList {
   readonly hasMore = computed(() => this.visibleCustomTypes().length < this.filteredCustomTypes().length);
 
   constructor() {
+    effect(() => {
+      const initial = this.initialFilter();
+      if (initial) this.filter.set(initial);
+    });
+
+    let firstRun = true;
+    effect(() => {
+      const value = this.filter();
+      if (firstRun) { firstRun = false; return; }
+      this.filterChanged.emit(value);
+    });
+
     effect(() => {
       this.customTypes();
       this.filter();

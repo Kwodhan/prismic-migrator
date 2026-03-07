@@ -1,5 +1,6 @@
 import { Component, inject, OnInit, signal } from '@angular/core';
 import { forkJoin } from 'rxjs';
+import { ActivatedRoute, Router } from '@angular/router';
 import { SourceAssetList } from '../source-asset-list/source-asset-list';
 import { TargetAssetList } from '../target-asset-list/target-asset-list';
 import { AssetFile, AssetService } from '../../../services/asset.service';
@@ -17,14 +18,22 @@ import { MatIconModule } from '@angular/material/icon';
 export class AssetMigration implements OnInit {
   private readonly assetService = inject(AssetService);
   private readonly configService = inject(ConfigService);
+  private readonly route = inject(ActivatedRoute);
+  private readonly router = inject(Router);
 
   sourceAssets = signal<AssetFile[]>([]);
   targetAssets = signal<AssetFile[]>([]);
   loading = signal(true);
   sourceRepository = signal('');
   targetRepository = signal('');
+  sourceFilter = signal('');
+  targetFilter = signal('');
 
   ngOnInit(): void {
+    const params = this.route.snapshot.queryParamMap;
+    this.sourceFilter.set(params.get('sourceFilter') ?? '');
+    this.targetFilter.set(params.get('targetFilter') ?? '');
+
     forkJoin({
       source: this.assetService.getSourceAssets(),
       target: this.assetService.getTargetAssets(),
@@ -38,9 +47,32 @@ export class AssetMigration implements OnInit {
     });
   }
 
+  onSourceFilterChange(filter: string): void {
+    this.sourceFilter.set(filter);
+    this.updateQueryParams();
+  }
+
+  onTargetFilterChange(filter: string): void {
+    this.targetFilter.set(filter);
+    this.updateQueryParams();
+  }
+
+  private updateQueryParams(): void {
+    this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: {
+        sourceFilter: this.sourceFilter() || null,
+        targetFilter: this.targetFilter() || null,
+      },
+      queryParamsHandling: 'merge',
+      replaceUrl: true,
+    });
+  }
+
   loadTargetAssets(): void {
     this.assetService.getTargetAssets().subscribe(assets => this.targetAssets.set(assets));
   }
+
   loadSourceAssets(): void {
     this.assetService.getSourceAssets().subscribe(assets => this.sourceAssets.set(assets));
   }
