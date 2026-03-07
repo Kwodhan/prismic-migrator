@@ -1,0 +1,25 @@
+.spacer {
+  flex: 1 1 auto;
+}
+
+.toolbar-title {
+  font-size: 1.2rem;
+  font-weight: bold;
+}
+
+mat-toolbar a {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  text-decoration: none;
+  opacity: 0.8;
+  transition: opacity 0.2s;
+}
+
+mat-toolbar a:hover,
+mat-toolbar a.active-link {
+  opacity: 1;
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 4px;
+}
+

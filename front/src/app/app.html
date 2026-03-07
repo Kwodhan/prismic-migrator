@@ -1,2 +1,21 @@
-<app-asset-migration />
+<mat-toolbar color="primary">
+  <a mat-button routerLink="/custom-builder" routerLinkActive="active-link">
+    <mat-icon>build</mat-icon>
+    Custom Builder
+  </a>
+  <a mat-button routerLink="/asset" routerLinkActive="active-link">
+    <mat-icon>inventory_2</mat-icon>
+    Asset
+  </a>
+  <a mat-button routerLink="/document" routerLinkActive="active-link">
+    <mat-icon>description</mat-icon>
+    Document
+  </a>
+
+  <span class="spacer"></span>
+  <span class="toolbar-title">Prismic Migrator</span>
+</mat-toolbar>
+
+<router-outlet />
+
 

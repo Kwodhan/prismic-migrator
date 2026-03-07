@@ -1,0 +1,11 @@
+:host {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+img {
+  pointer-events: none;
+  user-select: none;
+}
+
