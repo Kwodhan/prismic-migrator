@@ -1,0 +1,61 @@
+# ─────────────────────────────────────────────
+# Stage 0 – Installation des dépendances
+# ─────────────────────────────────────────────
+FROM node:20-slim AS deps
+
+WORKDIR /app
+
+COPY package.json package-lock.json ./
+COPY front/package.json ./front/
+COPY back/package.json ./back/
+
+RUN npm ci
+RUN npm install lightningcss-linux-x64-gnu @tailwindcss/oxide-linux-x64-gnu
+
+
+
+# ─────────────────────────────────────────────
+# Stage 1 – Build Front (Angular)
+# ─────────────────────────────────────────────
+FROM deps AS build-front
+
+WORKDIR /app/front
+COPY front/ ./
+RUN npm run build
+
+
+# ─────────────────────────────────────────────
+# Stage 2 – Build Back (TypeScript → JS)
+# ─────────────────────────────────────────────
+FROM deps AS build-back
+
+WORKDIR /app/back
+COPY back/ ./
+RUN npm run build
+
+
+# ─────────────────────────────────────────────
+# Stage 3 – Image finale (runtime)
+# ─────────────────────────────────────────────
+FROM node:20-slim AS runtime
+
+WORKDIR /app
+
+COPY package.json package-lock.json ./
+COPY back/package.json ./back/
+COPY front/package.json ./front/
+RUN npm ci --omit=dev
+
+COPY --from=build-back /app/back/dist ./back/dist
+COPY --from=build-front /app/front/dist/prismic-migrator/browser ./public
+
+COPY entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh && chown -R node:node /app
+
+USER node
+
+EXPOSE 3001 8080
+
+ENV APP_MODE=all
+
+ENTRYPOINT ["/entrypoint.sh"]

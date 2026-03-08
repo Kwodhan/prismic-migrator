@@ -1,0 +1,24 @@
+# Dépendances (reconstruites dans Docker)
+node_modules
+front/node_modules
+back/node_modules
+
+# Artefacts de build locaux
+back/dist
+front/dist
+front/.angular
+
+# Fichiers de développement
+*.log
+.env
+.env.*
+
+# IDE & OS
+.idea
+.vscode
+.DS_Store
+Thumbs.db
+
+# Tests
+coverage
+

@@ -66,25 +66,38 @@ const documentController = new DocumentController(migratorDocument);
 app.use(cors());
 app.use(express.json());
 
-app.get('/config', (_req, res) => {
+// Serve Angular front-end (production build)
+const frontDistPath = path.resolve(__dirname, '../../public');
+app.use(express.static(frontDistPath));
+
+const api = express.Router();
+
+api.get('/config', (_req, res) => {
     res.json({
         sourceRepository: process.env.SOURCE_REPOSITORY_NAME!,
         destinationRepository: process.env.DESTINATION_REPOSITORY_NAME!,
     });
 });
 
-app.get('/assets/source', assetController.getSourceAssets);
-app.get('/assets/target', assetController.getTargetAssets);
-app.post('/assets/migrate', assetController.migrateAsset);
+api.get('/assets/source', assetController.getSourceAssets);
+api.get('/assets/target', assetController.getTargetAssets);
+api.post('/assets/migrate', assetController.migrateAsset);
 
-app.get('/custom-types/source', customTypeController.getSourceCustomTypes);
-app.get('/custom-types/target', customTypeController.getTargetCustomTypes);
-app.post('/custom-types/:id/migrate', customTypeController.migrateCustomType);
-app.put('/custom-types/:id/update', customTypeController.updateCustomType);
+api.get('/custom-types/source', customTypeController.getSourceCustomTypes);
+api.get('/custom-types/target', customTypeController.getTargetCustomTypes);
+api.post('/custom-types/:id/migrate', customTypeController.migrateCustomType);
+api.put('/custom-types/:id/update', customTypeController.updateCustomType);
 
-app.get('/documents/source', documentController.getSourceDocuments);
-app.get('/documents/target', documentController.getTargetDocuments);
-app.post('/documents/:id/migrate', documentController.migrateDocument);
+api.get('/documents/source', documentController.getSourceDocuments);
+api.get('/documents/target', documentController.getTargetDocuments);
+api.post('/documents/:id/migrate', documentController.migrateDocument);
+
+app.use('/api', api);
+
+// SPA fallback : toutes les routes non-API renvoient index.html
+app.get('*path', (_req, res) => {
+    res.sendFile(path.join(frontDistPath, 'index.html'));
+});
 
 app.listen(PORT, () => {
     console.log(`Server running on http://localhost:${PORT}`);
