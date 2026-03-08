@@ -2,47 +2,7 @@ import {Injectable} from '@angular/core';
 import {HttpClient} from '@angular/common/http';
 import {map, Observable} from 'rxjs';
 import { API_URL } from '../constants/api';
-
-export interface PrismicDocument {
-  id: string;
-  uid: string | null;
-  type: string;
-  url: string | null;
-  first_publication_date: string | null;
-  last_publication_date: string | null;
-}
-
-export interface PaginatedDocuments {
-  documents: PrismicDocument[];
-  page: number;
-  totalPages: number;
-  totalDocuments: number;
-}
-
-export type ValidationSeverity = 'BLOCKING' | 'WARNING';
-
-export interface ValidationIssue {
-  severity: ValidationSeverity;
-  code: string;
-  validator: string;
-  message: string;
-  fixable: boolean;
-  fixed?: boolean;
-  fixDescription?: string;
-  context?: Record<string, unknown>;
-}
-
-export interface ValidationResult {
-  valid: boolean;
-  issues: ValidationIssue[];
-}
-
-export interface DocumentMigrationResult {
-  success: boolean;
-  id?: string;
-  error?: string;
-  validation?: ValidationResult;
-}
+import {DocumentMigrationResult, PaginatedDocuments} from '@shared/types';
 
 interface CustomType { id: string; label: string; }
 

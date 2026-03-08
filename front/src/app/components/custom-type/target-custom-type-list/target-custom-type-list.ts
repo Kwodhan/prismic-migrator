@@ -10,8 +10,9 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatDialog } from '@angular/material/dialog';
 import { switchMap, of } from 'rxjs';
 import { CustomTypeList } from '../custom-type-list/custom-type-list';
-import { CustomType, CustomTypeService } from '../../../services/custom-type.service';
+import {CustomTypeService } from '../../../services/custom-type.service';
 import { CustomTypeDiffDialogComponent } from '../custom-type-diff-dialog/custom-type-diff-dialog.component';
+import {CustomType} from '@shared/types';
 
 @Component({
   selector: 'target-custom-type-list',

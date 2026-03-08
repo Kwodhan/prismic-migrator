@@ -14,7 +14,8 @@
   "scripts": {
     "front": "npm run start -w front",
     "back": "npm run dev -w back",
-    "dev": "concurrently \"npm run front\" \"npm run back\""
+    "dev": "concurrently \"npm run front\" \"npm run back\"",
+    "typecheck": "tsc -p back/tsconfig.json && tsc -p front/tsconfig.app.json"
   },
   "devDependencies": {
     "concurrently": "^9.2.1"

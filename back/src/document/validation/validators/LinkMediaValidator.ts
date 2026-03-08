@@ -1,7 +1,8 @@
 import {DocumentValidator} from '../DocumentValidator';
-import {ValidationIssue, ValidationResult} from '../ValidationResult';
+import {ValidationResultUtils} from '../ValidationResult';
 import * as prismic from '@prismicio/client';
 import {PrismicMigratorAssets} from '../../../asset/PrismicMigratorAssets';
+import {ValidationIssue, ValidationResult} from "@shared/types";
 
 
 export class LinkMediaValidator implements DocumentValidator {
@@ -43,7 +44,7 @@ export class LinkMediaValidator implements DocumentValidator {
     async validate(doc: prismic.PrismicDocument): Promise<ValidationResult> {
         const links = this.extractMediaLinks(doc.data);
 
-        if (links.size === 0) return ValidationResult.ok();
+        if (links.size === 0) return ValidationResultUtils.ok();
 
         const targetAssets = await this.prismicMigratorAssets.getTargetAssets();
         const targetFileName = new Set(targetAssets.map(a => a.filename));

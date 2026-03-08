@@ -6,9 +6,10 @@ import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatIconModule } from '@angular/material/icon';
 import {TargetDocumentList} from '../target-document-list/target-document-list';
 import {SourceDocumentList} from '../source-document-list/source-document-list';
-import {DocumentService, PaginatedDocuments, PrismicDocument} from '../../../services/document.service';
+import {DocumentService} from '../../../services/document.service';
 import {ConfigService, RepositoryConfig} from '../../../services/config.service';
 import { DocumentType } from '../document-list/document-list';
+import {PaginatedDocuments, PrismicDocument} from '@shared/types';
 
 @Component({
   selector: 'document-migration',

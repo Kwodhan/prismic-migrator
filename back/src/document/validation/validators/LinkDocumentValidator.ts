@@ -1,6 +1,7 @@
 import {DocumentValidator} from '../DocumentValidator';
-import {ValidationIssue, ValidationResult} from '../ValidationResult';
+import { ValidationResultUtils} from '../ValidationResult';
 import * as prismic from '@prismicio/client';
+import {ValidationIssue, ValidationResult} from "@shared/types";
 
 
 export class LinkDocumentValidator implements DocumentValidator {
@@ -50,7 +51,7 @@ export class LinkDocumentValidator implements DocumentValidator {
     async validate(doc: prismic.PrismicDocument): Promise<ValidationResult> {
         const links = this.extractLinks(doc.data);
 
-        if (links.size === 0) return ValidationResult.ok();
+        if (links.size === 0) return ValidationResultUtils.ok();
 
         const issues: ValidationIssue[] = [];
 

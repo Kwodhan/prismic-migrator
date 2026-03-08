@@ -87,7 +87,7 @@ After migration, a **result dialog** shows:
 
 ### Prerequisites
 
-- Node.js ≥ 22
+- Node.js ≥ 20
 - Two Prismic repositories (source & destination)
 - Write tokens for both repositories
 - Content API tokens for both repositories

@@ -1,5 +1,5 @@
 import { computed, Directive, effect, ElementRef, input, output, signal, viewChild } from '@angular/core';
-import { CustomType } from '../../../services/custom-type.service';
+import {CustomType} from '@shared/types';
 
 export const PAGE_SIZE = 20;
 

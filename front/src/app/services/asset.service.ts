@@ -2,20 +2,8 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { API_URL } from '../constants/api';
+import {AssetFile, AssetMigrationResult} from '@shared/types';
 
-export interface AssetFile {
-  id: string;
-  url: string;
-  filename: string;
-  kind: string;
-}
-
-export interface MigrationResult {
-  success: boolean;
-  assetId?: string;
-  filename?: string;
-  error?: string;
-}
 
 @Injectable({
   providedIn: 'root'
@@ -33,8 +21,7 @@ export class AssetService {
     return this.http.get<AssetFile[]>(`${this.apiUrl}/assets/target`);
   }
 
-  migrateAsset(sourceUrl: string, filename?: string): Observable<MigrationResult> {
-    return this.http.post<MigrationResult>(`${this.apiUrl}/assets/migrate`, { sourceUrl, filename });
+  migrateAsset(sourceUrl: string, filename?: string): Observable<AssetMigrationResult> {
+    return this.http.post<AssetMigrationResult>(`${this.apiUrl}/assets/migrate`, { sourceUrl, filename });
   }
 }
-

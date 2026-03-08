@@ -3,11 +3,12 @@ import { forkJoin } from 'rxjs';
 import { ActivatedRoute, Router } from '@angular/router';
 import { SourceAssetList } from '../source-asset-list/source-asset-list';
 import { TargetAssetList } from '../target-asset-list/target-asset-list';
-import { AssetFile, AssetService } from '../../../services/asset.service';
+import { AssetService } from '../../../services/asset.service';
 import { ConfigService } from '../../../services/config.service';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatIconModule } from '@angular/material/icon';
+import {AssetFile} from '@shared/types';
 
 @Component({
   selector: 'asset-migration',

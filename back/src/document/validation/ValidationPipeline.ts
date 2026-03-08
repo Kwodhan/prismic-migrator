@@ -1,6 +1,7 @@
 import {DocumentValidator} from './DocumentValidator';
-import {ValidationResult} from './ValidationResult';
+import { ValidationResultUtils} from './ValidationResult';
 import * as prismic from '@prismicio/client';
+import {ValidationResult} from "@shared/types";
 
 /**
  * Exécute tous les validators en parallèle et fusionne les résultats.
@@ -17,7 +18,7 @@ export class ValidationPipeline {
         const results = await Promise.all(
             this.validators.map(v => v.validate(doc))
         );
-        return ValidationResult.merge(...results);
+        return ValidationResultUtils.merge(...results);
     }
 
     /**
@@ -51,4 +52,3 @@ export class ValidationPipeline {
         return { result, doc: fixedDoc };
     }
 }
-

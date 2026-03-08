@@ -1,5 +1,5 @@
 import { computed, Directive, effect, ElementRef, input, output, signal, viewChild } from '@angular/core';
-import { PrismicDocument } from '../../../services/document.service';
+import {PrismicDocument} from '@shared/types';
 
 export interface DocumentType {
   id: string;

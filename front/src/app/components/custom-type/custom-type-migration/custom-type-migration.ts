@@ -1,12 +1,13 @@
 import { Component, inject, OnInit, signal } from '@angular/core';
 import { forkJoin } from 'rxjs';
 import { ActivatedRoute, Router } from '@angular/router';
-import { CustomType, CustomTypeService } from '../../../services/custom-type.service';
+import { CustomTypeService } from '../../../services/custom-type.service';
 import { ConfigService } from '../../../services/config.service';
 import { SourceCustomTypeList } from '../source-custom-type-list/source-custom-type-list';
 import { TargetCustomTypeList } from '../target-custom-type-list/target-custom-type-list';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatIconModule } from '@angular/material/icon';
+import {CustomType} from '@shared/types';
 
 @Component({
   selector: 'custom-type-migration',

@@ -1,7 +1,8 @@
 import { DocumentValidator } from '../DocumentValidator';
-import { ValidationResult } from '../ValidationResult';
+import { ValidationResultUtils } from '../ValidationResult';
 import * as prismic from '@prismicio/client';
 import { PrismicMigratorCustomType } from '../../../custom-type/PrismicMigratorCustomType';
+import {ValidationResult} from "@shared/types";
 
 /**
  * Vérifie que le custom type du document existe dans le repository de destination.
@@ -28,7 +29,6 @@ export class CustomTypeValidator implements DocumentValidator {
             };
         }
 
-        return ValidationResult.ok();
+        return ValidationResultUtils.ok();
     }
 }
-

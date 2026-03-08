@@ -4,7 +4,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { create } from 'jsondiffpatch';
 import * as htmlFormatter from 'jsondiffpatch/formatters/html';
-import { CustomType } from '../../../services/custom-type.service';
+import {CustomType} from '@shared/types';
 
 export interface DiffDialogData {
   source: CustomType;

@@ -1,8 +1,9 @@
 import {DocumentValidator} from '../DocumentValidator';
-import {ValidationIssue, ValidationResult} from '../ValidationResult';
+import { ValidationResultUtils} from '../ValidationResult';
 import * as prismic from '@prismicio/client';
 import {FilledImageFieldImage} from '@prismicio/client';
 import {PrismicMigratorAssets} from "../../../asset/PrismicMigratorAssets";
+import {ValidationIssue, ValidationResult} from "@shared/types";
 
 /**
  * Parcourt récursivement les champs du document à la recherche de références
@@ -115,7 +116,7 @@ export class AssetValidator implements DocumentValidator {
         const images = this.extractImages(doc.data);
 
         if (images.length === 0) {
-            return ValidationResult.ok();
+            return ValidationResultUtils.ok();
         }
         const issues: ValidationIssue[] = images.map(img => ({
             severity: 'WARNING',
@@ -207,7 +208,7 @@ export class AssetValidator implements DocumentValidator {
         }
 
         if (this.isImageField(data)) {
-            const img = data as prismic.FilledImageFieldImage;
+            const img = data;
             let result: Record<string, unknown> = {};
             // Traiter l'image principale
             if (idsToFix.has(img.id)) {
@@ -247,4 +248,3 @@ export class AssetValidator implements DocumentValidator {
         };
     }
 }
-

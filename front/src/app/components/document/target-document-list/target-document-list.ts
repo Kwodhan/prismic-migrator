@@ -10,8 +10,9 @@ import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatAutocompleteModule } from '@angular/material/autocomplete';
 import { MatDialog } from '@angular/material/dialog';
 import { DocumentList } from '../document-list/document-list';
-import { DocumentMigrationResult, DocumentService, PrismicDocument } from '../../../services/document.service';
+import { DocumentService } from '../../../services/document.service';
 import { DocumentValidationDialogComponent } from '../document-validation-dialog/document-validation-dialog.component';
+import {DocumentMigrationResult, PrismicDocument} from '@shared/types';
 
 @Component({
   selector: 'target-document-list',

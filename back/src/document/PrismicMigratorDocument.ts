@@ -1,38 +1,28 @@
 import * as prismic from '@prismicio/client';
 import {fetch, ProxyAgent} from 'undici';
 import axios, {AxiosInstance} from 'axios';
-import {AssetValidator, ValidationPipeline, ValidationResult,} from './validation';
+import {AssetValidator, ValidationPipeline,} from './validation';
 import {PrismicMigratorAssets} from "../asset/PrismicMigratorAssets";
 import {LinkDocumentValidator} from "./validation/validators/LinkDocumentValidator";
 import {LinkMediaValidator} from "./validation/validators/LinkMediaValidator";
 import {CustomTypeValidator} from "./validation/validators/CustomTypeValidator";
 import {PrismicMigratorCustomType} from "../custom-type/PrismicMigratorCustomType";
+import {DocumentMigrationResult, PaginatedDocuments, ValidationResult} from "@shared/types";
 
-export interface PrismicDocument {
-    id: string;
-    uid: string | null;
-    type: string;
-    url: string | null;
-    first_publication_date: string | null;
-    last_publication_date: string | null;
-}
-
-export interface PaginatedDocuments {
-    documents: PrismicDocument[];
-    page: number;
-    totalPages: number;
-    totalDocuments: number;
-}
-
-export interface DocumentMigrationResult {
-    success: boolean;
-    id?: string;
-    error?: string;
-    validation?: ValidationResult;
-}
 
 const PAGE_SIZE = 30;
 const MIGRATION_API_URL = 'https://migration.prismic.io';
+
+interface PrismicMigratorDocumentOptions {
+    sourceRepositoryName: string;
+    sourceContentToken: string;
+    sourceWriteToken: string;
+    destinationRepositoryName: string;
+    destinationContentToken: string;
+    destinationWriteToken: string;
+    axiosInstance: AxiosInstance;
+    proxyUrl?: string;
+}
 
 export class PrismicMigratorDocument {
     private readonly destinationRepositoryName: string;
@@ -43,16 +33,18 @@ export class PrismicMigratorDocument {
     private readonly migratorAsset: PrismicMigratorAssets;
     private readonly migratorCustomType: PrismicMigratorCustomType;
 
-    constructor(
-        sourceRepositoryName: string,
-        sourceContentToken: string,
-        sourceWriteToken: string,
-        destinationRepositoryName: string,
-        destinationContentToken: string,
-        destinationWriteToken: string,
-        axiosInstance: AxiosInstance,
-        proxyUrl?: string,
-    ) {
+    constructor(options: PrismicMigratorDocumentOptions) {
+        const {
+            sourceRepositoryName,
+            sourceContentToken,
+            sourceWriteToken,
+            destinationRepositoryName,
+            destinationContentToken,
+            destinationWriteToken,
+            axiosInstance,
+            proxyUrl,
+        } = options;
+
         this.destinationRepositoryName = destinationRepositoryName;
         this.destinationWriteToken = destinationWriteToken;
         this.axiosInstance = axiosInstance;

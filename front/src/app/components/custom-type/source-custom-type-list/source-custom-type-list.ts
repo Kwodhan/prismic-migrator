@@ -6,7 +6,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { CustomTypeList } from '../custom-type-list/custom-type-list';
-import { CustomType } from '../../../services/custom-type.service';
+import {CustomType} from '@shared/types';
 
 @Component({
   selector: 'source-custom-type-list',

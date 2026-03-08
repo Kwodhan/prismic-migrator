@@ -9,7 +9,7 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatAutocompleteModule } from '@angular/material/autocomplete';
 import { DocumentList } from '../document-list/document-list';
-import { PrismicDocument } from '../../../services/document.service';
+import {PrismicDocument} from '@shared/types';
 
 @Component({
   selector: 'source-document-list',

@@ -1,23 +1,6 @@
 import axios, {AxiosInstance} from 'axios';
 import FormData from 'form-data';
-
-
-interface AssetFile {
-  height: number;
-  width: number;
-  alt: string | null;
-  id: string;
-  url: string;
-  filename: string;
-  kind: string;
-}
-
-interface MigrationResult {
-  success: boolean;
-  assetId?: string;
-  filename?: string;
-  error?: string;
-}
+import {AssetFile, AssetMigrationResult} from "@shared/types";
 
 export class PrismicMigratorAssets {
   private readonly sourceRepositoryName: string;
@@ -89,7 +72,7 @@ export class PrismicMigratorAssets {
   async migrateAsset(
     sourceUrl: string,
     filename?: string
-  ): Promise<MigrationResult> {
+  ): Promise<AssetMigrationResult> {
     const {destinationRepository, destinationToken} = this;
 
     try {
