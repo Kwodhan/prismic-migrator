@@ -9,7 +9,7 @@
       <h2 class="text-lg font-semibold text-gray-700 border-b pb-2 flex items-center gap-2">
         <mat-icon>folder</mat-icon> Source
         @if (sourceRepository()) {
-          <span class="text-sm font-normal text-gray-400">— {{ sourceRepository() }}</span>
+          <span class="text-lg font-normal text-gray-400">- {{ sourceRepository() }}</span>
         }
         <span class="ml-auto text-xs text-gray-400">{{ sourceDocuments().length }} / {{ sourceTotalDocuments() }}</span>
       </h2>
@@ -32,7 +32,7 @@
       <h2 class="text-lg font-semibold text-gray-700 border-b pb-2 flex items-center gap-2">
         <mat-icon>cloud_upload</mat-icon> Target
         @if (targetRepository()) {
-          <span class="text-sm font-normal text-gray-400">— {{ targetRepository() }}</span>
+          <span class="text-lg font-normal text-gray-400">- {{ targetRepository() }}</span>
         }
         <span class="ml-auto text-xs text-gray-400">{{ targetDocuments().length }} / {{ targetTotalDocuments() }}</span>
       </h2>

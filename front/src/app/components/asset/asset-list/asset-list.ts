@@ -1,7 +1,7 @@
 import {computed, Directive, effect, ElementRef, input, output, signal, viewChild} from '@angular/core';
 import {AssetFile} from '@shared/types';
 
-export const PAGE_SIZE = 20;
+export const PAGE_SIZE = 30;
 
 @Directive()
 export class AssetList {

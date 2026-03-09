@@ -18,7 +18,7 @@ export interface DiffDialogData {
   template: `
     <h2 mat-dialog-title class="flex items-center gap-2">
       <mat-icon>compare_arrows</mat-icon>
-      Différences — {{ data.source.label }}
+      Différences - {{ data.source.label }}
     </h2>
 
     <mat-dialog-content class="max-h-[70vh]! overflow-y-auto">

@@ -28,14 +28,14 @@
      (drop)="onDrop($event)">
 
   @if (isDragOver()) {
-    <div class="flex flex-col items-center justify-center flex-1 py-12 text-blue-400 gap-2">
+    <div class="flex flex-col items-center justify-center flex-1 py-30 text-blue-400 gap-2">
       <mat-icon class="text-5xl">add_circle_outline</mat-icon>
       <span class="text-sm font-medium">Déposer pour migrer</span>
     </div>
   } @else if (visibleAssets().length === 0) {
     <div class="flex flex-col items-center justify-center py-12 text-gray-400 gap-2">
       <mat-icon class="text-4xl">cloud_upload</mat-icon>
-      <span class="text-sm">Aucun asset cible — glissez des assets ici</span>
+      <span class="text-sm">Aucun asset cible - glissez des assets ici</span>
     </div>
   } @else {
     <ul class="grid grid-cols-3 gap-3 list-none p-0 m-0">

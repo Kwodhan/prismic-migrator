@@ -1,6 +1,6 @@
 # Prismic Migrator
 
-A full-stack web application to migrate content between two [Prismic](https://prismic.io) repositories — assets, custom types and documents — through a visual drag-and-drop interface.
+A full-stack web application to migrate content between two [Prismic](https://prismic.io) repositories - assets, custom types and documents - through a visual drag-and-drop interface.
 
 ---
 
@@ -51,16 +51,16 @@ Each validator runs in parallel and produces a list of `ValidationIssue` objects
 
 ### Severity levels
 
-- **BLOCKING** — migration is refused. The issue must be resolved manually before retrying (e.g. migrate the custom type first).
-- **WARNING** — migration can proceed, but some references may be broken. The pipeline will attempt to auto-fix them.
+- **BLOCKING** - migration is refused. The issue must be resolved manually before retrying (e.g. migrate the custom type first).
+- **WARNING** - migration can proceed, but some references may be broken. The pipeline will attempt to auto-fix them.
 
 ### Auto-fix strategy
 
 Before submitting the document, the pipeline runs a `fix` pass on each validator:
 
-- **AssetValidator fix** — resolves missing images by matching the source asset filename against the target asset library. If a match is found, the image field (including thumbnails) is updated with the target asset URL. If no match is found, the field is cleared.
-- **LinkDocumentValidator fix** — checks whether the linked document exists in the target by `uid`. If found, the relationship field is updated with the target document reference.
-- **LinkMediaValidator fix** — resolves missing media links by filename match in the target asset library. If no match is found, the link is cleared.
+- **AssetValidator fix** - resolves missing images by matching the source asset filename against the target asset library. If a match is found, the image field (including thumbnails) is updated with the target asset URL. If no match is found, the field is cleared.
+- **LinkDocumentValidator fix** - checks whether the linked document exists in the target by `uid`. If found, the relationship field is updated with the target document reference.
+- **LinkMediaValidator fix** - resolves missing media links by filename match in the target asset library. If no match is found, the link is cleared.
 
 ### Migration result dialog
 

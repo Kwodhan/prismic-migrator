@@ -9,7 +9,7 @@
       <h2 class="text-lg font-semibold text-gray-700 border-b pb-2 flex items-center gap-2">
         <mat-icon>folder</mat-icon> Source
         @if (sourceRepository()) {
-          <span class="text-lg font-normal text-gray-400">— {{ sourceRepository() }}</span>
+          <span class="text-lg font-normal text-gray-400">- {{ sourceRepository() }}</span>
         }
       </h2>
       <source-custom-type-list [customTypes]="sourceCustomTypes()" [repository]="sourceRepository()" [initialFilter]="sourceFilter()" (refreshNeeded)="loadSourceCustomTypes()" (filterChanged)="onSourceFilterChange($event)" />
@@ -21,7 +21,7 @@
       <h2 class="text-lg font-semibold text-gray-700 border-b pb-2 flex items-center gap-2">
         <mat-icon>cloud_upload</mat-icon> Target
         @if (targetRepository()) {
-          <span class="text-lg font-normal text-gray-400">— {{ targetRepository() }}</span>
+          <span class="text-lg font-normal text-gray-400">- {{ targetRepository() }}</span>
         }
       </h2>
       <target-custom-type-list [customTypes]="targetCustomTypes()" [repository]="targetRepository()" [initialFilter]="targetFilter()" (refreshNeeded)="loadTargetCustomTypes()" (filterChanged)="onTargetFilterChange($event)" />

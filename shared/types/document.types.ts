@@ -3,6 +3,7 @@ import { ValidationResult } from './validation.types';
 export interface PrismicDocument {
   id: string;
   uid: string | null;
+  title: string;
   type: string;
   url: string | null;
   first_publication_date: string | null;

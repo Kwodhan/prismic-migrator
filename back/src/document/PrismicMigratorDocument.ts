@@ -86,6 +86,7 @@ export class PrismicMigratorDocument {
             documents: response.results.map(doc => ({
                 id: doc.id,
                 uid: doc.uid ?? null,
+                title: this.getAnyTitle(doc),
                 type: doc.type,
                 url: doc.url ?? null,
                 first_publication_date: doc.first_publication_date,
@@ -103,6 +104,46 @@ export class PrismicMigratorDocument {
 
     async getTargetDocuments(page: number, type?: string): Promise<PaginatedDocuments> {
         return this.fetchDocuments(this.destinationPrismicClient, page, type);
+    }
+
+    private getAnyTitle(doc: prismic.PrismicDocument): string {
+        if (doc.uid) {
+            return doc.uid;
+        }
+
+        const candidates = [
+            'nom_du_contenu_prismic',
+            'nom_prismic',
+            'title',
+            'titre',
+            'label',
+        ];
+
+        const data = (doc as any).data;
+
+        if (!data || typeof data !== 'object') return doc.id;
+
+        const found = candidates
+            .map(key => {
+                if (!Object.prototype.hasOwnProperty.call(data, key)) return null;
+                const v = data[key];
+                if (v == null) return null;
+                if (typeof v === 'string') {
+                    const t = v.trim();
+                    return t.length ? t : null;
+                }
+                if (typeof v === 'number' || typeof v === 'boolean') return String(v);
+                return null;
+            })
+            .filter((v): v is string => typeof v === 'string' && v.length > 0);
+
+        if (found.length === 0) {
+            return doc.id;
+        }
+
+        found.sort((a, b) => b.length - a.length);
+        return found[0];
+
     }
 
     private buildValidationPipeline(): ValidationPipeline {
@@ -123,7 +164,7 @@ export class PrismicMigratorDocument {
         try {
             const doc = await this.sourcePrismicClient.getByID(id);
 
-            const { result: validation, doc: fixedDoc } = await this.buildValidationPipeline().runWithFix(doc);
+            const {result: validation, doc: fixedDoc} = await this.buildValidationPipeline().runWithFix(doc);
             validationResult = validation;
 
             // Refuser uniquement si des BLOCKING subsistent après les fix
