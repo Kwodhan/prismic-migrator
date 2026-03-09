@@ -68,19 +68,23 @@
 
   @if (!blockingIssues.length && !warningIssues.length && data.success) {
     <p class="text-sm text-gray-500 flex items-center gap-2">
-      <mat-icon class="text-green-500">check_circle</mat-icon>
       Aucun problème détecté.
     </p>
   }
 
+  @if (data.success) {
+    <p class="text-sm pt-2">
+      Les documents sont présents dans le menu <a class="underline text-blue-500" [href]="migrationUrl" target="_blank" rel="noopener noreferrer">Migration release</a> de Prismic. Il reste à les publier.
+    </p>
+  }
 </mat-dialog-content>
 
 <mat-dialog-actions align="end" class="gap-2">
   @if (data.success) {
-    <a [href]="migrationUrl" target="_blank" rel="noopener noreferrer"
+    <a [href]="pageUrl" target="_blank" rel="noopener noreferrer"
        mat-stroked-button color="primary" class="flex items-center gap-1">
       <mat-icon style="font-size:16px;width:16px;height:16px">open_in_new</mat-icon>
-      Voir dans Prismic
+      Voir la page
     </a>
   }
   <button mat-button mat-dialog-close>Fermer</button>

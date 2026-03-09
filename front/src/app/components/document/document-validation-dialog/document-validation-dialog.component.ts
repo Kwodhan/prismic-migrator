@@ -21,8 +21,12 @@ interface DialogData {
 export class DocumentValidationDialogComponent {
   readonly data = inject<DialogData>(MAT_DIALOG_DATA);
 
-  get migrationUrl(): string {
+  get pageUrl(): string {
     return `https://${this.data.targetRepo}.prismic.io/builder/pages/${this.data.docTargetId}`;
+  }
+
+  get migrationUrl(): string {
+    return `https://${this.data.targetRepo}.prismic.io/builder/migration`;
   }
 
   get blockingIssues(): ValidationIssue[] {
