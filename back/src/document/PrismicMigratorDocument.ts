@@ -8,6 +8,7 @@ import {LinkMediaValidator} from "./validation/validators/LinkMediaValidator";
 import {CustomTypeValidator} from "./validation/validators/CustomTypeValidator";
 import {PrismicMigratorCustomType} from "../custom-type/PrismicMigratorCustomType";
 import {DocumentMigrationResult, PaginatedDocuments, ValidationResult} from "@shared/types";
+import {ExactlySameDocumentValidator} from "./validation/validators/ExactlySameDocumentValidator";
 
 
 const PAGE_SIZE = 30;
@@ -106,6 +107,12 @@ export class PrismicMigratorDocument {
         return this.fetchDocuments(this.destinationPrismicClient, page, type);
     }
 
+    /**
+     * Le title d'un document n'est pas donné par le Content API de Prismic. On va tenter de trouver un titre pour le document,
+     * en essayant plusieurs champs courants, ou en retombant sur l'ID si aucun trouver.
+     * @param doc
+     * @private
+     */
     private getAnyTitle(doc: prismic.PrismicDocument): string {
         if (doc.uid) {
             return doc.uid;
@@ -155,6 +162,7 @@ export class PrismicMigratorDocument {
                 this.destinationPrismicClient,
             ),
             new LinkMediaValidator(this.migratorAsset),
+            new ExactlySameDocumentValidator(this.sourcePrismicClient, this.destinationPrismicClient),
         ]);
     }
 
@@ -172,7 +180,7 @@ export class PrismicMigratorDocument {
                 return {success: false, error: 'VALIDATION_FAILED', validation: validationResult};
             }
             const body = {
-                title: fixedDoc.uid ?? fixedDoc.id,
+                title: this.getAnyTitle(doc),
                 type: fixedDoc.type,
                 uid: fixedDoc.uid ?? undefined,
                 lang: fixedDoc.lang,

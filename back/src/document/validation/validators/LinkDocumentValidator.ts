@@ -1,7 +1,8 @@
 import {DocumentValidator} from '../DocumentValidator';
-import { ValidationResultUtils} from '../ValidationResult';
+import {ValidationResultUtils} from '../ValidationResult';
 import * as prismic from '@prismicio/client';
 import {ValidationIssue, ValidationResult} from "@shared/types";
+import _ from 'lodash';
 
 
 export class LinkDocumentValidator implements DocumentValidator {
@@ -76,23 +77,35 @@ export class LinkDocumentValidator implements DocumentValidator {
 
         for (const issue of issues) {
 
-            const uid = issue.context?.['uid'] as string | undefined;
-            const type = issue.context?.['type'] as string | undefined;
-            if (!uid || !type) continue;
+            const id = issue.context!['id'] as string;
+            const uid = issue.context?.['uid'] as string;
+            const type = issue.context?.['type'] as string;
+            if (!type) {
+                continue;
+            }
+            if (!uid) {
+                const idTarget = await this.foundIdTargetDocument(id, type);
+                if (idTarget) {
+                    replacements.set(issue.context!['id'] as string, idTarget);
+                    issue.fixed = true;
+                    issue.fixDescription = `Document lié trouvé dans la destination (id: ${idTarget})`;
+                }
 
-            try {
+            }
 
-                const found = await this.destinationPrismicClient.getByUID(type, uid);
+            const found = await this.destinationPrismicClient.getByUID(type, uid).catch(() => null);
 
+            if (found) {
                 replacements.set(issue.context!['id'] as string, found.id);
                 issue.fixed = true;
                 issue.fixDescription = `Document lié trouvé dans la destination (id: ${found.id})`;
-            } catch {
-                // Pas trouvé → on laisse inchangé
             }
+
         }
 
-        if (replacements.size === 0) return doc;
+        if (replacements.size === 0) {
+            return doc;
+        }
 
         return {
             ...doc,
@@ -120,4 +133,23 @@ export class LinkDocumentValidator implements DocumentValidator {
         }
         return result;
     }
+
+    /**
+     * Tente de trouver dans la destination un document équivalent au document source identifié par idSource et type.
+     * La comparaison se fait via une égalité profonde (lodash.isEqual) entre les deux documents.
+     * @param idSource
+     * @param type
+     * @private
+     */
+    private async foundIdTargetDocument(idSource: string, type: string): Promise<string | null> {
+        const allDocsDestinationType = await this.destinationPrismicClient.getByType(type);
+        const sourceDoc = await this.sourcePrismicClient.getByID(idSource).catch(() => null);
+        for (const docDest of allDocsDestinationType.results) {
+            if (_.isEqual(docDest.data, sourceDoc?.data)) {
+                return docDest.id;
+            }
+        }
+        return null;
+    }
+
 }
