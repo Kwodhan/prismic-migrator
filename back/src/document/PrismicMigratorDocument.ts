@@ -1,14 +1,18 @@
 import * as prismic from '@prismicio/client';
 import {fetch, ProxyAgent} from 'undici';
 import axios, {AxiosInstance} from 'axios';
-import {AssetValidator, ValidationPipeline,} from './validation';
+import {ValidationPipeline,} from './validation';
 import {PrismicMigratorAssets} from "../asset/PrismicMigratorAssets";
-import {LinkDocumentValidator} from "./validation/validators/LinkDocumentValidator";
-import {LinkMediaValidator} from "./validation/validators/LinkMediaValidator";
-import {CustomTypeValidator} from "./validation/validators/CustomTypeValidator";
 import {PrismicMigratorCustomType} from "../custom-type/PrismicMigratorCustomType";
 import {DocumentMigrationResult, PaginatedDocuments, ValidationResult} from "@shared/types";
-import {ExactlySameDocumentValidator} from "./validation/validators/ExactlySameDocumentValidator";
+import {
+    AssetValidator,
+    CustomTypeValidator,
+    ExactlySameDocumentValidator,
+    LinkDocumentValidator,
+    LinkMediaValidator,
+    SameUIDDocumentValidator
+} from "./validation/validators";
 
 
 const PAGE_SIZE = 30;
@@ -132,7 +136,7 @@ export class PrismicMigratorDocument {
 
         const found = candidates
             .map(key => {
-                if (!Object.prototype.hasOwnProperty.call(data, key)) return null;
+                if (!Object.hasOwn(data, key)) return null;
                 const v = data[key];
                 if (v == null) return null;
                 if (typeof v === 'string') {
@@ -163,6 +167,7 @@ export class PrismicMigratorDocument {
             ),
             new LinkMediaValidator(this.migratorAsset),
             new ExactlySameDocumentValidator(this.sourcePrismicClient, this.destinationPrismicClient),
+            new SameUIDDocumentValidator(this.destinationPrismicClient),
         ]);
     }
 
