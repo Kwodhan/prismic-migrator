@@ -36,18 +36,20 @@ When working with multiple Prismic environments (e.g. staging → production), m
 
 ## Document Migration & Validation Report
 
-Document migration is the most complex operation. Before sending a document to the [Prismic Migration API](https://prismic.io/docs/migration-api), the application runs a **validation pipeline** that inspects the document and collects issues.
+Document migration is the most complex operation. Before sending a document to the [Prismic Migration API](https://prismic.io/docs/migration-api-technical-reference), the application runs a **validation pipeline** that inspects the document and collects issues.
 
 ### Validation Pipeline
 
 Each validator runs in parallel and produces a list of `ValidationIssue` objects:
 
-| Validator | Severity | What it checks | Auto-fixable |
-|---|---|---|---|
-| `CustomTypeValidator` | **BLOCKING** | The document's custom type exists in the target repository | ✗ |
+| Validator | Severity | What it checks                                                               | Auto-fixable |
+|---|---|------------------------------------------------------------------------------|---|
+| `CustomTypeValidator` | **BLOCKING** | The document's custom type exists in the target repository                   | ✗ |
+| `ExactlySameDocumentValidator` | **BLOCKING** | The document's source has exactly the same data in the target repository     | ✗ |
+| `SameUIDDocumentValidator` | **BLOCKING** | The document's uid is already present  in the target repository                                       | ✗ |
 | `AssetValidator` | WARNING | All image fields and rich text images reference assets present in the target | ✓ |
-| `LinkDocumentValidator` | WARNING | All content relationship fields point to documents that exist in the target | ✓ |
-| `LinkMediaValidator` | WARNING | All media links reference assets present in the target | ✓ |
+| `LinkDocumentValidator` | WARNING | All content relationship fields point to documents that exist in the target  | ✓ |
+| `LinkMediaValidator` | WARNING | All media links reference assets present in the target                       | ✓ |
 
 ### Severity levels
 
@@ -59,7 +61,7 @@ Each validator runs in parallel and produces a list of `ValidationIssue` objects
 Before submitting the document, the pipeline runs a `fix` pass on each validator:
 
 - **AssetValidator fix** - resolves missing images by matching the source asset filename against the target asset library. If a match is found, the image field (including thumbnails) is updated with the target asset URL. If no match is found, the field is cleared.
-- **LinkDocumentValidator fix** - checks whether the linked document exists in the target by `uid`. If found, the relationship field is updated with the target document reference.
+- **LinkDocumentValidator fix** - checks whether the linked document exists in the target by `uid`. If found, the relationship field is updated with the target document reference. Certains documents doesn't have a `uid`, so in that case we're looking for an exact match of the content in documents of the same type. If no match is found, the field is cleared.
 - **LinkMediaValidator fix** - resolves missing media links by filename match in the target asset library. If no match is found, the link is cleared.
 
 ### Migration result dialog
@@ -68,7 +70,7 @@ After migration, a **result dialog** shows:
 - ✅ Success or ❌ failure
 - The full list of issues with their severity, fix status and fix description
 - A direct link to the Prismic Migration Builder of the target repository
-
+- Don't forget that migration documents is present in "Migration release" of the target repository, not in the regular document list!
 ---
 
 ## Tech stack
@@ -121,7 +123,7 @@ npm run dev
 ```
 
 - Front-end: [http://localhost:4200](http://localhost:4200)
-- Back-end API: [http://localhost:3001](http://localhost:3001)
+- Back-end API: [http://localhost:3001/api](http://localhost:3001/api)
 
 ---
 
@@ -154,8 +156,6 @@ docker run -p 8080:8080 -e APP_MODE=front prismic-migrator
 |---|---|---|
 | `APP_MODE` | `all` | Launch mode: `all` \| `back` \| `front` |
 
-> The `.env` file is never copied into the image. Secrets are injected at runtime via `--env-file` or `-e`.
-
 ---
 
 ## Project structure
@@ -174,6 +174,8 @@ prismic-migrator/
 │       ├── components/
 │       ├── pages/
 │       └── services/
+├── shared              
+│   └── types/          # Common types beetween back & front
 ├── Dockerfile
 ├── entrypoint.sh
 └── .env.example
