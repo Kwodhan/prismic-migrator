@@ -58,14 +58,14 @@ export class TargetAssetList extends AssetList implements OnInit, OnDestroy {
         this.migrating.set(false);
         if (result.success) {
           this.refreshNeeded.emit();
-          this.snackBar.open(`✅ "${result.filename}" migré avec succès`, 'Fermer', {
+          this.snackBar.open(`✅ "${result.filename}" migrated successfully`, 'Close', {
             duration: 4000,
             panelClass: ['snack-success'],
             horizontalPosition: 'end',
             verticalPosition: 'top',
           });
         } else {
-          this.snackBar.open(`⚠️ Échec : ${result.error ?? 'erreur inconnue'}`, 'Fermer', {
+          this.snackBar.open(`⚠️ Failure: ${result.error ?? 'unknown error'}`, 'Close', {
             duration: 6000,
             panelClass: ['snack-error'],
             horizontalPosition: 'end',
@@ -75,7 +75,7 @@ export class TargetAssetList extends AssetList implements OnInit, OnDestroy {
       },
       error: err => {
         this.migrating.set(false);
-        this.snackBar.open(`❌ Erreur réseau : ${err.message ?? 'injoignable'}`, 'Fermer', {
+        this.snackBar.open(`❌ Network error: ${err.message ?? 'unreachable'}`, 'Close', {
           duration: 6000,
           panelClass: ['snack-error'],
           horizontalPosition: 'end',

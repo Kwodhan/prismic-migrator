@@ -18,7 +18,7 @@ export class PrismicMigratorAssets {
   }
 
   /**
-   * Méthode privée commune pour récupérer les assets d'un repository
+   * Private helper to fetch assets from a repository
    */
   private async fetchAssets(repositoryName: string, token: string): Promise<AssetFile[]> {
     const assets: AssetFile[] = [];
@@ -51,23 +51,23 @@ export class PrismicMigratorAssets {
   }
 
   /**
-   * Récupère tous les assets du repository source
+   * Retrieve all assets from the source repository
    */
   async getSourceAssets(): Promise<AssetFile[]> {
     return this.fetchAssets(this.sourceRepositoryName, this.sourceToken);
   }
 
   /**
-   * Récupère tous les assets du repository de destination
+   * Retrieve all assets from the target repository
    */
   async getTargetAssets(): Promise<AssetFile[]> {
     return this.fetchAssets(this.destinationRepository, this.destinationToken);
   }
 
   /**
-   * Migre un asset depuis une URL source vers le repository de destination
-   * @param sourceUrl - URL de l'asset source à migrer
-   * @param filename - Nom du fichier (optionnel)
+   * Migrate an asset from a source URL to the destination repository
+   * @param sourceUrl - Source asset URL to migrate
+   * @param filename - Optional filename
    */
   async migrateAsset(
     sourceUrl: string,
@@ -76,17 +76,17 @@ export class PrismicMigratorAssets {
     const {destinationRepository, destinationToken} = this;
 
     try {
-      // 1. Télécharger l'asset depuis l'URL source
+      // 1. Download the asset from the source URL
       const assetResponse = await this.axiosInstance.get<Buffer>(sourceUrl, {
         responseType: 'arraybuffer',
       });
 
       const buffer = Buffer.from(assetResponse.data);
 
-      // Déduire le nom de fichier depuis l'URL si non fourni
+      // Infer filename from URL if not provided
       const resolvedFilename = filename ?? sourceUrl.split('/').pop() ?? 'asset';
 
-      // 2. Vérifier si un asset avec le même nom existe déjà dans le repo cible
+      // 2. Check if an asset with the same filename already exists in the target repo
       const targetAssets = await this.getTargetAssets();
       const alreadyExists = targetAssets.some(asset => asset.filename === resolvedFilename);
 
@@ -94,11 +94,11 @@ export class PrismicMigratorAssets {
         return {
           success: false,
           filename: resolvedFilename,
-          error: `Un asset avec le nom "${resolvedFilename}" existe déjà dans le repository de destination`,
+          error: `An asset with the name "${resolvedFilename}" already exists in the destination repository`,
         };
       }
 
-      // 2. Uploader l'asset vers le repository de destination via l'Asset API
+      // 2. Upload the asset to the destination repository via the Asset API
       const formData = new FormData();
       formData.append('file', buffer, resolvedFilename);
 

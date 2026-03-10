@@ -17,11 +17,10 @@ export function createApp(axiosInstance: AxiosInstance, proxyUrl: string | undef
     // API routes
     app.use('/api', buildRouter(axiosInstance, proxyUrl));
 
-    // SPA fallback : toutes les routes non-API renvoient index.html
+    // SPA fallback: all non-API routes return index.html
     app.get('/{*path}', (_req, res) => {
         res.sendFile(path.join(frontDistPath, 'index.html'));
     });
 
     return app;
 }
-

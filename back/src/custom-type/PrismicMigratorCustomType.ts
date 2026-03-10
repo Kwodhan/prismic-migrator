@@ -25,7 +25,7 @@ export class PrismicMigratorCustomType {
   }
 
   /**
-   * Méthode privée commune pour récupérer les custom types d'un repository
+   * Private helper to fetch custom types from a repository
    */
   private async fetchCustomTypes(repositoryName: string, token: string): Promise<CustomType[]> {
     const { data } = await this.axiosInstance
@@ -49,7 +49,7 @@ export class PrismicMigratorCustomType {
   }
 
   /**
-   * Récupère un custom type par son id depuis le repository source
+   * Fetch a custom type by its id from the given repository
    */
   private async fetchCustomTypeById(id: string, repositoryName: string, token: string): Promise<CustomType> {
     const { data } = await this.axiosInstance
@@ -70,21 +70,21 @@ export class PrismicMigratorCustomType {
   }
 
   /**
-   * Récupère tous les custom types du repository source
+   * Retrieve all custom types from the source repository
    */
   async getSourceCustomTypes(): Promise<CustomType[]> {
     return this.fetchCustomTypes(this.sourceRepositoryName, this.sourceToken);
   }
 
   /**
-   * Récupère tous les custom types du repository de destination
+   * Retrieve all custom types from the target repository
    */
   async getTargetCustomTypes(): Promise<CustomType[]> {
     return this.fetchCustomTypes(this.destinationRepositoryName, this.destinationToken);
   }
 
   /**
-   * Récupère un custom type par son id depuis le repository de destination
+   * Retrieve a custom type by id from the target repository
    */
   async getTargetCustomTypeById(id: string): Promise<CustomType | null> {
     return this.fetchCustomTypeById(id, this.destinationRepositoryName, this.destinationToken)
@@ -95,7 +95,7 @@ export class PrismicMigratorCustomType {
   }
 
   /**
-   * Met à jour un custom type existant dans le repository de destination
+   * Update an existing custom type in the target repository
    */
   async updateCustomType(id: string): Promise<CustomTypeMigrationResult> {
     try {
@@ -136,12 +136,12 @@ export class PrismicMigratorCustomType {
   }
 
   /**
-   * Migre un custom type depuis le repository source vers le repository de destination
-   * @param id - Identifiant du custom type à migrer
+   * Migrate a custom type from the source repository to the target repository
+   * @param id - Identifier of the custom type to migrate
    */
   async migrateCustomType(id: string): Promise<CustomTypeMigrationResult> {
     try {
-      // 1. Récupérer le custom type directement par son id depuis le repository source
+      // 1. Fetch the custom type directly by its id from the source repository
       const customType = await this.fetchCustomTypeById(id, this.sourceRepositoryName, this.sourceToken)
         .catch((error) => {
           if (axios.isAxiosError(error) && error.response?.status === 404) return null;
@@ -152,7 +152,7 @@ export class PrismicMigratorCustomType {
         return { success: false, error: `Custom type "${id}" introuvable dans le repository source` };
       }
 
-      // 2. Vérifier si le custom type existe déjà dans le repo destination
+      // 2. Check if the custom type already exists in the destination repo
       const existingTarget = await this.fetchCustomTypeById(id, this.destinationRepositoryName, this.destinationToken)
         .catch((error) => {
           if (axios.isAxiosError(error) && error.response?.status === 404) return null;
@@ -163,7 +163,7 @@ export class PrismicMigratorCustomType {
         return { success: false, error: 'ALREADY_EXISTS', id, label: customType.label, target: existingTarget };
       }
 
-      // 3. Insérer le custom type dans le repository de destination
+      // 3. Insert the custom type into the destination repository
       await this.axiosInstance
         .post(`${PrismicMigratorCustomType.BASE_URL}/customtypes/insert`, customType, {
           headers: {

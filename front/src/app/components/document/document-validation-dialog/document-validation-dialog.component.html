@@ -2,20 +2,20 @@
   <mat-icon [class.text-green-500]="data.success" [class.text-red-500]="!data.success">
     {{ data.success ? 'check_circle' : 'error' }}
   </mat-icon>
-  {{ data.success ? 'Migration réussie' : 'Échec de migration' }} - {{ data.docLabel }}
+  {{ data.success ? 'Migration successful' : 'Migration failed' }} - {{ data.docLabel }}
 </h2>
 
 <mat-dialog-content class="flex flex-col gap-4 py-4">
 
   @if (!data.validation) {
-    <p class="text-sm text-gray-500">Erreur réseau - le serveur est inaccessible.</p>
+    <p class="text-sm text-gray-500">Network error - server is unreachable.</p>
   }
 
   @if (blockingIssues.length) {
     <div class="flex flex-col gap-2">
       <h3 class="text-sm font-semibold text-red-600 flex items-center gap-1">
         <mat-icon style="font-size:16px;width:16px;height:16px">block</mat-icon>
-        Bloquants ({{ blockingIssues.length }})
+        Blocking ({{ blockingIssues.length }})
       </h3>
       @for (issue of blockingIssues; track $index) {
         <div class="flex items-start gap-3 px-3 py-2 rounded-lg bg-red-50 border border-red-200">
@@ -40,7 +40,7 @@
     <div class="flex flex-col gap-2">
       <h3 class="text-sm font-semibold text-orange-500 flex items-center gap-1">
         <mat-icon style="font-size:16px;width:16px;height:16px">warning</mat-icon>
-        Avertissements ({{ warningIssues.length }})
+        Warnings ({{ warningIssues.length }})
       </h3>
       @for (issue of warningIssues; track $index) {
         <div class="flex items-start gap-3 px-3 py-2 rounded-lg border"
@@ -68,13 +68,13 @@
 
   @if (!blockingIssues.length && !warningIssues.length && data.success) {
     <p class="text-sm text-gray-500 flex items-center gap-2">
-      Aucun problème détecté.
+      No issues detected.
     </p>
   }
 
   @if (data.success) {
     <p class="text-sm pt-2">
-      Les documents sont présents dans le menu <a class="underline text-blue-500" [href]="migrationUrl" target="_blank" rel="noopener noreferrer">Migration release</a> de Prismic. Il reste à les publier.
+      Documents are available in the <a class="underline text-blue-500" [href]="migrationUrl" target="_blank" rel="noopener noreferrer">Migration release</a> menu in Prismic. They still need to be published.
     </p>
   }
 </mat-dialog-content>
@@ -84,9 +84,9 @@
     <a [href]="pageUrl" target="_blank" rel="noopener noreferrer"
        mat-stroked-button color="primary" class="flex items-center gap-1">
       <mat-icon style="font-size:16px;width:16px;height:16px">open_in_new</mat-icon>
-      Voir la page
+      View page
     </a>
   }
-  <button mat-button mat-dialog-close>Fermer</button>
+  <button mat-button mat-dialog-close>Close</button>
 </mat-dialog-actions>
 

@@ -112,8 +112,8 @@ export class PrismicMigratorDocument {
     }
 
     /**
-     * Le title d'un document n'est pas donné par le Content API de Prismic. On va tenter de trouver un titre pour le document,
-     * en essayant plusieurs champs courants, ou en retombant sur l'ID si aucun trouver.
+     * A document's title is not provided by Prismic Content API. We'll try to find a title
+     * for the document by probing common fields, falling back to the ID if none found.
      * @param doc
      * @private
      */
@@ -180,7 +180,7 @@ export class PrismicMigratorDocument {
             const {result: validation, doc: fixedDoc} = await this.buildValidationPipeline().runWithFix(doc);
             validationResult = validation;
 
-            // Refuser uniquement si des BLOCKING subsistent après les fix
+            // Reject only if BLOCKING issues remain after fixes
             if (!validationResult.valid) {
                 return {success: false, error: 'VALIDATION_FAILED', validation: validationResult};
             }

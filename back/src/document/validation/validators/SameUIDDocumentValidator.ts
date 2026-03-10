@@ -4,8 +4,9 @@ import {ValidationResult} from "@shared/types";
 import * as prismic from "@prismicio/client";
 
 
-/** * Vérifie qu'aucun document avec le même uid n'existe déjà dans le repository de destination.
- * BLOCKING : la Migration refusera la création s'il existe déjà un document avec le même uid.
+/**
+ * Ensure no document with the same uid already exists in the destination repository.
+ * BLOCKING: Migration will refuse creation if a document with the same uid already exists.
  */
 export class SameUIDDocumentValidator implements DocumentValidator {
     constructor(
@@ -23,7 +24,7 @@ export class SameUIDDocumentValidator implements DocumentValidator {
                         severity: 'BLOCKING',
                         code: 'DOCUMENT_ALREADY_EXISTS',
                         validator: this.constructor.name,
-                        message: `Un document existe déja dans le repertoire de destination avec le même uid (uid: ${doc.uid})`,
+                        message: `A document already exists in the destination repository with the same uid (uid: ${doc.uid})`,
                         fixable: false,
                     }],
                 };

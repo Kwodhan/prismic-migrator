@@ -62,16 +62,16 @@ export class TargetCustomTypeList extends CustomTypeList implements OnInit, OnDe
         if (result.error === 'ALREADY_EXISTS' && result.target) {
           this.migrating.set(false);
 
-          // Vérifier si source et target sont identiques
+          // Check if source and target are identical
           if (JSON.stringify(source.json) === JSON.stringify(result.target.json)) {
-            this.snackBar.open(`ℹ️ Les CustomType sont identiques, aucun changement n'a été fait`, 'Fermer', {
+            this.snackBar.open(`ℹ️ Custom types are identical, no changes were made`, 'Close', {
               duration: 4000, panelClass: ['snack-info'],
               horizontalPosition: 'end', verticalPosition: 'top',
             });
             return of(null);
           }
 
-          // Existe et différent → ouvrir la dialog de diff
+          // Exists and different → open diff dialog
           const dialogRef = this.dialog.open(CustomTypeDiffDialogComponent, {
             width: '800px',
             maxWidth: '95vw',
@@ -89,15 +89,15 @@ export class TargetCustomTypeList extends CustomTypeList implements OnInit, OnDe
     ).subscribe({
       next: result => {
         this.migrating.set(false);
-        if (!result) return; // dialog annulée
+        if (!result) return; // dialog cancelled
         if (result.success) {
           this.refreshNeeded.emit();
-          this.snackBar.open(`✅ "${result.label}" migré avec succès`, 'Fermer', {
+          this.snackBar.open(`✅ "${result.label}" migrated successfully`, 'Close', {
             duration: 4000, panelClass: ['snack-success'],
             horizontalPosition: 'end', verticalPosition: 'top',
           });
         } else {
-          this.snackBar.open(`⚠️ Échec : ${result.error ?? 'erreur inconnue'}`, 'Fermer', {
+          this.snackBar.open(`⚠️ Failure: ${result.error ?? 'unknown error'}`, 'Close', {
             duration: 6000, panelClass: ['snack-error'],
             horizontalPosition: 'end', verticalPosition: 'top',
           });
@@ -105,7 +105,7 @@ export class TargetCustomTypeList extends CustomTypeList implements OnInit, OnDe
       },
       error: err => {
         this.migrating.set(false);
-        this.snackBar.open(`❌ Erreur réseau : ${err.message ?? 'injoignable'}`, 'Fermer', {
+        this.snackBar.open(`❌ Network error: ${err.message ?? 'unreachable'}`, 'Close', {
           duration: 6000, panelClass: ['snack-error'],
           horizontalPosition: 'end', verticalPosition: 'top',
         });

@@ -1,15 +1,15 @@
 <div class="flex items-center gap-2 w-full">
   <mat-form-field class="flex-1" appearance="outline">
-    <mat-label>Rechercher un custom type</mat-label>
+    <mat-label>Search a custom type</mat-label>
     <mat-icon matPrefix class="mr-2">search</mat-icon>
-    <input matInput type="text" [(ngModel)]="filter" placeholder="nom ou id..." />
+    <input matInput type="text" [(ngModel)]="filter" placeholder="name or id..." />
     @if (filter()) {
       <button matSuffix mat-icon-button (click)="filter.set('')">
         <mat-icon>close</mat-icon>
       </button>
     }
   </mat-form-field>
-  <button mat-icon-button (click)="refreshNeeded.emit()" matTooltip="Rafraîchir">
+  <button mat-icon-button (click)="refreshNeeded.emit()" matTooltip="Refresh">
     <mat-icon>refresh</mat-icon>
   </button>
 </div>
@@ -17,7 +17,7 @@
 @if (visibleCustomTypes().length === 0) {
   <div class="flex flex-col items-center justify-center py-12 text-gray-400 gap-2">
     <mat-icon class="text-4xl">category</mat-icon>
-    <span class="text-sm">Aucun custom type source disponible</span>
+    <span class="text-sm">No source custom types available</span>
   </div>
 } @else {
   <ul class="flex flex-col gap-2 list-none p-0 m-0">
@@ -35,7 +35,7 @@
         </div>
         <a [href]="'https://' + repository() + '.prismic.io/masks/' + ct.id + '.json'"
            target="_blank" rel="noopener noreferrer"
-           matTooltip="Voir dans Prismic"
+           matTooltip="View in Prismic"
            (click)="$event.stopPropagation()"
            class="text-gray-400 hover:text-blue-500 leading-none shrink-0">
           <mat-icon style="font-size: 14px; width: 14px; height: 14px; line-height: 14px;">open_in_new</mat-icon>
@@ -48,4 +48,3 @@
 @if (hasMore()) {
   <div #sentinel class="h-10 w-full"></div>
 }
-

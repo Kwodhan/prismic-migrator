@@ -18,16 +18,16 @@ export interface DiffDialogData {
   template: `
     <h2 mat-dialog-title class="flex items-center gap-2">
       <mat-icon>compare_arrows</mat-icon>
-      Différences - {{ data.source.label }}
+      Differences - {{ data.source.label }}
     </h2>
 
     <mat-dialog-content class="max-h-[70vh]! overflow-y-auto">
       <div class="flex gap-4 text-xs mb-3">
         <span class="flex items-center gap-1">
-          <span class="inline-block w-3 h-3 rounded bg-red-200 border border-red-400"></span> Supprimé / avant
+          <span class="inline-block w-3 h-3 rounded bg-red-200 border border-red-400"></span> Removed / before
         </span>
         <span class="flex items-center gap-1">
-          <span class="inline-block w-3 h-3 rounded bg-green-200 border border-green-400"></span> Ajouté / après
+          <span class="inline-block w-3 h-3 rounded bg-green-200 border border-green-400"></span> Added / after
         </span>
       </div>
       <div class="jsondiffpatch-delta text-xs font-mono overflow-x-auto"
@@ -36,9 +36,9 @@ export interface DiffDialogData {
     </mat-dialog-content>
 
     <mat-dialog-actions align="end">
-      <button mat-button (click)="cancel()">Annuler</button>
+      <button mat-button (click)="cancel()">Cancel</button>
       <button mat-flat-button color="primary" (click)="confirm()">
-        <mat-icon>sync</mat-icon> Mettre à jour
+        <mat-icon>sync</mat-icon> Update
       </button>
     </mat-dialog-actions>
   `,
@@ -101,7 +101,7 @@ export class CustomTypeDiffDialogComponent implements OnInit {
     const delta = differ.diff(this.data.target.json, this.data.source.json);
     this.diffHtml = delta
       ? htmlFormatter.format(delta, this.data.target.json)
-      : '<p class="text-gray-400 italic">Aucune différence dans le JSON.</p>';
+      : '<p class="text-gray-400 italic">No differences in JSON.</p>';
   }
 
   confirm(): void {

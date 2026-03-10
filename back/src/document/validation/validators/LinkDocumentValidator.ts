@@ -13,8 +13,8 @@ export class LinkDocumentValidator implements DocumentValidator {
     }
 
     /**
-     * Détecte si un objet est un FilledContentRelationshipField.
-     * Discriminant : link_type === "Document" + id string.
+     * Detect if an object is a FilledContentRelationshipField.
+     * Discriminator: link_type === "Document" + id string.
      */
     private isDocumentLink(value: unknown): value is prismic.FilledContentRelationshipField {
         if (!value || typeof value !== 'object' || Array.isArray(value)) return false;
@@ -23,8 +23,8 @@ export class LinkDocumentValidator implements DocumentValidator {
     }
 
     /**
-     * Parcourt récursivement doc.data et collecte tous les FilledContentRelationshipField.
-     * Déduplique par id.
+     * Recursively traverse doc.data and collect all FilledContentRelationshipField.
+     * Deduplicate by id.
      */
     private extractLinks(data: unknown, found: Map<string, prismic.FilledContentRelationshipField> = new Map()): Map<string, prismic.FilledContentRelationshipField> {
         if (!data || typeof data !== 'object') return found;
@@ -61,7 +61,7 @@ export class LinkDocumentValidator implements DocumentValidator {
                 severity: 'WARNING',
                 code: 'LINKED_DOCUMENT_NOT_FOUND',
                 validator: this.constructor.name,
-                message: `Document lié absent dans la destination (uid: ${link.uid}, type: ${link.type})`,
+                message: `Linked document missing in destination (uid: ${link.uid}, type: ${link.type})`,
                 fixable: true,
                 fixed: false,
                 context: {id: link.id, type: link.type, uid: link.uid},
@@ -72,7 +72,7 @@ export class LinkDocumentValidator implements DocumentValidator {
     }
 
     async fix(doc: prismic.PrismicDocument, issues: ValidationIssue[]): Promise<prismic.PrismicDocument> {
-        // Construire un map uid → nouvel id dans la destination
+        // Build a map uid -> new id in destination
         const replacements = new Map<string, string>();
 
         for (const issue of issues) {
@@ -88,7 +88,7 @@ export class LinkDocumentValidator implements DocumentValidator {
                 if (idTarget) {
                     replacements.set(issue.context!['id'] as string, idTarget);
                     issue.fixed = true;
-                    issue.fixDescription = `Document lié trouvé dans la destination (id: ${idTarget})`;
+                    issue.fixDescription = `Linked document found in destination (id: ${idTarget})`;
                 }
 
             }
@@ -98,7 +98,7 @@ export class LinkDocumentValidator implements DocumentValidator {
             if (found) {
                 replacements.set(issue.context!['id'] as string, found.id);
                 issue.fixed = true;
-                issue.fixDescription = `Document lié trouvé dans la destination (id: ${found.id})`;
+                issue.fixDescription = `Linked document found in destination (id: ${found.id})`;
             }
 
         }
@@ -135,8 +135,8 @@ export class LinkDocumentValidator implements DocumentValidator {
     }
 
     /**
-     * Tente de trouver dans la destination un document équivalent au document source identifié par idSource et type.
-     * La comparaison se fait via une égalité profonde (lodash.isEqual) entre les deux documents.
+     * Attempt to find in the destination a document equivalent to the source document identified by idSource and type.
+     * Comparison uses deep equality (lodash.isEqual) between the two documents.
      * @param idSource
      * @param type
      * @private

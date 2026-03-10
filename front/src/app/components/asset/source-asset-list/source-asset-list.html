@@ -1,15 +1,15 @@
 <div class="flex items-center gap-2 w-full">
   <mat-form-field class="flex-1" appearance="outline">
-    <mat-label>Rechercher un fichier</mat-label>
+    <mat-label>Search file</mat-label>
     <mat-icon matPrefix class="mr-2">search</mat-icon>
-    <input matInput type="text" [(ngModel)]="filter" placeholder="nom du fichier..." />
+    <input matInput type="text" [(ngModel)]="filter" placeholder="filename..." />
     @if (filter()) {
       <button matSuffix mat-icon-button (click)="filter.set('')">
         <mat-icon>close</mat-icon>
       </button>
     }
   </mat-form-field>
-  <button mat-icon-button (click)="refreshNeeded.emit()" matTooltip="Rafraîchir">
+  <button mat-icon-button (click)="refreshNeeded.emit()" matTooltip="Refresh">
     <mat-icon>refresh</mat-icon>
   </button>
 </div>
@@ -17,7 +17,7 @@
 @if (visibleAssets().length === 0) {
   <div class="flex flex-col items-center justify-center py-12 text-gray-400 gap-2">
     <mat-icon class="text-4xl">image_not_supported</mat-icon>
-    <span class="text-sm">Aucun asset source disponible</span>
+    <span class="text-sm">No source assets available</span>
   </div>
 } @else {
   <ul class="grid grid-cols-3 gap-3 list-none p-0 m-0">
@@ -37,7 +37,7 @@
         }
         <span class="text-xs text-center text-gray-600 break-all w-full px-1">{{ asset.filename }}</span>
         <a [href]="asset.url" target="_blank" rel="noopener noreferrer"
-           matTooltip="Voir l'image"
+           matTooltip="View image"
            (click)="$event.stopPropagation()"
            class="self-end text-gray-400 hover:text-blue-500 leading-none">
           <mat-icon style="font-size: 14px; width: 14px; height: 14px; line-height: 14px;">open_in_new</mat-icon>
@@ -50,4 +50,3 @@
 @if (hasMore()) {
   <div #sentinel class="h-10 w-full"></div>
 }
-

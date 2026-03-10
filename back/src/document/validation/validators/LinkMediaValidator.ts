@@ -57,7 +57,7 @@ export class LinkMediaValidator implements DocumentValidator {
                     severity: 'WARNING',
                     code: 'LINKED_MEDIA_NOT_FOUND',
                     validator: this.constructor.name,
-                    message: `Media lié absent dans la destination (id: ${link.id}, nom: ${link.name})`,
+                    message: `Linked media missing in destination (id: ${link.id}, name: ${link.name})`,
                     fixable: true,
                     context: {id: link.id, url: link.url, name: link.name, kind: link.kind},
                 });
@@ -80,9 +80,9 @@ export class LinkMediaValidator implements DocumentValidator {
             if (match) {
                 replacements.set(id, match);
                 issue.fixed = true;
-                issue.fixDescription = `Media trouvé dans la destination : "${match.filename}"`;
+                issue.fixDescription = `Media found in destination: "${match.filename}"`;
             } else {
-                replacements.set(id, null); // non trouvé → sera mis à vide
+                replacements.set(id, null); // not found -> will be emptied
             }
         }
 
@@ -102,12 +102,12 @@ export class LinkMediaValidator implements DocumentValidator {
         }
 
         if (this.isMediaLink(data)) {
-            if (!replacements.has(data.id)) return data; // non concerné
+            if (!replacements.has(data.id)) return data; // not concerned
             const match = replacements.get(data.id);
             if (match) {
                 return { ...data, id: match.id, url: match.url, name: match.filename, kind: match.kind };
             }
-            return { link_type: 'Any' }; // non trouvé → vide
+            return { link_type: 'Any' }; // not found -> empty
         }
 
         const obj = data as Record<string, unknown>;
