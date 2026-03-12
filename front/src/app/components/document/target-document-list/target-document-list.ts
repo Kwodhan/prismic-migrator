@@ -12,7 +12,7 @@ import { MatDialog } from '@angular/material/dialog';
 import { DocumentList } from '../document-list/document-list';
 import { DocumentService } from '../../../services/document.service';
 import { DocumentValidationDialogComponent } from '../document-validation-dialog/document-validation-dialog.component';
-import {DocumentMigrationResult, PrismicDocument} from '@shared/types';
+import {DocumentMigrationResult, PrismicDocument, ReportMigrationResult} from '@shared/types';
 
 @Component({
   selector: 'target-document-list',
@@ -45,19 +45,17 @@ export class TargetDocumentList extends DocumentList implements OnInit, OnDestro
     const doc: PrismicDocument = JSON.parse(data);
     this.migrating.set(true);
 
-    this.documentService.migrateDocument(doc.id).subscribe({
-      next: (result: DocumentMigrationResult) => {
+    this.documentService.getReportMigrateDocument(doc.id).subscribe({
+      next: (result: ReportMigrationResult) => {
         this.migrating.set(false);
-        if (result.success) this.refreshNeeded.emit();
 
         this.dialog.open(DocumentValidationDialogComponent, {
-          width: '700px',
+          width: '800px',
           maxWidth: '95vw',
           data: {
-            success: result.success,
             validation: result.validation,
             docLabel: doc.uid ?? doc.id,
-            docTargetId: result.id,
+            docId: doc.id,
             targetRepo: this.repository(),
           },
         });
@@ -68,7 +66,6 @@ export class TargetDocumentList extends DocumentList implements OnInit, OnDestro
           width: '700px',
           maxWidth: '95vw',
           data: {
-            success: false,
             validation: null,
             docLabel: doc.uid ?? doc.id,
             targetRepo: this.repository(),

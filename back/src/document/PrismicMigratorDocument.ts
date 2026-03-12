@@ -4,7 +4,7 @@ import axios, {AxiosInstance} from 'axios';
 import {ValidationPipeline,} from './validation';
 import {PrismicMigratorAssets} from "../asset/PrismicMigratorAssets";
 import {PrismicMigratorCustomType} from "../custom-type/PrismicMigratorCustomType";
-import {DocumentMigrationResult, PaginatedDocuments, ValidationResult} from "@shared/types";
+import {DocumentMigrationResult, PaginatedDocuments, ReportMigrationResult, ValidationResult} from "@shared/types";
 import {
     AssetValidator,
     CustomTypeValidator,
@@ -171,6 +171,18 @@ export class PrismicMigratorDocument {
         ]);
     }
 
+    /**
+     * Run the validation pipeline for a given document ID and return the validation result without migrating the document.
+     * This can be used to report validation issues to the user before attempting migration.
+     * @param id
+     */
+    async reportMigrateDocument(id: string): Promise<ReportMigrationResult> {
+        const doc = await this.sourcePrismicClient.getByID(id);
+        // TODO : why did it take soo long! Maybe need some parallelization or optimization in the validation pipeline (some validations are quite long, like the LinkDocumentValidator that makes a request for each linked document) ?!
+        const {result: validation} = await this.buildValidationPipeline().runWithFix(doc);
+        return {validation};
+    }
+
 
     async migrateDocument(id: string): Promise<DocumentMigrationResult> {
         let validationResult: ValidationResult | undefined;
@@ -182,7 +194,7 @@ export class PrismicMigratorDocument {
 
             // Reject only if BLOCKING issues remain after fixes
             if (!validationResult.valid) {
-                return {success: false, error: 'VALIDATION_FAILED', validation: validationResult};
+                return {success: false,id:null, error: 'VALIDATION_FAILED', validation: validationResult};
             }
             const body = {
                 title: this.getAnyTitle(doc),
@@ -204,7 +216,7 @@ export class PrismicMigratorDocument {
                 }
             );
 
-            return {success: true, id: data.id, validation: validationResult};
+            return {success: true, id: data.id, validation: validationResult,error:null};
         } catch (error) {
             const errorMessage = axios.isAxiosError(error)
                 ? `${error.response?.status} - ${JSON.stringify(error.response?.data)}`
@@ -224,7 +236,7 @@ export class PrismicMigratorDocument {
                 ],
             };
 
-            return {success: false, error: 'MIGRATION_API_ERROR', validation: failedValidation};
+            return {success: false, id:null,error: 'MIGRATION_API_ERROR', validation: failedValidation};
         }
     }
 }

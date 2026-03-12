@@ -31,6 +31,15 @@ export class DocumentController {
   };
 
   /**
+   * GET /documents/:id/migrate
+   */
+  getReportMigrateDocument = async (req: Request, res: Response): Promise<void> => {
+    const id = req.params['id'] as string;
+    const result = await this.migratorDocument.reportMigrateDocument(id);
+    res.json(result);
+  };
+
+  /**
    * POST /documents/:id/migrate
    * Migre un document depuis le repository source vers le repository de destination
    */

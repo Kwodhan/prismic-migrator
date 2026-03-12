@@ -8,6 +8,7 @@ export interface ValidationIssue {
   fixable: boolean;
   fixed?: boolean;
   fixDescription?: string;
+  urlHint?: string;
   context?: Record<string, unknown>;
 }
 

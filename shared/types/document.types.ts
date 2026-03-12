@@ -17,10 +17,13 @@ export interface PaginatedDocuments {
   totalDocuments: number;
 }
 
-export interface DocumentMigrationResult {
+export interface ReportMigrationResult {
+  validation: ValidationResult;
+}
+
+export interface DocumentMigrationResult extends ReportMigrationResult{
   success: boolean;
-  id?: string;
-  error?: string;
-  validation?: ValidationResult;
+  id: string| null;
+  error: string | null;
 }
 

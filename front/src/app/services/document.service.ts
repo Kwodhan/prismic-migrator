@@ -2,7 +2,7 @@ import {Injectable} from '@angular/core';
 import {HttpClient} from '@angular/common/http';
 import {map, Observable} from 'rxjs';
 import { API_URL } from '../constants/api';
-import {DocumentMigrationResult, PaginatedDocuments} from '@shared/types';
+import {DocumentMigrationResult, PaginatedDocuments, ReportMigrationResult} from '@shared/types';
 
 interface CustomType { id: string; label: string; }
 
@@ -25,6 +25,10 @@ export class DocumentService {
     return this.http.get<CustomType[]>(`${this.apiUrl}/custom-types/target`).pipe(
       map(types => Object.fromEntries(types.map(t => [t.id, t.label])))
     );
+  }
+
+  getReportMigrateDocument(id: string): Observable<ReportMigrationResult> {
+    return this.http.get<DocumentMigrationResult>(`${this.apiUrl}/documents/${id}/migrate`, {});
   }
 
   migrateDocument(id: string): Observable<DocumentMigrationResult> {

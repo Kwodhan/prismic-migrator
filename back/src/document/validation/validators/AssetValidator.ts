@@ -125,6 +125,7 @@ export class AssetValidator implements DocumentValidator {
             message: `Asset "${img.url}" non trouvé dans la destination `,
             fixable: true,
             fixed: false,
+            urlHint: img.url,
             context: {id: img.id, url: img.url},
         }));
 

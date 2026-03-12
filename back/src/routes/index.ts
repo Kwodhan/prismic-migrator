@@ -63,6 +63,7 @@ export function buildRouter(
     router.get('/documents/source', documentController.getSourceDocuments);
     router.get('/documents/target', documentController.getTargetDocuments);
     router.post('/documents/:id/migrate', documentController.migrateDocument);
+    router.get('/documents/:id/migrate', documentController.getReportMigrateDocument);
 
     return router;
 }

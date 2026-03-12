@@ -64,6 +64,7 @@ export class LinkDocumentValidator implements DocumentValidator {
                 message: `Linked document missing in destination (uid: ${link.uid}, type: ${link.type})`,
                 fixable: true,
                 fixed: false,
+                urlHint: `https://${this.sourcePrismicClient.repositoryName}.prismic.io/builder/pages/${link.id}`,
                 context: {id: link.id, type: link.type, uid: link.uid},
             });
         }
@@ -142,14 +143,50 @@ export class LinkDocumentValidator implements DocumentValidator {
      * @private
      */
     private async foundIdTargetDocument(idSource: string, type: string): Promise<string | null> {
+        // TODO :  Give the first 100 documents of the relevant type, need to implement pagination if there are more than 100 documents of the same type in the destination
         const allDocsDestinationType = await this.destinationPrismicClient.getByType(type);
-        const sourceDoc = await this.sourcePrismicClient.getByID(idSource).catch(() => null);
+        let docSource = await this.sourcePrismicClient.getByID(idSource).catch(() => null);
+        if (!docSource) {
+            return null;
+        }
+        let cleanDocSource = this.removeKeyDeep(docSource.data, 'id');
+        cleanDocSource = this.removeKeyDeep(cleanDocSource, 'key');
         for (const docDest of allDocsDestinationType.results) {
-            if (_.isEqual(docDest.data, sourceDoc?.data)) {
+            let cleanDocDest = this.removeKeyDeep(docDest.data, 'id');
+            cleanDocDest = this.removeKeyDeep(cleanDocDest, 'key');
+            if (_.isEqual(cleanDocDest, cleanDocSource)) {
                 return docDest.id;
             }
         }
         return null;
     }
 
+
+    /**
+     * Recursively remove a key from an object or array.
+     * @param obj
+     * @param keyToRemove
+     * @private
+     */
+    private removeKeyDeep<T = unknown>(obj: T, keyToRemove: string): T {
+        if (obj == null) return obj;
+
+        if (Array.isArray(obj)) {
+            return (obj as unknown as any[]).map(item => this.removeKeyDeep(item, keyToRemove)) as unknown as T;
+        }
+
+        if (_.isPlainObject(obj)) {
+            const result = _.transform(
+                obj as Record<string, unknown>,
+                (acc: Record<string, unknown>, value, key) => {
+                    if (key === keyToRemove) return;
+                    acc[key] = this.removeKeyDeep(value, keyToRemove);
+                },
+                {}
+            );
+            return result as unknown as T;
+        }
+
+        return obj;
+    }
 }
