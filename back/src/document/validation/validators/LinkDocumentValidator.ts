@@ -3,12 +3,13 @@ import {ValidationResultUtils} from '../ValidationResult';
 import * as prismic from '@prismicio/client';
 import {ValidationIssue, ValidationResult} from "@shared/types";
 import _ from 'lodash';
+import {CachedPrismicClient} from "../CachedPrismicClient";
 
 
 export class LinkDocumentValidator implements DocumentValidator {
     constructor(
-        private readonly sourcePrismicClient: prismic.Client,
-        private readonly destinationPrismicClient: prismic.Client
+        private readonly sourcePrismicClient: CachedPrismicClient,
+        private readonly destinationPrismicClient: CachedPrismicClient
     ) {
     }
 
@@ -186,7 +187,6 @@ export class LinkDocumentValidator implements DocumentValidator {
             );
             return result as unknown as T;
         }
-
         return obj;
     }
 }

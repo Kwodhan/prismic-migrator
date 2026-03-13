@@ -2,6 +2,7 @@ import {DocumentValidator} from "../DocumentValidator";
 import {ValidationResultUtils} from "../ValidationResult";
 import {ValidationResult} from "@shared/types";
 import * as prismic from "@prismicio/client";
+import {CachedPrismicClient} from "../CachedPrismicClient";
 
 
 /**
@@ -10,7 +11,7 @@ import * as prismic from "@prismicio/client";
  */
 export class SameUIDDocumentValidator implements DocumentValidator {
     constructor(
-        private readonly destinationPrismicClient: prismic.Client
+        private readonly destinationPrismicClient: CachedPrismicClient
     ) {
     }
 

@@ -13,6 +13,7 @@ import {
     LinkMediaValidator,
     SameUIDDocumentValidator
 } from "./validation/validators";
+import {CachedPrismicClient} from "./validation/CachedPrismicClient";
 
 
 const PAGE_SIZE = 30;
@@ -30,10 +31,10 @@ interface PrismicMigratorDocumentOptions {
 }
 
 export class PrismicMigratorDocument {
-    private readonly destinationRepositoryName: string;
-    private readonly destinationWriteToken: string;
+    private readonly targetRepositoryName: string;
+    private readonly targetWriteToken: string;
     private readonly sourcePrismicClient: prismic.Client;
-    private readonly destinationPrismicClient: prismic.Client;
+    private readonly targetPrismicClient: prismic.Client;
     private readonly axiosInstance: AxiosInstance;
     private readonly migratorAsset: PrismicMigratorAssets;
     private readonly migratorCustomType: PrismicMigratorCustomType;
@@ -43,28 +44,28 @@ export class PrismicMigratorDocument {
             sourceRepositoryName,
             sourceContentToken,
             sourceWriteToken,
-            destinationRepositoryName,
+            destinationRepositoryName: targetRepositoryName,
             destinationContentToken,
-            destinationWriteToken,
+            destinationWriteToken: targetWriteToken,
             axiosInstance,
             proxyUrl,
         } = options;
 
-        this.destinationRepositoryName = destinationRepositoryName;
-        this.destinationWriteToken = destinationWriteToken;
+        this.targetRepositoryName = targetRepositoryName;
+        this.targetWriteToken = targetWriteToken;
         this.axiosInstance = axiosInstance;
         this.migratorAsset = new PrismicMigratorAssets(
             sourceRepositoryName,
             sourceWriteToken,
-            destinationRepositoryName,
-            destinationWriteToken,
+            targetRepositoryName,
+            targetWriteToken,
             axiosInstance
         );
         this.migratorCustomType = new PrismicMigratorCustomType(
             sourceRepositoryName,
             sourceWriteToken,
-            destinationRepositoryName,
-            destinationWriteToken,
+            targetRepositoryName,
+            targetWriteToken,
             axiosInstance
         );
 
@@ -80,7 +81,7 @@ export class PrismicMigratorDocument {
         });
 
         this.sourcePrismicClient = prismic.createClient(sourceRepositoryName, clientOptions(sourceContentToken));
-        this.destinationPrismicClient = prismic.createClient(destinationRepositoryName, clientOptions(destinationContentToken));
+        this.targetPrismicClient = prismic.createClient(targetRepositoryName, clientOptions(destinationContentToken));
     }
 
     private async fetchDocuments(client: prismic.Client, page: number, type?: string): Promise<PaginatedDocuments> {
@@ -108,7 +109,7 @@ export class PrismicMigratorDocument {
     }
 
     async getTargetDocuments(page: number, type?: string): Promise<PaginatedDocuments> {
-        return this.fetchDocuments(this.destinationPrismicClient, page, type);
+        return this.fetchDocuments(this.targetPrismicClient, page, type);
     }
 
     /**
@@ -158,16 +159,21 @@ export class PrismicMigratorDocument {
     }
 
     private buildValidationPipeline(): ValidationPipeline {
+        const cachedSourceClient = new CachedPrismicClient(this.sourcePrismicClient);
+        const cachedTargetClient = new CachedPrismicClient(this.targetPrismicClient);
+
         return new ValidationPipeline([
             new CustomTypeValidator(this.migratorCustomType),
             new AssetValidator(this.migratorAsset),
             new LinkDocumentValidator(
-                this.sourcePrismicClient,
-                this.destinationPrismicClient,
+                cachedSourceClient,
+                cachedTargetClient
             ),
             new LinkMediaValidator(this.migratorAsset),
-            new ExactlySameDocumentValidator(this.sourcePrismicClient, this.destinationPrismicClient),
-            new SameUIDDocumentValidator(this.destinationPrismicClient),
+            new ExactlySameDocumentValidator(
+                cachedSourceClient,
+                cachedTargetClient),
+            new SameUIDDocumentValidator(cachedTargetClient),
         ]);
     }
 
@@ -178,7 +184,6 @@ export class PrismicMigratorDocument {
      */
     async reportMigrateDocument(id: string): Promise<ReportMigrationResult> {
         const doc = await this.sourcePrismicClient.getByID(id);
-        // TODO : why did it take soo long! Maybe need some parallelization or optimization in the validation pipeline (some validations are quite long, like the LinkDocumentValidator that makes a request for each linked document) ?!
         const {result: validation} = await this.buildValidationPipeline().runWithFix(doc);
         return {validation};
     }
@@ -210,8 +215,8 @@ export class PrismicMigratorDocument {
                 {
                     headers: {
                         'Content-Type': 'application/json',
-                        'repository': this.destinationRepositoryName,
-                        'authorization': `Bearer ${this.destinationWriteToken}`,
+                        'repository': this.targetRepositoryName,
+                        'authorization': `Bearer ${this.targetWriteToken}`,
                     },
                 }
             );

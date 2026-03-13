@@ -3,6 +3,7 @@ import {ValidationResultUtils} from "../ValidationResult";
 import {ValidationResult} from "@shared/types";
 import * as prismic from "@prismicio/client";
 import _ from 'lodash';
+import {CachedPrismicClient} from "../CachedPrismicClient";
 
 
 /**
@@ -13,8 +14,8 @@ import _ from 'lodash';
  */
 export class ExactlySameDocumentValidator implements DocumentValidator {
     constructor(
-        private readonly sourcePrismicClient: prismic.Client,
-        private readonly destinationPrismicClient: prismic.Client
+        private readonly sourcePrismicClient: CachedPrismicClient,
+        private readonly destinationPrismicClient: CachedPrismicClient
     ) {
     }
 

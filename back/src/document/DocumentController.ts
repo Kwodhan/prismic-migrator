@@ -32,6 +32,7 @@ export class DocumentController {
 
   /**
    * GET /documents/:id/migrate
+   * Get report of the migration of a document from the source repository to the target repository, without performing the migration
    */
   getReportMigrateDocument = async (req: Request, res: Response): Promise<void> => {
     const id = req.params['id'] as string;
