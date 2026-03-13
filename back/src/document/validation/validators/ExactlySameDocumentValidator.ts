@@ -23,7 +23,7 @@ export class ExactlySameDocumentValidator implements DocumentValidator {
         if (!doc.uid) {
             const allDocsDestinationType = await this.destinationPrismicClient.getByType(doc.type);
             const sourceDoc = await this.sourcePrismicClient.getByID(doc.id).catch(() => null);
-            for (const docDest of allDocsDestinationType.results) {
+            for (const docDest of allDocsDestinationType) {
                 if (_.isEqual(docDest.data, sourceDoc?.data)) {
                     return {
                         valid: false,

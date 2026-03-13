@@ -144,7 +144,6 @@ export class LinkDocumentValidator implements DocumentValidator {
      * @private
      */
     private async foundIdTargetDocument(idSource: string, type: string): Promise<string | null> {
-        // TODO :  Give the first 100 documents of the relevant type, need to implement pagination if there are more than 100 documents of the same type in the destination
         const allDocsDestinationType = await this.destinationPrismicClient.getByType(type);
         let docSource = await this.sourcePrismicClient.getByID(idSource).catch(() => null);
         if (!docSource) {
@@ -152,7 +151,7 @@ export class LinkDocumentValidator implements DocumentValidator {
         }
         let cleanDocSource = this.removeKeyDeep(docSource.data, 'id');
         cleanDocSource = this.removeKeyDeep(cleanDocSource, 'key');
-        for (const docDest of allDocsDestinationType.results) {
+        for (const docDest of allDocsDestinationType) {
             let cleanDocDest = this.removeKeyDeep(docDest.data, 'id');
             cleanDocDest = this.removeKeyDeep(cleanDocDest, 'key');
             if (_.isEqual(cleanDocDest, cleanDocSource)) {

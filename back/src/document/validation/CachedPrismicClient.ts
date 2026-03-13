@@ -85,9 +85,31 @@ export class CachedPrismicClient {
         return this.fetchWithCache(key, () => this.client.getByUID(type, uid, options as any));
     }
 
-    async getByType(type: string, options?: unknown): Promise<prismic.Query<prismic.PrismicDocument>> {
+    async getByType(type: string, options?: unknown): Promise<prismic.PrismicDocument[]> {
         const key = this.makeKey('getByType', type, options ?? null);
-        return this.fetchWithCache(key, () => this.client.getByType(type, options as any));
+        return this.fetchWithCache(key, async () => {
+            const all: prismic.PrismicDocument[] = [];
+
+            // Commencer à la page fournie dans options ou page 1
+            const opts = (options ?? {}) as any;
+            let page = typeof opts.page === 'number' ? opts.page : 1;
+
+            // Récupérer la première page puis itérer tant qu'il y a une `next_page`
+            let resp: any = await this.client.getByType(type, {...opts, page});
+            all.push(...(resp.results ?? []));
+
+            // Boucler tant que Prismic indique une page suivante
+            while (resp?.next_page) {
+                page += 1;
+                resp = await this.client.getByType(type, {...opts, page});
+                all.push(...(resp.results ?? []));
+
+                // Si total_pages est présent, on peut arrêter quand on l'atteint
+                if (typeof resp.total_pages === 'number' && page >= resp.total_pages) break;
+            }
+
+            return all;
+        });
     }
 
     get repositoryName(){
