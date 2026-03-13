@@ -1,5 +1,5 @@
 import {DocumentValidator} from '../DocumentValidator';
-import { ValidationResultUtils} from '../ValidationResult';
+import {ValidationResultUtils} from '../ValidationResult';
 import * as prismic from '@prismicio/client';
 import {FilledImageFieldImage} from '@prismicio/client';
 import {PrismicMigratorAssets} from "../../../asset/PrismicMigratorAssets";
@@ -141,7 +141,7 @@ export class AssetValidator implements DocumentValidator {
      *
      * @returns l'URL de l'asset trouvé dans la destination, ou null si absent
      */
-    private async findMatchingAssetUrl(id: string, alt: string | null): Promise<FilledImageFieldImage | null> {
+    private async findMatchingAssetUrl(id: string, node: FilledImageFieldImage): Promise<FilledImageFieldImage | null> {
         // 1. Chercher les infos de l'image source à partir de son id
         const sourceAssets = await this.prismicMigratorAssets.getSourceAssets();
         const sourceAsset = sourceAssets.find(a => a.id === id);
@@ -156,16 +156,14 @@ export class AssetValidator implements DocumentValidator {
 
         // 4 & 5. Si trouvé, construire et retourner le FilledImageFieldImage
         if (match) {
+            const newUrl = match.url + node.url.replaceAll(sourceAsset.url, '');
             return {
                 id: match.id,
-                url: match.url,
-                dimensions: {
-                    width: match.width,
-                    height: match.height,
-                },
-                edit: {x: 0, y: 0, zoom: 1, background: 'transparent'},
-                alt: alt ?? null,
-                copyright: null,
+                url: newUrl,
+                dimensions: node.dimensions,
+                edit: node.edit,
+                alt: node.alt,
+                copyright: node.copyright,
             };
         }
 
@@ -187,9 +185,9 @@ export class AssetValidator implements DocumentValidator {
             if (data.length > 0 && typeof (data[0] as Record<string, unknown>)['type'] === 'string') {
                 return Promise.all(data.map(async node => {
                     if (this.isRichTextImageNode(node) && idsToFix.has(node.id)) {
-                        const targetAsset = await this.findMatchingAssetUrl(node.id, node.alt);
+                        const targetAsset = await this.findMatchingAssetUrl(node.id, node);
                         if (targetAsset) {
-                            const issue = issues.find(i => i.context?.['id'] === node.id);
+                            const issue = issues.find(i => i.context?.['url'] === node.url);
                             if (issue) {
                                 issue.fixDescription = `Asset trouvé : "${targetAsset.url}"`;
                                 issue.fixed = true;
@@ -213,9 +211,9 @@ export class AssetValidator implements DocumentValidator {
             let result: Record<string, unknown> = {};
             // Traiter l'image principale
             if (idsToFix.has(img.id)) {
-                const targetAsset = await this.findMatchingAssetUrl(img.id, img.alt);
+                const targetAsset = await this.findMatchingAssetUrl(img.id, img);
                 if (targetAsset) {
-                    const issue = issues.find(i => i.context?.['id'] === img.id);
+                    const issue = issues.find(i => i.context?.['url'] === img.url);
                     if (issue) {
                         issue.fixDescription = `Asset trouvé : "${targetAsset.url}"`;
                         issue.fixed = true;
