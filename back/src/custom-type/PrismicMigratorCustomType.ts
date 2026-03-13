@@ -4,8 +4,8 @@ import {CustomType, CustomTypeMigrationResult} from "@shared/types";
 export class PrismicMigratorCustomType {
   private readonly sourceRepositoryName: string;
   private readonly sourceToken: string;
-  private readonly destinationRepositoryName: string;
-  private readonly destinationToken: string;
+  private readonly targetRepositoryName: string;
+  private readonly targetToken: string;
   private readonly axiosInstance: AxiosInstance;
 
   private static readonly BASE_URL = 'https://customtypes.prismic.io';
@@ -19,8 +19,8 @@ export class PrismicMigratorCustomType {
   ) {
     this.sourceRepositoryName = sourceRepositoryName;
     this.sourceToken = sourceToken;
-    this.destinationRepositoryName = destinationRepositoryName;
-    this.destinationToken = destinationToken;
+    this.targetRepositoryName = destinationRepositoryName;
+    this.targetToken = destinationToken;
     this.axiosInstance = axiosInstance;
   }
 
@@ -80,18 +80,26 @@ export class PrismicMigratorCustomType {
    * Retrieve all custom types from the target repository
    */
   async getTargetCustomTypes(): Promise<CustomType[]> {
-    return this.fetchCustomTypes(this.destinationRepositoryName, this.destinationToken);
+    return this.fetchCustomTypes(this.targetRepositoryName, this.targetToken);
   }
 
   /**
    * Retrieve a custom type by id from the target repository
    */
   async getTargetCustomTypeById(id: string): Promise<CustomType | null> {
-    return this.fetchCustomTypeById(id, this.destinationRepositoryName, this.destinationToken)
+    return this.fetchCustomTypeById(id, this.targetRepositoryName, this.targetToken)
       .catch((error) => {
         if (axios.isAxiosError(error) && error.response?.status === 404) return null;
         throw error;
       });
+  }
+
+  async getSourceCustomTypeById(id: string): Promise<CustomType | null> {
+    return this.fetchCustomTypeById(id, this.sourceRepositoryName, this.sourceToken)
+        .catch((error) => {
+          if (axios.isAxiosError(error) && error.response?.status === 404) return null;
+          throw error;
+        });
   }
 
   /**
@@ -112,8 +120,8 @@ export class PrismicMigratorCustomType {
       await this.axiosInstance
         .post(`${PrismicMigratorCustomType.BASE_URL}/customtypes/update`, customType, {
           headers: {
-            Authorization: `Bearer ${this.destinationToken}`,
-            repository: this.destinationRepositoryName,
+            Authorization: `Bearer ${this.targetToken}`,
+            repository: this.targetRepositoryName,
             'Content-Type': 'application/json',
           },
         })
@@ -153,7 +161,7 @@ export class PrismicMigratorCustomType {
       }
 
       // 2. Check if the custom type already exists in the destination repo
-      const existingTarget = await this.fetchCustomTypeById(id, this.destinationRepositoryName, this.destinationToken)
+      const existingTarget = await this.fetchCustomTypeById(id, this.targetRepositoryName, this.targetToken)
         .catch((error) => {
           if (axios.isAxiosError(error) && error.response?.status === 404) return null;
           throw error;
@@ -167,8 +175,8 @@ export class PrismicMigratorCustomType {
       await this.axiosInstance
         .post(`${PrismicMigratorCustomType.BASE_URL}/customtypes/insert`, customType, {
           headers: {
-            Authorization: `Bearer ${this.destinationToken}`,
-            repository: this.destinationRepositoryName,
+            Authorization: `Bearer ${this.targetToken}`,
+            repository: this.targetRepositoryName,
             'Content-Type': 'application/json',
           },
         })

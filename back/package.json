@@ -16,6 +16,7 @@
     "@prismicio/client": "^7.21.6",
     "axios": "^1.13.6",
     "cors": "^2.8.6",
+    "deep-object-diff": "^1.1.9",
     "dotenv": "^17.3.1",
     "express": "^5.2.1",
     "lodash": "^4.17.23",

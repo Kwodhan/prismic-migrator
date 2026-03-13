@@ -4,4 +4,5 @@ export * from './ExactlySameDocumentValidator';
 export * from './LinkDocumentValidator';
 export * from './LinkMediaValidator';
 export * from './SameUIDDocumentValidator';
+export * from './SameStateCustomType';
 

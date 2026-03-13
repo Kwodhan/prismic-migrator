@@ -42,14 +42,15 @@ Document migration is the most complex operation. Before sending a document to t
 
 Each validator runs in parallel and produces a list of `ValidationIssue` objects:
 
-| Validator | Severity | What it checks                                                               | Auto-fixable |
-|---|---|------------------------------------------------------------------------------|---|
-| `CustomTypeValidator` | **BLOCKING** | The document's custom type exists in the target repository                   | ✗ |
-| `ExactlySameDocumentValidator` | **BLOCKING** | The document's source has exactly the same data in the target repository     | ✗ |
-| `SameUIDDocumentValidator` | **BLOCKING** | The document's uid is already present  in the target repository                                       | ✗ |
+| Validator | Severity | What it checks                                                              | Auto-fixable |
+|---|---|-----------------------------------------------------------------------------|---|
+| `CustomTypeValidator` | **BLOCKING** | The document's custom type exists in the target repository                  | ✗ |
+| `ExactlySameDocumentValidator` | **BLOCKING** | The document's source has exactly the same data in the target repository    | ✗ |
+| `SameUIDDocumentValidator` | **BLOCKING** | The document's uid is already present  in the target repository             | ✗ |
+| `SameStateCustomType` | **BLOCKING** | The document's custom type has not the same structure                       | ✗ |
 | `AssetValidator` | WARNING | All image fields and rich text images reference assets present in the target | ✓ |
-| `LinkDocumentValidator` | WARNING | All content relationship fields point to documents that exist in the target  | ✓ |
-| `LinkMediaValidator` | WARNING | All media links reference assets present in the target                       | ✓ |
+| `LinkDocumentValidator` | WARNING | All content relationship fields point to documents that exist in the target | ✓ |
+| `LinkMediaValidator` | WARNING | All media links reference assets present in the target                      | ✓ |
 
 ### Severity levels
 

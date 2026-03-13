@@ -11,6 +11,7 @@ import {
     ExactlySameDocumentValidator,
     LinkDocumentValidator,
     LinkMediaValidator,
+    SameStateCustomType,
     SameUIDDocumentValidator
 } from "./validation/validators";
 import {CachedPrismicClient} from "./validation/CachedPrismicClient";
@@ -174,6 +175,7 @@ export class PrismicMigratorDocument {
                 cachedSourceClient,
                 cachedTargetClient),
             new SameUIDDocumentValidator(cachedTargetClient),
+            new SameStateCustomType(this.migratorCustomType)
         ]);
     }
 
