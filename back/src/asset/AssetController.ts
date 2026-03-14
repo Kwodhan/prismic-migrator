@@ -9,37 +9,33 @@ export class AssetController {
   }
 
   /**
-   * GET /assets/source
-   * Récupère tous les assets du repository source
+   * GET /assets/:repoName
+   * Récupère tous les assets du repository
    */
-  getSourceAssets = async (_req: Request, res: Response): Promise<void> => {
-    const assets = await this.migratorAsset.getSourceAssets();
-    res.json(assets);
-  };
-
-  /**
-   * GET /assets/target
-   * Récupère tous les assets du repository de destination
-   */
-  getTargetAssets = async (_req: Request, res: Response): Promise<void> => {
-    const assets = await this.migratorAsset.getTargetAssets();
+  getAssets = async (req: Request, res: Response): Promise<void> => {
+    const repoName = req.params['repoName'] as string;
+    const assets = await this.migratorAsset.getAssets(repoName);
     res.json(assets);
   };
 
   /**
    * POST /assets/migrate
-   * Migre un asset depuis une URL source vers le repository de destination
-   * Body: { sourceUrl, filename? }
+   * Migre un asset depuis une URL source vers le repository
+   * Body: { sourceUrl, filename?, repoNameTarget }
    */
   migrateAsset = async (req: Request, res: Response): Promise<void> => {
-    const {sourceUrl, filename} = req.body;
+    const {sourceUrl, filename, repoNameTarget} = req.body;
 
     if (!sourceUrl) {
       res.status(400).json({error: 'sourceUrl est requis'});
       return;
     }
+    if (!repoNameTarget) {
+      res.status(400).json({error: 'repoNameTarget est requis'});
+      return;
+    }
 
-    const result = await this.migratorAsset.migrateAsset(sourceUrl, filename);
+    const result = await this.migratorAsset.migrateAsset(repoNameTarget, sourceUrl, filename);
     res.json(result);
   };
 }

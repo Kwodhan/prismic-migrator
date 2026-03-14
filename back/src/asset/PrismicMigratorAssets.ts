@@ -1,34 +1,28 @@
 import axios, {AxiosInstance} from 'axios';
 import FormData from 'form-data';
 import {AssetFile, AssetMigrationResult} from "@shared/types";
+import {Environnement} from '@shared/types/environnement.types';
 
 export class PrismicMigratorAssets {
-  private readonly sourceRepositoryName: string;
-  private readonly sourceToken: string;
-  private readonly destinationRepository: string;
-  private readonly destinationToken: string;
+  private readonly environments: Environnement[];
   private readonly axiosInstance: AxiosInstance;
 
-  constructor(sourceRepositoryName: string, sourceToken: string, destinationRepository: string, destinationToken: string, axiosInstance: AxiosInstance) {
-    this.sourceRepositoryName = sourceRepositoryName;
-    this.sourceToken = sourceToken;
-    this.destinationRepository = destinationRepository;
-    this.destinationToken = destinationToken;
+  constructor(environments: Environnement[], axiosInstance: AxiosInstance) {
+    this.environments = environments;
     this.axiosInstance = axiosInstance;
   }
 
-  /**
-   * Retrieve all assets from the source repository
-   */
-  async getSourceAssets(): Promise<AssetFile[]> {
-    return this.fetchAssets(this.sourceRepositoryName, this.sourceToken);
-  }
 
   /**
-   * Retrieve all assets from the target repository
+   *
+   * Retrieve all assets from the repository
    */
-  async getTargetAssets(): Promise<AssetFile[]> {
-    return this.fetchAssets(this.destinationRepository, this.destinationToken);
+  async getAssets(repoName: string): Promise<AssetFile[]> {
+    const env = this.environments.find(env => env.repoName === repoName);
+    if (!env) {
+      return [];
+    }
+    return this.fetchAssets(env?.repoName, env?.writeToken);
   }
 
   /**
@@ -37,10 +31,17 @@ export class PrismicMigratorAssets {
    * @param filename - Optional filename
    */
   async migrateAsset(
+    repoNameTarget: string,
     sourceUrl: string,
     filename?: string
   ): Promise<AssetMigrationResult> {
-    const {destinationRepository, destinationToken} = this;
+    const envTarget = this.environments.find(env => env.repoName === repoNameTarget);
+    if (!envTarget ) {
+      return {
+        success: false,
+        error: `Env ${repoNameTarget}  not found`,
+      };
+    }
     console.log(`[migrateAsset] ${sourceUrl} started`);
     try {
       // 1. Download the asset from the source URL
@@ -54,7 +55,7 @@ export class PrismicMigratorAssets {
       const resolvedFilename = filename ?? sourceUrl.split('/').pop() ?? 'asset';
 
       // 2. Check if an asset with the same filename already exists in the target repo
-      const targetAssets = await this.getTargetAssets();
+      const targetAssets = await this.getAssets(repoNameTarget);
       const alreadyExists = targetAssets.some(asset => asset.filename === resolvedFilename);
 
       if (alreadyExists) {
@@ -75,8 +76,8 @@ export class PrismicMigratorAssets {
         formData,
         {
           headers: {
-            Authorization: `Bearer ${destinationToken}`,
-            repository: destinationRepository,
+            Authorization: `Bearer ${envTarget.writeToken}`,
+            repository: envTarget.repoName,
             ...formData.getHeaders(),
           },
         }

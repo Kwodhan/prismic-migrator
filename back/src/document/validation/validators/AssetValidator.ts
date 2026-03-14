@@ -17,6 +17,8 @@ import {ValidationIssue, ValidationResult} from "@shared/types";
  */
 export class AssetValidator implements DocumentValidator {
     constructor(
+        private readonly repoNameSource: string,
+        private readonly repoNameTarget: string,
         private readonly prismicMigratorAssets: PrismicMigratorAssets,
     ) {
     }
@@ -143,7 +145,7 @@ export class AssetValidator implements DocumentValidator {
      */
     private async findMatchingAssetUrl(id: string, node: FilledImageFieldImage): Promise<FilledImageFieldImage | null> {
         // 1. Chercher les infos de l'image source à partir de son id
-        const sourceAssets = await this.prismicMigratorAssets.getSourceAssets();
+        const sourceAssets = await this.prismicMigratorAssets.getAssets(this.repoNameSource);
         const sourceAsset = sourceAssets.find(a => a.id === id);
         if (!sourceAsset) return null;
 
@@ -151,7 +153,7 @@ export class AssetValidator implements DocumentValidator {
         const filename = sourceAsset.filename;
 
         // 3. Chercher dans les assets target un fichier avec ce nom
-        const targetAssets = await this.prismicMigratorAssets.getTargetAssets();
+        const targetAssets = await this.prismicMigratorAssets.getAssets(this.repoNameTarget);
         const match = targetAssets.find(a => a.filename === filename);
 
         // 4 & 5. Si trouvé, construire et retourner le FilledImageFieldImage

@@ -1,55 +1,41 @@
 import axios, {AxiosInstance} from 'axios';
 import {CustomType, CustomTypeMigrationResult} from "@shared/types";
+import {Environnement} from '@shared/types/environnement.types';
 
 export class PrismicMigratorCustomType {
   private static readonly BASE_URL = 'https://customtypes.prismic.io';
-  private readonly sourceRepositoryName: string;
-  private readonly sourceToken: string;
-  private readonly targetRepositoryName: string;
-  private readonly targetToken: string;
+  private readonly environments: Environnement[]
   private readonly axiosInstance: AxiosInstance;
 
   constructor(
-    sourceRepositoryName: string,
-    sourceToken: string,
-    destinationRepositoryName: string,
-    destinationToken: string,
+    environments: Environnement[],
     axiosInstance: AxiosInstance
   ) {
-    this.sourceRepositoryName = sourceRepositoryName;
-    this.sourceToken = sourceToken;
-    this.targetRepositoryName = destinationRepositoryName;
-    this.targetToken = destinationToken;
+    this.environments = environments;
     this.axiosInstance = axiosInstance;
   }
 
-  /**
-   * Retrieve all custom types from the source repository
-   */
-  async getSourceCustomTypes(): Promise<CustomType[]> {
-    return this.fetchCustomTypes(this.sourceRepositoryName, this.sourceToken);
-  }
 
   /**
    * Retrieve all custom types from the target repository
    */
-  async getTargetCustomTypes(): Promise<CustomType[]> {
-    return this.fetchCustomTypes(this.targetRepositoryName, this.targetToken);
+  async getCustomTypes(repoName: string): Promise<CustomType[]> {
+    const env = this.environments.find(env => env.repoName === repoName);
+    if (!env) {
+      return [];
+    }
+    return this.fetchCustomTypes(env.repoName, env.writeToken);
   }
 
   /**
    * Retrieve a custom type by id from the target repository
    */
-  async getTargetCustomTypeById(id: string): Promise<CustomType | null> {
-    return this.fetchCustomTypeById(id, this.targetRepositoryName, this.targetToken)
-      .catch((error) => {
-        if (axios.isAxiosError(error) && error.response?.status === 404) return null;
-        throw error;
-      });
-  }
-
-  async getSourceCustomTypeById(id: string): Promise<CustomType | null> {
-    return this.fetchCustomTypeById(id, this.sourceRepositoryName, this.sourceToken)
+  async getCustomTypeById(repoName: string, id: string): Promise<CustomType | null> {
+    const env = this.environments.find(env => env.repoName === repoName);
+    if (!env) {
+      return null;
+    }
+    return this.fetchCustomTypeById(id, env.repoName, env.writeToken)
       .catch((error) => {
         if (axios.isAxiosError(error) && error.response?.status === 404) return null;
         throw error;
@@ -59,25 +45,34 @@ export class PrismicMigratorCustomType {
   /**
    * Update an existing custom type in the target repository
    */
-  async updateCustomType(id: string): Promise<CustomTypeMigrationResult> {
+  async updateCustomType(repoNameSource: string, repoNameTarget: string, idSource: string): Promise<CustomTypeMigrationResult> {
+    const envSource = this.environments.find(env => env.repoName === repoNameSource);
+    const envTarget = this.environments.find(env => env.repoName === repoNameTarget);
+    if (!envSource || !envTarget) {
+      return {
+        success: false,
+        error: `Env ${repoNameSource} or ${repoNameTarget} not found`,
+      };
+    }
+
     try {
 
-      const customType = await this.fetchCustomTypeById(id, this.sourceRepositoryName, this.sourceToken)
+      const customType = await this.fetchCustomTypeById(idSource, envSource.repoName, envSource.writeToken)
         .catch((error) => {
           if (axios.isAxiosError(error) && error.response?.status === 404) return null;
           throw error;
         });
 
       if (!customType) {
-        console.log(`[updateCustomType] ${id} does not exist`);
-        return {success: false, error: `Custom type "${id}" introuvable dans le repository source`};
+        console.log(`[updateCustomType] ${idSource} does not exist`);
+        return {success: false, error: `Custom type "${idSource}" introuvable dans le repository source`};
       }
       console.log(`[updateCustomType] ${customType?.label} started`);
       await this.axiosInstance
         .post(`${PrismicMigratorCustomType.BASE_URL}/customtypes/update`, customType, {
           headers: {
-            Authorization: `Bearer ${this.targetToken}`,
-            repository: this.targetRepositoryName,
+            Authorization: `Bearer ${envTarget.writeToken}`,
+            repository: envTarget.repoName,
             'Content-Type': 'application/json',
           },
         })
@@ -103,10 +98,18 @@ export class PrismicMigratorCustomType {
    * Migrate a custom type from the source repository to the target repository
    * @param id - Identifier of the custom type to migrate
    */
-  async migrateCustomType(id: string): Promise<CustomTypeMigrationResult> {
+  async migrateCustomType(repoNameSource: string, repoNameTarget: string, id: string): Promise<CustomTypeMigrationResult> {
+    const envSource = this.environments.find(env => env.repoName === repoNameSource);
+    const envTarget = this.environments.find(env => env.repoName === repoNameTarget);
+    if (!envSource || !envTarget) {
+      return {
+        success: false,
+        error: `Env ${repoNameSource} or ${repoNameTarget} not found`,
+      };
+    }
     try {
       // 1. Fetch the custom type directly by its id from the source repository
-      const customType = await this.fetchCustomTypeById(id, this.sourceRepositoryName, this.sourceToken)
+      const customType = await this.fetchCustomTypeById(id, envSource.repoName, envSource.writeToken)
         .catch((error) => {
           if (axios.isAxiosError(error) && error.response?.status === 404) return null;
           throw error;
@@ -117,7 +120,7 @@ export class PrismicMigratorCustomType {
       }
       console.log(`[migrateCustomType] ${customType?.label} started`);
       // 2. Check if the custom type already exists in the destination repo
-      const existingTarget = await this.fetchCustomTypeById(id, this.targetRepositoryName, this.targetToken)
+      const existingTarget = await this.fetchCustomTypeById(id, envTarget.repoName, envTarget.writeToken)
         .catch((error) => {
           if (axios.isAxiosError(error) && error.response?.status === 404) return null;
           throw error;
@@ -131,8 +134,8 @@ export class PrismicMigratorCustomType {
       await this.axiosInstance
         .post(`${PrismicMigratorCustomType.BASE_URL}/customtypes/insert`, customType, {
           headers: {
-            Authorization: `Bearer ${this.targetToken}`,
-            repository: this.targetRepositoryName,
+            Authorization: `Bearer ${envTarget.writeToken}`,
+            repository: envTarget.repoName,
             'Content-Type': 'application/json',
           },
         })
