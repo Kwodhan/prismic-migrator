@@ -1,5 +1,5 @@
-import { Request, Response } from 'express';
-import { PrismicMigratorAssets } from './PrismicMigratorAssets';
+import {Request, Response} from 'express';
+import {PrismicMigratorAssets} from './PrismicMigratorAssets';
 
 export class AssetController {
   private readonly migratorAsset: PrismicMigratorAssets;
@@ -32,10 +32,10 @@ export class AssetController {
    * Body: { sourceUrl, filename? }
    */
   migrateAsset = async (req: Request, res: Response): Promise<void> => {
-    const { sourceUrl, filename } = req.body;
+    const {sourceUrl, filename} = req.body;
 
     if (!sourceUrl) {
-      res.status(400).json({ error: 'sourceUrl est requis' });
+      res.status(400).json({error: 'sourceUrl est requis'});
       return;
     }
 

@@ -6,11 +6,18 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { AssetList } from '../asset-list/asset-list';
-import {AssetFile} from '@shared/types';
+import { AssetFile } from '@shared/types';
 
 @Component({
   selector: 'source-asset-list',
-  imports: [FormsModule, MatFormFieldModule, MatInputModule, MatIconModule, MatButtonModule, MatTooltipModule],
+  imports: [
+    FormsModule,
+    MatFormFieldModule,
+    MatInputModule,
+    MatIconModule,
+    MatButtonModule,
+    MatTooltipModule,
+  ],
   templateUrl: './source-asset-list.html',
   styleUrl: './source-asset-list.css',
 })
@@ -19,4 +26,3 @@ export class SourceAssetList extends AssetList {
     event.dataTransfer?.setData('application/json', JSON.stringify(asset));
   }
 }
-

@@ -18,39 +18,6 @@ export class PrismicMigratorAssets {
   }
 
   /**
-   * Private helper to fetch assets from a repository
-   */
-  private async fetchAssets(repositoryName: string, token: string): Promise<AssetFile[]> {
-    const assets: AssetFile[] = [];
-    let page = 1;
-    let hasMore = true;
-
-    while (hasMore) {
-      const {data} = await this.axiosInstance.get<{ items: AssetFile[]; total: number }>(
-        `https://asset-api.prismic.io/assets`,
-        {
-          params: {limit: 99999},
-          headers: {
-            Authorization: `Bearer ${token}`,
-            repository: repositoryName,
-          },
-        }
-      ).catch(error => {
-        if (axios.isAxiosError(error)) {
-          console.error(`[fetchAssets] ${error.response?.status}`, JSON.stringify(error.response?.data, null, 2));
-        }
-        throw error;
-      });
-
-      assets.push(...data.items);
-      hasMore = assets.length < data.total;
-      page++;
-    }
-
-    return assets;
-  }
-
-  /**
    * Retrieve all assets from the source repository
    */
   async getSourceAssets(): Promise<AssetFile[]> {
@@ -74,7 +41,7 @@ export class PrismicMigratorAssets {
     filename?: string
   ): Promise<AssetMigrationResult> {
     const {destinationRepository, destinationToken} = this;
-
+    console.log(`[migrateAsset] ${sourceUrl} started`);
     try {
       // 1. Download the asset from the source URL
       const assetResponse = await this.axiosInstance.get<Buffer>(sourceUrl, {
@@ -91,6 +58,7 @@ export class PrismicMigratorAssets {
       const alreadyExists = targetAssets.some(asset => asset.filename === resolvedFilename);
 
       if (alreadyExists) {
+        console.log(`[migrateAsset] ${sourceUrl} already exists`);
         return {
           success: false,
           filename: resolvedFilename,
@@ -113,13 +81,14 @@ export class PrismicMigratorAssets {
           },
         }
       );
-
+      console.log(`[migrateAsset] ${sourceUrl} successfully uploaded`);
       return {
         success: true,
         assetId: uploaded.id,
         filename: uploaded.filename,
       };
     } catch (error) {
+      console.log(`[migrateAsset] ${sourceUrl} failed`);
       return {
         success: false,
         error: axios.isAxiosError(error)
@@ -127,6 +96,39 @@ export class PrismicMigratorAssets {
           : String(error),
       };
     }
+  }
+
+  /**
+   * Private helper to fetch assets from a repository
+   */
+  private async fetchAssets(repositoryName: string, token: string): Promise<AssetFile[]> {
+    const assets: AssetFile[] = [];
+    let page = 1;
+    let hasMore = true;
+    console.log(`[fetchAssets] on ${repositoryName}`);
+    while (hasMore) {
+      const {data} = await this.axiosInstance.get<{ items: AssetFile[]; total: number }>(
+        `https://asset-api.prismic.io/assets`,
+        {
+          params: {limit: 99999},
+          headers: {
+            Authorization: `Bearer ${token}`,
+            repository: repositoryName,
+          },
+        }
+      ).catch(error => {
+        if (axios.isAxiosError(error)) {
+          console.error(`[fetchAssets] ${error.response?.status}`, JSON.stringify(error.response?.data, null, 2));
+        }
+        throw error;
+      });
+
+      assets.push(...data.items);
+      hasMore = assets.length < data.total;
+      page++;
+    }
+
+    return assets;
   }
 
 }
