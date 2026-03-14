@@ -108,7 +108,7 @@
 
 <mat-dialog-actions>
   <div class="flex justify-between w-full">
-    <button mat-flat-button color="primary" (click)="confirm()">
+    <button mat-flat-button color="primary" (click)="confirm()" [disabled]="this.loading()">
       <mat-icon>sync</mat-icon>
       Update
     </button>

@@ -103,24 +103,35 @@
 
   @if (success()) {
     <p class="text-sm pt-2">
-      Documents are available in the <a class="underline text-blue-500" [href]="migrationUrl" target="_blank" rel="noopener noreferrer">Migration release</a> menu in Prismic. They still need to be published.
+      Documents are available in the <a class="underline text-blue-500" [href]="migrationUrl" target="_blank" rel="noopener noreferrer">Migration release</a> menu in Prismic. <span class="font-bold">They still need to be published</span>.
     </p>
   }
 </mat-dialog-content>
 
-<mat-dialog-actions align="end" class="gap-2">
-  @if (hasMigrated() && success()) {
-    <a [href]="pageUrl" target="_blank" rel="noopener noreferrer"
-       mat-stroked-button color="primary" class="flex items-center gap-1">
-      <mat-icon style="font-size:16px;width:16px;height:16px">open_in_new</mat-icon>
-      View page
-    </a>
-  } @else {
-    <button mat-button matButton="filled" (click)="onUpdateReport()" [disabled]="loading()">Update report</button>
 
-  }
-  @if (blockingIssues().length === 0 && !hasMigrated()) {
-    <button mat-button matButton="filled" (click)="onMigrate()" [disabled]="loading()">Migrate</button>
-  }
-  <button mat-button matButton="filled" mat-dialog-close>Close</button>
+<mat-dialog-actions>
+  <div class="flex justify-between w-full">
+
+    <!-- Gauche -->
+    <div>
+      @if (blockingIssues().length === 0 && !hasMigrated()) {
+        <button mat-flat-button color="primary" (click)="onMigrate()" [disabled]="loading()">Migrate</button>
+      }
+    </div>
+
+    <!-- Droite -->
+    <div class="flex gap-2">
+      @if (hasMigrated() && success()) {
+        <a [href]="pageUrl" target="_blank" rel="noopener noreferrer"
+           mat-stroked-button color="primary" class="flex items-center gap-1">
+          <mat-icon style="font-size:16px;width:16px;height:16px">open_in_new</mat-icon>
+          View page
+        </a>
+      } @else {
+        <button mat-button (click)="onUpdateReport()" [disabled]="loading()">Update report</button>
+      }
+      <button mat-button mat-dialog-close>Close</button>
+    </div>
+
+  </div>
 </mat-dialog-actions>

@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, ViewEncapsulation } from '@angular/core';
+import { Component, inject, OnInit, signal, ViewEncapsulation } from '@angular/core';
 import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -6,9 +6,10 @@ import { MatTabsModule } from '@angular/material/tabs';
 import { CommonModule } from '@angular/common';
 import { create } from 'jsondiffpatch';
 import * as htmlFormatter from 'jsondiffpatch/formatters/html';
-import { CustomType } from '@shared/types';
+import { CustomType, CustomTypeMigrationResult } from '@shared/types';
 
 import { detailedDiff, DetailedDiff } from 'deep-object-diff';
+import { CustomTypeService } from '../../../services/custom-type.service';
 
 export interface DiffDialogData {
   source: CustomType;
@@ -37,8 +38,9 @@ export interface ShowDiffLine {
 })
 export class CustomTypeDiffDialogComponent implements OnInit {
   readonly data: DiffDialogData = inject(MAT_DIALOG_DATA);
+  private readonly customTypeService = inject(CustomTypeService);
   private readonly dialogRef = inject(MatDialogRef<CustomTypeDiffDialogComponent>);
-
+  loading = signal(false);
   diffHtml: string | undefined = '';
   diffStructured: ShowDiffLine | undefined;
 
@@ -54,11 +56,24 @@ export class CustomTypeDiffDialogComponent implements OnInit {
   }
 
   confirm(): void {
-    this.dialogRef.close(true);
+    this.loading.set(true);
+    this.customTypeService.updateCustomType(this.data.source.id).subscribe({
+      next: (result: CustomTypeMigrationResult) => {
+        this.loading.set(false);
+        this.dialogRef.close(result);
+      },
+      error: (err) => {
+        this.loading.set(false);
+        this.dialogRef.close({
+          success: false,
+          error: err.message,
+        });
+      },
+    });
   }
 
   cancel(): void {
-    this.dialogRef.close(false);
+    this.dialogRef.close(null);
   }
 
   public formatDiff(target: CustomType, source: CustomType): ShowDiffLine {
