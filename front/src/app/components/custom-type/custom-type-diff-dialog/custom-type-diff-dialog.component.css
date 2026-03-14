@@ -1,0 +1,137 @@
+::ng-deep .mat-mdc-tab-header {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background-color: white;
+}
+
+/* Styles existants pour jsondiffpatch */
+.jsondiffpatch-delta {
+  font-family: monospace;
+  font-size: 12px;
+}
+.jsondiffpatch-delta ul {
+  list-style: none;
+  padding: 0 0 0 16px;
+  margin: 0;
+}
+.jsondiffpatch-delta li {
+  padding: 1px 0;
+}
+
+.jsondiffpatch-added .jsondiffpatch-property-name,
+.jsondiffpatch-added .jsondiffpatch-value pre,
+.jsondiffpatch-modified .jsondiffpatch-right-value pre,
+.jsondiffpatch-textdiff-added {
+  background: #d4edda;
+  color: #155724;
+}
+
+.jsondiffpatch-deleted .jsondiffpatch-property-name,
+.jsondiffpatch-deleted .jsondiffpatch-value pre,
+.jsondiffpatch-modified .jsondiffpatch-left-value pre,
+.jsondiffpatch-textdiff-deleted {
+  background: #f8d7da;
+  color: #721c24;
+  text-decoration: line-through;
+}
+
+.jsondiffpatch-unchanged {
+  color: #999;
+}
+.jsondiffpatch-unchanged .jsondiffpatch-value pre {
+  color: #999;
+}
+
+.jsondiffpatch-property-name {
+  display: inline-block;
+  padding: 0 4px;
+  font-weight: bold;
+  min-width: 120px;
+}
+
+.jsondiffpatch-value pre {
+  display: inline;
+  margin: 0;
+  padding: 1px 4px;
+  border-radius: 2px;
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+
+.jsondiffpatch-arrow {
+  color: #999;
+  margin: 0 4px;
+}
+.jsondiffpatch-moved-destination {
+  color: #999;
+  font-style: italic;
+}
+
+.jsondiffpatch-textdiff-added {
+  text-decoration: none;
+}
+.jsondiffpatch-textdiff-deleted {
+  text-decoration: line-through;
+}
+
+/* Nouveaux styles pour la vue structurée */
+.diff-section {
+  border: 1px solid #e0e0e0;
+  border-radius: 4px;
+  padding: 12px;
+  background: #fafafa;
+}
+
+.diff-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-family: monospace;
+}
+
+.diff-item.added {
+  background: #e8f5e9;
+  border-left: 3px solid #4caf50;
+}
+
+.diff-item.deleted {
+  background: #ffebee;
+  border-left: 3px solid #f44336;
+}
+
+.diff-item.modified {
+  background: #fff3e0;
+  border-left: 3px solid #ff9800;
+}
+
+.diff-path {
+  font-weight: 600;
+  color: #424242;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.diff-value {
+  color: #1976d2;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.diff-value-before {
+  color: #d32f2f;
+  text-decoration: line-through;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.diff-value-after {
+  color: #388e3c;
+  font-weight: 500;
+  white-space: pre-wrap;
+  word-break: break-word;
+}

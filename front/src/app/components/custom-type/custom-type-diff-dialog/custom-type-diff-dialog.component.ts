@@ -2,106 +2,55 @@ import { Component, inject, OnInit, ViewEncapsulation } from '@angular/core';
 import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
+import { MatTabsModule } from '@angular/material/tabs';
+import { CommonModule } from '@angular/common';
 import { create } from 'jsondiffpatch';
 import * as htmlFormatter from 'jsondiffpatch/formatters/html';
-import {CustomType} from '@shared/types';
+import { CustomType } from '@shared/types';
+
+import { detailedDiff, DetailedDiff } from 'deep-object-diff';
 
 export interface DiffDialogData {
   source: CustomType;
   target: CustomType;
 }
 
+export interface DiffLine {
+  path: string;
+  action: string;
+  oldValue?: any;
+  value?: any;
+}
+
+export interface ShowDiffLine {
+  added: DiffLine[];
+  deleted: DiffLine[];
+  updated: DiffLine[];
+}
+
 @Component({
   selector: 'app-custom-type-diff-dialog',
-  imports: [MatDialogModule, MatButtonModule, MatIconModule],
+  imports: [MatDialogModule, MatButtonModule, MatIconModule, MatTabsModule, CommonModule],
   encapsulation: ViewEncapsulation.None,
-  template: `
-    <h2 mat-dialog-title class="flex items-center gap-2">
-      <mat-icon>compare_arrows</mat-icon>
-      Differences - {{ data.source.label }}
-    </h2>
-
-    <mat-dialog-content class="max-h-[70vh]! overflow-y-auto">
-      <div class="flex gap-4 text-xs mb-3">
-        <span class="flex items-center gap-1">
-          <span class="inline-block w-3 h-3 rounded bg-red-200 border border-red-400"></span> Removed / before
-        </span>
-        <span class="flex items-center gap-1">
-          <span class="inline-block w-3 h-3 rounded bg-green-200 border border-green-400"></span> Added / after
-        </span>
-      </div>
-      <div class="jsondiffpatch-delta text-xs font-mono overflow-x-auto"
-           [innerHTML]="diffHtml">
-      </div>
-    </mat-dialog-content>
-
-    <mat-dialog-actions align="end">
-      <button mat-button (click)="cancel()">Cancel</button>
-      <button mat-flat-button color="primary" (click)="confirm()">
-        <mat-icon>sync</mat-icon> Update
-      </button>
-    </mat-dialog-actions>
-  `,
-  styles: [`
-    .jsondiffpatch-delta { font-family: monospace; font-size: 12px; }
-    .jsondiffpatch-delta ul { list-style: none; padding: 0 0 0 16px; margin: 0; }
-    .jsondiffpatch-delta li { padding: 1px 0; }
-
-    .jsondiffpatch-added .jsondiffpatch-property-name,
-    .jsondiffpatch-added .jsondiffpatch-value pre,
-    .jsondiffpatch-modified .jsondiffpatch-right-value pre,
-    .jsondiffpatch-textdiff-added {
-      background: #d4edda;
-      color: #155724;
-    }
-
-    .jsondiffpatch-deleted .jsondiffpatch-property-name,
-    .jsondiffpatch-deleted .jsondiffpatch-value pre,
-    .jsondiffpatch-modified .jsondiffpatch-left-value pre,
-    .jsondiffpatch-textdiff-deleted {
-      background: #f8d7da;
-      color: #721c24;
-      text-decoration: line-through;
-    }
-
-    .jsondiffpatch-unchanged { color: #999; }
-    .jsondiffpatch-unchanged .jsondiffpatch-value pre { color: #999; }
-
-    .jsondiffpatch-property-name {
-      display: inline-block;
-      padding: 0 4px;
-      font-weight: bold;
-      min-width: 120px;
-    }
-
-    .jsondiffpatch-value pre {
-      display: inline;
-      margin: 0;
-      padding: 1px 4px;
-      border-radius: 2px;
-      white-space: pre-wrap;
-      word-break: break-all;
-    }
-
-    .jsondiffpatch-arrow { color: #999; margin: 0 4px; }
-    .jsondiffpatch-moved-destination { color: #999; font-style: italic; }
-
-    .jsondiffpatch-textdiff-added { text-decoration: none; }
-    .jsondiffpatch-textdiff-deleted { text-decoration: line-through; }
-  `],
+  templateUrl: './custom-type-diff-dialog.component.html',
+  styleUrl: './custom-type-diff-dialog.component.css',
 })
 export class CustomTypeDiffDialogComponent implements OnInit {
   readonly data: DiffDialogData = inject(MAT_DIALOG_DATA);
   private readonly dialogRef = inject(MatDialogRef<CustomTypeDiffDialogComponent>);
 
   diffHtml: string | undefined = '';
+  diffStructured: ShowDiffLine | undefined;
 
   ngOnInit(): void {
+    // Vue Git Diff (jsondiffpatch)
     const differ = create({ arrays: { detectMove: false } });
     const delta = differ.diff(this.data.target.json, this.data.source.json);
     this.diffHtml = delta
       ? htmlFormatter.format(delta, this.data.target.json)
       : '<p class="text-gray-400 italic">No differences in JSON.</p>';
+
+    this.diffStructured = this.formatDiff(this.data.target, this.data.source);
   }
 
   confirm(): void {
@@ -110,5 +59,57 @@ export class CustomTypeDiffDialogComponent implements OnInit {
 
   cancel(): void {
     this.dialogRef.close(false);
+  }
+
+  public formatDiff(target: CustomType, source: CustomType): ShowDiffLine {
+    const detailedDiffCustomType: DetailedDiff = detailedDiff(target.json, source.json);
+    const show: ShowDiffLine = { added: [], deleted: [], updated: [] };
+    // Traitement des ajouts
+    if (detailedDiffCustomType.added) {
+      show.added = this.processDiff(detailedDiffCustomType.added, 'Added');
+    }
+    // Traitement des suppressions
+    if (detailedDiffCustomType.deleted) {
+      show.deleted = this.processDiff(detailedDiffCustomType.deleted, 'Delete', target.json);
+    }
+    // Traitement des mises à jour
+    if (detailedDiffCustomType.updated) {
+      show.updated = this.processDiff(detailedDiffCustomType.updated, 'Update', target.json);
+    }
+    return show;
+  }
+
+  private processDiff(obj: Record<string, any>, action: string, originalObject?: any): DiffLine[] {
+    const lines: DiffLine[] = [];
+    const traverse = (current: Record<string, any>, path: string[] = []) => {
+      for (const [key, value] of Object.entries(current)) {
+        const newPath = [...path, key];
+        const oldValue = this.getValueByPath(originalObject, newPath);
+        if (value === undefined) {
+          lines.push({ path: newPath.join(' > '), action, oldValue });
+        } else if (typeof value === 'object' && value !== null) {
+          traverse(value, newPath);
+        } else {
+          lines.push({
+            path: newPath.join(' > '),
+            action,
+            oldValue,
+            value,
+          });
+        }
+      }
+    };
+
+    traverse(obj);
+    return lines;
+  }
+
+  private getValueByPath(obj: any, path: string[]): any {
+    return path.reduce((acc, key) => {
+      if (acc && typeof acc === 'object' && key in acc) {
+        return acc[key];
+      }
+      return undefined;
+    }, obj);
   }
 }
