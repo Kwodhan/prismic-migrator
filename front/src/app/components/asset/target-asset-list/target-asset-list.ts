@@ -53,7 +53,7 @@ export class TargetAssetList extends AssetList implements OnInit, OnDestroy {
 
     const asset: AssetFile = JSON.parse(data);
     this.migrating.set(true);
-    this.assetService.migrateAsset(asset.url, asset.filename).subscribe({
+    this.assetService.migrateAsset(asset.url, this.repository(),asset.filename).subscribe({
       next: result => {
         this.migrating.set(false);
         if (result.success) {

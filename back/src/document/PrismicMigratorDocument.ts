@@ -15,7 +15,7 @@ import {
   SameUIDDocumentValidator
 } from "./validation/validators";
 import {CachedPrismicClient} from "./validation/CachedPrismicClient";
-import {Environnement} from '@shared/types/environnement.types';
+import {Environment} from '@shared/types/environment.types';
 
 
 const PAGE_SIZE = 30;
@@ -23,13 +23,13 @@ const MIGRATION_API_URL = 'https://migration.prismic.io';
 
 
 export class PrismicMigratorDocument {
-  private readonly environments: Environnement[];
+  private readonly environments: Environment[];
   private readonly prismicClients: Record<string, prismic.Client> = {};
   private readonly axiosInstance: AxiosInstance;
   private readonly migratorAsset: PrismicMigratorAssets;
   private readonly migratorCustomType: PrismicMigratorCustomType;
 
-  constructor(environments: Environnement[], axiosInstance: AxiosInstance, proxyUrl: string | undefined) {
+  constructor(environments: Environment[], axiosInstance: AxiosInstance, proxyUrl: string | undefined) {
     this.environments = environments;
     this.axiosInstance = axiosInstance;
     this.migratorAsset = new PrismicMigratorAssets(
@@ -143,7 +143,7 @@ export class PrismicMigratorDocument {
           headers: {
             'Content-Type': 'application/json',
             'repository': envTarget.repoName,
-            'authorization': `Bearer ${envTarget.contentToken}`,
+            'authorization': `Bearer ${envTarget.writeToken}`,
           },
         }
       );

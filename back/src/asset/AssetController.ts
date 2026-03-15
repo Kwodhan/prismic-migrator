@@ -24,7 +24,7 @@ export class AssetController {
    * Body: { sourceUrl, filename?, repoNameTarget }
    */
   migrateAsset = async (req: Request, res: Response): Promise<void> => {
-    const {sourceUrl, filename, repoNameTarget} = req.body;
+    const {sourceUrl, repoNameTarget, filename} = req.body;
 
     if (!sourceUrl) {
       res.status(400).json({error: 'sourceUrl est requis'});
@@ -34,7 +34,6 @@ export class AssetController {
       res.status(400).json({error: 'repoNameTarget est requis'});
       return;
     }
-
     const result = await this.migratorAsset.migrateAsset(repoNameTarget, sourceUrl, filename);
     res.json(result);
   };

@@ -1,0 +1,140 @@
+<div class="min-h-screen bg-slate-100 flex items-center justify-center p-6">
+  <div class="w-full max-w-5xl">
+
+    <!-- Header -->
+    <div class="mb-8">
+      <h1 class="text-2xl font-semibold text-slate-800">Migration d'environnements</h1>
+      <p class="text-slate-500 mt-1 text-sm">Sélectionnez les environnements source et cible</p>
+    </div>
+
+    <!-- Chargement -->
+    @if (isLoading()) {
+      <div class="flex items-center gap-3 py-10">
+        <div class="w-5 h-5 border-2 border-slate-400 border-t-transparent rounded-full animate-spin"></div>
+        <span class="text-slate-500 text-sm">Chargement...</span>
+      </div>
+    } @else {
+
+      <!-- Sélecteurs -->
+      <div class="grid grid-cols-1 md:grid-cols-[1fr_auto_1fr] gap-4 items-start">
+
+        <!-- Source -->
+        <div class="bg-white border border-slate-200 rounded-lg p-5 shadow-sm">
+          <div class="flex items-center gap-2 mb-4">
+            <mat-icon class="!text-slate-500 !text-base">upload</mat-icon>
+            <span class="text-sm font-medium text-slate-600 uppercase tracking-wider">Source</span>
+          </div>
+
+          <mat-form-field appearance="outline" class="w-full">
+            <mat-label>Environnement source</mat-label>
+            <mat-select
+              [value]="selectedSource()?.repoName ?? ''"
+              (valueChange)="onSourceChange($event)">
+              <mat-option value="">-- Aucun --</mat-option>
+              @for (env of availableForSource(); track env.repoName) {
+                <mat-option [value]="env.repoName">
+                  <div class="flex flex-col">
+                    <span class="text-sm">{{ env.repoName }}</span>
+                  </div>
+                </mat-option>
+              }
+            </mat-select>
+          </mat-form-field>
+
+          @if (selectedSource(); as source) {
+
+
+            @if (source.description) {
+              <div class="mt-2 p-3 rounded-md bg-slate-50 border border-slate-200">
+                <p class="text-xs mt-0.5">{{ source.description }}</p>
+              </div>
+            }
+
+          }
+        </div>
+
+        <!-- Swap -->
+        <div class="flex items-center justify-center pt-16">
+          <button
+            mat-icon-button
+            [disabled]="!isReadyToMigrate()"
+            (click)="swapEnvironments()"
+            matTooltip="Inverser">
+            <mat-icon >swap_horiz</mat-icon>
+          </button>
+        </div>
+
+        <!-- Target -->
+        <div class="bg-white border border-slate-200 rounded-lg p-5 shadow-sm">
+          <div class="flex items-center gap-2 mb-4">
+            <mat-icon class="!text-slate-500 !text-base">download</mat-icon>
+            <span class="text-sm font-medium text-slate-600 uppercase tracking-wider">Cible</span>
+          </div>
+
+          <mat-form-field appearance="outline" class="w-full">
+            <mat-label>Environnement cible</mat-label>
+            <mat-select
+              [value]="selectedTarget()?.repoName ?? ''"
+              (valueChange)="onTargetChange($event)">
+              <mat-option value="">-- Aucun --</mat-option>
+              @for (env of availableForTarget(); track env.repoName) {
+                <mat-option [value]="env.repoName">
+                  <div class="flex flex-col">
+                    <span class="text-sm">{{ env.repoName }}</span>
+                  </div>
+                </mat-option>
+              }
+            </mat-select>
+          </mat-form-field>
+
+          @if (selectedTarget(); as target) {
+
+            @if (target.description) {
+              <div class="mt-2 p-3 rounded-md bg-slate-50 border border-slate-200">
+                <p class="text-xs  mt-0.5">{{ target.description }}</p>
+              </div>
+            }
+
+          }
+        </div>
+
+      </div>
+
+      <!-- Résumé & Actions -->
+      <div class="mt-6">
+
+        @if (isReadyToMigrate()) {
+          <div
+            class="mb-4 p-3 rounded-md bg-slate-50 border border-slate-200 flex flex-wrap items-center gap-2 text-sm text-slate-600">
+            <mat-icon class="!text-slate-400 !text-base">route</mat-icon>
+            <span>Migration de</span>
+            <span class="font-medium text-slate-800">{{ selectedSource()!.repoName }}</span>
+            <mat-icon class="!text-slate-400 !text-base">arrow_forward</mat-icon>
+            <span class="font-medium text-slate-800">{{ selectedTarget()!.repoName }}</span>
+          </div>
+        }
+
+        <div class="flex items-center justify-between gap-3">
+          <button
+            mat-stroked-button
+            (click)="resetSelection()"
+            [disabled]="!selectedSource() && !selectedTarget()">
+            <mat-icon>restart_alt</mat-icon>
+            Réinitialiser
+          </button>
+
+          <button
+            mat-flat-button
+            color="primary"
+            (click)="startMigration()"
+            [disabled]="!isReadyToMigrate()">
+            <mat-icon>play_arrow</mat-icon>
+            Démarrer la migration
+          </button>
+        </div>
+
+      </div>
+    }
+
+  </div>
+</div>

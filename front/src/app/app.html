@@ -1,19 +1,23 @@
 <mat-toolbar color="primary">
+
+  <span class="toolbar-title">Prismic Migrator</span>
   <a mat-button routerLink="/custom-type" routerLinkActive="active-link">
     <mat-icon>build</mat-icon>
     Custom Type
   </a>
   <a mat-button routerLink="/asset" routerLinkActive="active-link">
-    <mat-icon>inventory_2</mat-icon>
+    <mat-icon>image</mat-icon>
     Asset
   </a>
   <a mat-button routerLink="/document" routerLinkActive="active-link">
     <mat-icon>description</mat-icon>
     Document
   </a>
-
   <span class="spacer"></span>
-  <span class="toolbar-title">Prismic Migrator</span>
+  <a mat-button routerLink="/" routerLinkActive="active-link">
+    <mat-icon>description</mat-icon>
+    Environments
+  </a>
 </mat-toolbar>
 
 <router-outlet />

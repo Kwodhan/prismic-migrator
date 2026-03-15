@@ -2,12 +2,12 @@ import { Component, inject, OnInit, signal } from '@angular/core';
 import { forkJoin } from 'rxjs';
 import { ActivatedRoute, Router } from '@angular/router';
 import { CustomTypeService } from '../../../services/custom-type.service';
-import { ConfigService } from '../../../services/config.service';
 import { SourceCustomTypeList } from '../source-custom-type-list/source-custom-type-list';
 import { TargetCustomTypeList } from '../target-custom-type-list/target-custom-type-list';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatIconModule } from '@angular/material/icon';
-import {CustomType} from '@shared/types';
+import { CustomType } from '@shared/types';
+import { EnvironmentStorageService } from '../../../services/environment-storage.service';
 
 @Component({
   selector: 'custom-type-migration',
@@ -16,11 +16,6 @@ import {CustomType} from '@shared/types';
   styleUrl: './custom-type-migration.css',
 })
 export class CustomTypeMigration implements OnInit {
-  private readonly customTypeService = inject(CustomTypeService);
-  private readonly configService = inject(ConfigService);
-  private readonly route = inject(ActivatedRoute);
-  private readonly router = inject(Router);
-
   sourceCustomTypes = signal<CustomType[]>([]);
   targetCustomTypes = signal<CustomType[]>([]);
   loading = signal(true);
@@ -28,21 +23,32 @@ export class CustomTypeMigration implements OnInit {
   targetRepository = signal('');
   sourceFilter = signal('');
   targetFilter = signal('');
+  private readonly customTypeService = inject(CustomTypeService);
+  private readonly storageService = inject(EnvironmentStorageService);
+  private readonly route = inject(ActivatedRoute);
+  private readonly router = inject(Router);
 
   ngOnInit(): void {
+    const source = this.storageService.getRepoNameSource();
+    const target = this.storageService.getRepoNameTarget();
+
+    if (!source || !target) {
+      this.router.navigate(['/']);
+      return;
+    }
+    this.sourceRepository.set(source);
+    this.targetRepository.set(target);
+
     const params = this.route.snapshot.queryParamMap;
     this.sourceFilter.set(params.get('sourceFilter') ?? '');
     this.targetFilter.set(params.get('targetFilter') ?? '');
 
     forkJoin({
-      source: this.customTypeService.getSourceCustomTypes(),
-      target: this.customTypeService.getTargetCustomTypes(),
-      config: this.configService.getConfig(),
-    }).subscribe(({ source, target, config }) => {
+      source: this.customTypeService.getCustomTypes(this.sourceRepository()),
+      target: this.customTypeService.getCustomTypes(this.targetRepository()),
+    }).subscribe(({ source, target }) => {
       this.sourceCustomTypes.set(source);
       this.targetCustomTypes.set(target);
-      this.sourceRepository.set(config.sourceRepository);
-      this.targetRepository.set(config.destinationRepository);
       this.loading.set(false);
     });
   }
@@ -57,6 +63,18 @@ export class CustomTypeMigration implements OnInit {
     this.updateQueryParams();
   }
 
+  loadSourceCustomTypes(): void {
+    this.customTypeService
+      .getCustomTypes(this.sourceRepository())
+      .subscribe((ct) => this.sourceCustomTypes.set(ct));
+  }
+
+  loadTargetCustomTypes(): void {
+    this.customTypeService
+      .getCustomTypes(this.targetRepository())
+      .subscribe((ct) => this.targetCustomTypes.set(ct));
+  }
+
   private updateQueryParams(): void {
     this.router.navigate([], {
       relativeTo: this.route,
@@ -68,13 +86,4 @@ export class CustomTypeMigration implements OnInit {
       replaceUrl: true,
     });
   }
-
-  loadSourceCustomTypes(): void {
-    this.customTypeService.getSourceCustomTypes().subscribe(ct => this.sourceCustomTypes.set(ct));
-  }
-
-  loadTargetCustomTypes(): void {
-    this.customTypeService.getTargetCustomTypes().subscribe(ct => this.targetCustomTypes.set(ct));
-  }
 }
-

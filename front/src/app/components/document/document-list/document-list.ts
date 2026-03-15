@@ -1,5 +1,14 @@
-import { computed, Directive, effect, ElementRef, input, output, signal, viewChild } from '@angular/core';
-import {PrismicDocument} from '@shared/types';
+import {
+  computed,
+  Directive,
+  effect,
+  ElementRef,
+  input,
+  output,
+  signal,
+  viewChild,
+} from '@angular/core';
+import { PrismicDocument } from '@shared/types';
 
 export interface DocumentType {
   id: string;
@@ -13,7 +22,7 @@ export class DocumentList {
   currentPage = input<number>(1);
   loading = input<boolean>(false);
   types = input<DocumentType[]>([]);
-  repository = input<string>('');
+  repository = input.required<string>();
   initialType = input<string>('');
 
   readonly refreshNeeded = output<void>();
@@ -21,28 +30,15 @@ export class DocumentList {
   readonly searchChanged = output<string>();
 
   readonly filterType = signal('');
-  protected observer: IntersectionObserver | null = null;
   readonly sentinel = viewChild<ElementRef>('sentinel');
-
   readonly filteredTypes = computed(() => {
     const search = this.filterType().toLowerCase().trim();
     if (!search) return this.types();
-    return this.types().filter(t =>
-      t.id.toLowerCase().includes(search) || t.label.toLowerCase().includes(search)
+    return this.types().filter(
+      (t) => t.id.toLowerCase().includes(search) || t.label.toLowerCase().includes(search),
     );
   });
-
-  readonly hasMore = () => this.currentPage() < this.totalPages();
-
-  onTypeSelected(typeId: string): void {
-    this.filterType.set(typeId);
-    this.searchChanged.emit(typeId);
-  }
-
-  onTypeCleared(): void {
-    this.filterType.set('');
-    this.searchChanged.emit('');
-  }
+  protected observer: IntersectionObserver | null = null;
 
   constructor() {
     effect(() => {
@@ -57,14 +53,29 @@ export class DocumentList {
       this.observer?.disconnect();
 
       if (this.hasMore()) {
-        this.observer = new IntersectionObserver(entries => {
-          if (entries[0].isIntersecting) {
-            this.pageNeeded.emit(this.currentPage() + 1);
-          }
-        }, { threshold: 0.1 });
+        this.observer = new IntersectionObserver(
+          (entries) => {
+            if (entries[0].isIntersecting) {
+              this.pageNeeded.emit(this.currentPage() + 1);
+            }
+          },
+          { threshold: 0.1 },
+        );
 
         this.observer.observe(sentinel.nativeElement);
       }
     });
+  }
+
+  readonly hasMore = () => this.currentPage() < this.totalPages();
+
+  onTypeSelected(typeId: string): void {
+    this.filterType.set(typeId);
+    this.searchChanged.emit(typeId);
+  }
+
+  onTypeCleared(): void {
+    this.filterType.set('');
+    this.searchChanged.emit('');
   }
 }

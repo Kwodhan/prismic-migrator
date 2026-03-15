@@ -28,7 +28,15 @@ export class CustomTypeService {
     });
   }
 
-  updateCustomType(id: string): Observable<CustomTypeMigrationResult> {
-    return this.http.put<CustomTypeMigrationResult>(`${this.apiUrl}/custom-types/${id}/update`, {});
+  updateCustomType(
+    repoNameSource: string,
+    repoNameTarget: string,
+    idSource: string,
+  ): Observable<CustomTypeMigrationResult> {
+    return this.http.put<CustomTypeMigrationResult>(`${this.apiUrl}/custom-types/update`, {
+      repoNameSource,
+      repoNameTarget,
+      idSource,
+    });
   }
 }

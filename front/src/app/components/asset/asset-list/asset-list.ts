@@ -6,6 +6,7 @@ export const PAGE_SIZE = 30;
 @Directive()
 export class AssetList {
   assets = input<AssetFile[]>([]);
+  repository = input.required<string>();
   initialFilter = input<string>('');
 
   readonly refreshNeeded = output<void>();

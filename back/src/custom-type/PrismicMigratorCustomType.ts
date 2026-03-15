@@ -1,14 +1,14 @@
 import axios, {AxiosInstance} from 'axios';
 import {CustomType, CustomTypeMigrationResult} from "@shared/types";
-import {Environnement} from '@shared/types/environnement.types';
+import {Environment} from '@shared/types/environment.types';
 
 export class PrismicMigratorCustomType {
   private static readonly BASE_URL = 'https://customtypes.prismic.io';
-  private readonly environments: Environnement[]
+  private readonly environments: Environment[]
   private readonly axiosInstance: AxiosInstance;
 
   constructor(
-    environments: Environnement[],
+    environments: Environment[],
     axiosInstance: AxiosInstance
   ) {
     this.environments = environments;

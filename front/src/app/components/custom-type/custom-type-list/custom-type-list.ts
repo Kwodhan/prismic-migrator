@@ -6,7 +6,7 @@ export const PAGE_SIZE = 20;
 @Directive()
 export class CustomTypeList {
   customTypes = input<CustomType[]>([]);
-  repository = input<string>('');
+  repository = input.required<string>();
   initialFilter = input<string>('');
 
   readonly refreshNeeded = output<void>();

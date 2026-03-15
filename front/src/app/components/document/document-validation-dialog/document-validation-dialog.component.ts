@@ -11,7 +11,8 @@ interface DialogData {
   validation: ValidationResult | null;
   docId: string;
   docLabel: string;
-  targetRepo: string;
+  repoNameSource: string;
+  repoNameTarget: string;
 }
 
 @Component({
@@ -45,16 +46,16 @@ export class DocumentValidationDialogComponent {
   });
 
   get pageUrl(): string {
-    return `https://${this.data.targetRepo}.prismic.io/builder/pages/${this.idTarget()}`;
+    return `https://${this.data.repoNameTarget}.prismic.io/builder/pages/${this.idTarget()}`;
   }
 
   get migrationUrl(): string {
-    return `https://${this.data.targetRepo}.prismic.io/builder/migration`;
+    return `https://${this.data.repoNameTarget}.prismic.io/builder/migration`;
   }
 
   onUpdateReport(): void {
     this.loading.set(true);
-    this.documentService.getReportMigrateDocument(this.data.docId).subscribe({
+    this.documentService.getReportMigrateDocument(this.data.repoNameSource,this.data.repoNameTarget,this.data.docId).subscribe({
       next: (result: ReportMigrationResult) => {
         this.validation.set(result.validation);
         this.loading.set(false);
@@ -69,13 +70,13 @@ export class DocumentValidationDialogComponent {
 
   onMigrate(): void {
     this.loading.set(true);
-    this.documentService.migrateDocument(this.data.docId).subscribe({
+    this.documentService.migrateDocument(this.data.repoNameSource,this.data.repoNameTarget,this.data.docId).subscribe({
       next: (result: DocumentMigrationResult) => {
         this.validation.set(result.validation);
         this.success.set(result.success);
         this.error.set(result.error ?? null);
         this.idTarget.set(result.id ?? null);
-        this.hasMigrated.set(true);
+        this.hasMigrated.set(result.success);
         this.loading.set(false);
       },
       error: () => {

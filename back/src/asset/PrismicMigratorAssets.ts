@@ -1,13 +1,13 @@
 import axios, {AxiosInstance} from 'axios';
 import FormData from 'form-data';
 import {AssetFile, AssetMigrationResult} from "@shared/types";
-import {Environnement} from '@shared/types/environnement.types';
+import {Environment} from '@shared/types/environment.types';
 
 export class PrismicMigratorAssets {
-  private readonly environments: Environnement[];
+  private readonly environments: Environment[];
   private readonly axiosInstance: AxiosInstance;
 
-  constructor(environments: Environnement[], axiosInstance: AxiosInstance) {
+  constructor(environments: Environment[], axiosInstance: AxiosInstance) {
     this.environments = environments;
     this.axiosInstance = axiosInstance;
   }

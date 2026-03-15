@@ -12,7 +12,7 @@ import { of, switchMap } from 'rxjs';
 import { CustomTypeList } from '../custom-type-list/custom-type-list';
 import { CustomTypeService } from '../../../services/custom-type.service';
 import { CustomTypeDiffDialogComponent } from '../custom-type-diff-dialog/custom-type-diff-dialog.component';
-import { CustomType, CustomTypeMigrationResult } from '@shared/types';
+import { CustomTypeMigrationResult } from '@shared/types';
 
 @Component({
   selector: 'target-custom-type-list',
@@ -62,18 +62,18 @@ export class TargetCustomTypeList extends CustomTypeList implements OnInit, OnDe
     const data = event.dataTransfer?.getData('application/json');
     if (!data) return;
 
-    const source: CustomType = JSON.parse(data);
+    const { repositorySource, customType } = JSON.parse(data);
     this.migrating.set(true);
 
     this.customTypeService
-      .migrateCustomType(source.id)
+      .migrateCustomType(repositorySource, this.repository(), customType.id)
       .pipe(
         switchMap((result) => {
           if (result.error === 'ALREADY_EXISTS' && result.target) {
             this.migrating.set(false);
 
             // Check if source and target are identical
-            if (JSON.stringify(source.json) === JSON.stringify(result.target.json)) {
+            if (JSON.stringify(customType.json) === JSON.stringify(result.target.json)) {
               this.snackBar.open(`ℹ️ Custom types are identical, no changes were made`, 'Close', {
                 duration: 4000,
                 panelClass: ['snack-info'],
@@ -87,9 +87,16 @@ export class TargetCustomTypeList extends CustomTypeList implements OnInit, OnDe
             const dialogRef = this.dialog.open(CustomTypeDiffDialogComponent, {
               width: '800px',
               maxWidth: '95vw',
-              data: { source, target: result.target },
+              data: {
+                customType,
+                target: result.target,
+                repoNameSource : repositorySource,
+                repoNameTarget : this.repository()
+              },
             });
-            return dialogRef.afterClosed().pipe(switchMap((migrated:CustomTypeMigrationResult) => of(migrated)));
+            return dialogRef
+              .afterClosed()
+              .pipe(switchMap((migrated: CustomTypeMigrationResult) => of(migrated)));
           }
           return of(result);
         }),

@@ -19,6 +19,9 @@ import {PrismicDocument} from '@shared/types';
 })
 export class SourceDocumentList extends DocumentList {
   onDragStart(event: DragEvent, doc: PrismicDocument): void {
-    event.dataTransfer?.setData('application/json', JSON.stringify(doc));
+    event.dataTransfer?.setData(
+      'application/json',
+      JSON.stringify({ repositorySource: this.repository(), document: doc }),
+    );
   }
 }

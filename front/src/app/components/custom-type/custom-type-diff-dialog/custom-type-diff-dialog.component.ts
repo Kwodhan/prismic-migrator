@@ -14,6 +14,8 @@ import { CustomTypeService } from '../../../services/custom-type.service';
 export interface DiffDialogData {
   source: CustomType;
   target: CustomType;
+  repoNameSource: string;
+  repoNameTarget: string;
 }
 
 export interface DiffLine {
@@ -57,7 +59,7 @@ export class CustomTypeDiffDialogComponent implements OnInit {
 
   confirm(): void {
     this.loading.set(true);
-    this.customTypeService.updateCustomType(this.data.source.id).subscribe({
+    this.customTypeService.updateCustomType(this.data.repoNameSource,this.data.repoNameTarget,this.data.source.id).subscribe({
       next: (result: CustomTypeMigrationResult) => {
         this.loading.set(false);
         this.dialogRef.close(result);

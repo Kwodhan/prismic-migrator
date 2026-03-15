@@ -19,10 +19,6 @@ export class DocumentController {
       return;
     }
     const type = req.query['type'] as string | undefined;
-    if (!type) {
-      res.status(400).json({error: 'type est requis'});
-      return;
-    }
     const page = Number(req.query['page']) || 1;
     const result = await this.migratorDocument.getDocuments(repoName, page, type);
     res.json(result);

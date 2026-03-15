@@ -12,28 +12,46 @@ import { MatDialog } from '@angular/material/dialog';
 import { DocumentList } from '../document-list/document-list';
 import { DocumentService } from '../../../services/document.service';
 import { DocumentValidationDialogComponent } from '../document-validation-dialog/document-validation-dialog.component';
-import {DocumentMigrationResult, PrismicDocument, ReportMigrationResult} from '@shared/types';
+import { ReportMigrationResult } from '@shared/types';
 
 @Component({
   selector: 'target-document-list',
-  imports: [FormsModule, DatePipe, MatFormFieldModule, MatInputModule, MatIconModule, MatButtonModule, MatTooltipModule, MatProgressBarModule, MatAutocompleteModule],
+  imports: [
+    FormsModule,
+    DatePipe,
+    MatFormFieldModule,
+    MatInputModule,
+    MatIconModule,
+    MatButtonModule,
+    MatTooltipModule,
+    MatProgressBarModule,
+    MatAutocompleteModule,
+  ],
   templateUrl: './target-document-list.html',
   styleUrl: './target-document-list.css',
 })
 export class TargetDocumentList extends DocumentList implements OnInit, OnDestroy {
+  isDragOver = signal(false);
+  migrating = signal(false);
   private readonly documentService = inject(DocumentService);
   private readonly dialog = inject(MatDialog);
 
-  isDragOver = signal(false);
-  migrating = signal(false);
+  ngOnInit(): void {
+    document.addEventListener('dragend', this.onDragEnd);
+  }
 
-  private readonly onDragEnd = (): void => this.isDragOver.set(false);
+  ngOnDestroy(): void {
+    document.removeEventListener('dragend', this.onDragEnd);
+  }
 
-  ngOnInit(): void { document.addEventListener('dragend', this.onDragEnd); }
-  ngOnDestroy(): void { document.removeEventListener('dragend', this.onDragEnd); }
+  onDragOver(event: DragEvent): void {
+    event.preventDefault();
+    this.isDragOver.set(true);
+  }
 
-  onDragOver(event: DragEvent): void { event.preventDefault(); this.isDragOver.set(true); }
-  onDragLeave(): void { this.isDragOver.set(false); }
+  onDragLeave(): void {
+    this.isDragOver.set(false);
+  }
 
   onDrop(event: DragEvent): void {
     event.preventDefault();
@@ -42,36 +60,41 @@ export class TargetDocumentList extends DocumentList implements OnInit, OnDestro
     const data = event.dataTransfer?.getData('application/json');
     if (!data) return;
 
-    const doc: PrismicDocument = JSON.parse(data);
+    const { repositorySource, document } = JSON.parse(data);
     this.migrating.set(true);
 
-    this.documentService.getReportMigrateDocument(doc.id).subscribe({
-      next: (result: ReportMigrationResult) => {
-        this.migrating.set(false);
+    this.documentService
+      .getReportMigrateDocument(repositorySource, this.repository(), document.id)
+      .subscribe({
+        next: (result: ReportMigrationResult) => {
+          this.migrating.set(false);
 
-        this.dialog.open(DocumentValidationDialogComponent, {
-          width: '800px',
-          maxWidth: '95vw',
-          data: {
-            validation: result.validation,
-            docLabel: doc.uid ?? doc.id,
-            docId: doc.id,
-            targetRepo: this.repository(),
-          },
-        });
-      },
-      error: () => {
-        this.migrating.set(false);
-        this.dialog.open(DocumentValidationDialogComponent, {
-          width: '700px',
-          maxWidth: '95vw',
-          data: {
-            validation: null,
-            docLabel: doc.uid ?? doc.id,
-            targetRepo: this.repository(),
-          },
-        });
-      },
-    });
+          this.dialog.open(DocumentValidationDialogComponent, {
+            width: '800px',
+            maxWidth: '95vw',
+            data: {
+              validation: result.validation,
+              docLabel: document.uid ?? document.id,
+              docId: document.id,
+              repoNameSource: repositorySource,
+              repoNameTarget: this.repository(),
+            },
+          });
+        },
+        error: () => {
+          this.migrating.set(false);
+          this.dialog.open(DocumentValidationDialogComponent, {
+            width: '800px',
+            maxWidth: '95vw',
+            data: {
+              validation: null,
+              docLabel: document.uid ?? document.id,
+              targetRepo: this.repository(),
+            },
+          });
+        },
+      });
   }
+
+  private readonly onDragEnd = (): void => this.isDragOver.set(false);
 }
