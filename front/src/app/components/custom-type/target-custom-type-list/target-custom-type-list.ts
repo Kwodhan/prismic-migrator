@@ -88,7 +88,7 @@ export class TargetCustomTypeList extends CustomTypeList implements OnInit, OnDe
               width: '800px',
               maxWidth: '95vw',
               data: {
-                customType,
+                source: customType,
                 target: result.target,
                 repoNameSource : repositorySource,
                 repoNameTarget : this.repository()
