@@ -19,8 +19,10 @@
     "deep-object-diff": "^1.1.9",
     "dotenv": "^17.3.1",
     "express": "^5.2.1",
+    "express-jwt": "^8.5.1",
+    "jwks-rsa": "^4.0.1",
     "lodash": "^4.17.23",
-    "undici": "^7.22.0"
+    "undici": "7.24.0"
   },
   "devDependencies": {
     "@types/cors": "^2.8.19",
