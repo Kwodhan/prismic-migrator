@@ -1,12 +1,12 @@
 # Prismic Migrator
 
-A full-stack web application to migrate content between two [Prismic](https://prismic.io) repositories - assets, custom types and documents - through a visual drag-and-drop interface.
+A full-stack web application to migrate content between [Prismic](https://prismic.io) repositories — assets, custom types and documents — through a visual drag-and-drop interface.
 
 ---
 
 ## Overview
 
-When working with multiple Prismic environments (e.g. staging → production), migrating content manually is tedious and error-prone. **Prismic Migrator** provides a unified UI to browse both repositories side by side and migrate items with a single drag-and-drop, with built-in validation and conflict detection.
+When working with multiple Prismic environments (e.g. staging → production), migrating content manually is tedious and error-prone. **Prismic Migrator** provides a unified UI to browse repositories side by side and migrate items with a single drag-and-drop, with built-in validation, conflict detection and auto-fix.
 
 ---
 
@@ -31,10 +31,27 @@ When working with multiple Prismic environments (e.g. staging → production), m
 - **Validation pipeline** runs before and after migration (see below)
 - Open any document directly in Prismic Migration Builder (new tab)
 - URL-persisted filters (type filter is kept in the query string on navigation)
+- Don't forget that migrated documents appear in the **"Migration release"** of the target repository, not in the regular document list!
 
 ---
 
-## Document Migration & Validation Report
+## Authentication (OIDC)
+
+Prismic Migrator supports **optional OpenID Connect (OIDC) authentication**. When configured, all API routes are protected and the front-end redirects unauthenticated users to the identity provider.
+
+### Environment variables
+
+| Variable |  Description |
+|---|---|
+| `OIDC_ISSUER` |Base URL of the identity provider (e.g. `https://sso.example.com/realms/my-realm`) |
+| `OIDC_CLIENT_ID` | OIDC client ID registered in the IdP |
+| `OIDC_SCOPE` | Space-separated scopes (default: `openid profile email`) |
+
+> The IdP must expose `{OIDC_ISSUER}/.well-known/openid-configuration` and support the **Authorization Code Flow** with `RS256` or `ES256` tokens.
+
+---
+
+## Document Migration & Validation Pipeline
 
 Document migration is the most complex operation. Before sending a document to the [Prismic Migration API](https://prismic.io/docs/migration-api-technical-reference), the application runs a **validation pipeline** that inspects the document and collects issues.
 
@@ -42,36 +59,36 @@ Document migration is the most complex operation. Before sending a document to t
 
 Each validator runs in parallel and produces a list of `ValidationIssue` objects:
 
-| Validator | Severity | What it checks                                                              | Auto-fixable |
-|---|---|-----------------------------------------------------------------------------|---|
-| `CustomTypeValidator` | **BLOCKING** | The document's custom type exists in the target repository                  | ✗ |
-| `ExactlySameDocumentValidator` | **BLOCKING** | The document's source has exactly the same data in the target repository    | ✗ |
-| `SameUIDDocumentValidator` | **BLOCKING** | The document's uid is already present  in the target repository             | ✗ |
-| `SameStateCustomType` | **BLOCKING** | The document's custom type has not the same structure                       | ✗ |
-| `AssetValidator` | WARNING | All image fields and rich text images reference assets present in the target | ✓ |
+| Validator | Severity | What it checks | Auto-fixable |
+|---|---|---|---|
+| `CustomTypeValidator` | **BLOCKING** | The document's custom type exists in the target repository | ✗ |
+| `ExactlySameDocumentValidator` | **BLOCKING** | The document already exists with identical data in the target | ✗ |
+| `SameUIDDocumentValidator` | **BLOCKING** | The document's UID is already used by a different document in the target | ✗ |
+| `SameStateCustomType` | **BLOCKING** | The custom type structure differs between source and target | ✗ |
+| `AssetValidator` | WARNING | All image fields and rich-text images reference assets present in the target | ✓ |
 | `LinkDocumentValidator` | WARNING | All content relationship fields point to documents that exist in the target | ✓ |
-| `LinkMediaValidator` | WARNING | All media links reference assets present in the target                      | ✓ |
+| `LinkMediaValidator` | WARNING | All media links reference assets present in the target | ✓ |
 
 ### Severity levels
 
-- **BLOCKING** - migration is refused. The issue must be resolved manually before retrying (e.g. migrate the custom type first).
-- **WARNING** - migration can proceed, but some references may be broken. The pipeline will attempt to auto-fix them.
+- **BLOCKING** — migration is refused. The issue must be resolved manually before retrying (e.g. migrate the custom type first, or resolve the UID conflict).
+- **WARNING** — migration can proceed, but some references may be broken. The pipeline will attempt to auto-fix them.
 
 ### Auto-fix strategy
 
-Before submitting the document, the pipeline runs a `fix` pass on each validator:
+| Validator | Fix behaviour |
+|---|---|
+| `AssetValidator` | Matches source asset filename against the target library. If found, updates image fields (including thumbnails) with target URLs. If not found, clears the field. |
+| `LinkDocumentValidator` | Looks up the linked document in the target by `uid`. If found, updates the relationship field. For documents without `uid`, falls back to an exact content match within the same type. If no match, clears the field. |
+| `LinkMediaValidator` | Matches source media filename against the target asset library. If not found, clears the link. |
 
-- **AssetValidator fix** - resolves missing images by matching the source asset filename against the target asset library. If a match is found, the image field (including thumbnails) is updated with the target asset URL. If no match is found, the field is cleared.
-- **LinkDocumentValidator fix** - checks whether the linked document exists in the target by `uid`. If found, the relationship field is updated with the target document reference. Certains documents doesn't have a `uid`, so in that case we're looking for an exact match of the content in documents of the same type. If no match is found, the field is cleared.
-- **LinkMediaValidator fix** - resolves missing media links by filename match in the target asset library. If no match is found, the link is cleared.
+### Validation result dialog
 
-### Migration result dialog
-
-After migration, a **result dialog** shows:
+After migration, a result dialog shows:
 - ✅ Success or ❌ failure
-- The full list of issues with their severity, fix status and fix description
+- The full list of issues with severity, fix status and fix description
 - A direct link to the Prismic Migration Builder of the target repository
-- Don't forget that migration documents is present in "Migration release" of the target repository, not in the regular document list!
+
 ---
 
 ## Tech stack
@@ -80,8 +97,8 @@ After migration, a **result dialog** shows:
 |---|---|
 | Front-end | Angular 21, Angular Material, Tailwind CSS |
 | Back-end | Node.js, Express 5, TypeScript |
+| Authentication | `oidc-client-ts` (front), `express-jwt` + `jwks-rsa` (back) |
 | Prismic SDK | `@prismicio/client` |
-| Diff | `jsondiffpatch` |
 | Monorepo | npm workspaces |
 
 ---
@@ -91,9 +108,7 @@ After migration, a **result dialog** shows:
 ### Prerequisites
 
 - Node.js ≥ 20
-- Two Prismic repositories (source & destination)
-- Write tokens for both repositories
-- Content API tokens for both repositories
+- At least two Prismic repositories with write & content API tokens
 
 ### Configuration
 
@@ -105,16 +120,24 @@ PROXY_HOST=
 PROXY_PORT=
 PROXY_PROTOCOL=
 
-# Source repository
-SOURCE_REPOSITORY_NAME=
-SOURCE_WRITE_TOKEN=
-SOURCE_CONTENT_TOKEN=
+# Optional OIDC authentication
+OIDC_ISSUER=
+OIDC_CLIENT_ID=
+OIDC_SCOPE=openid profile email
 
-# Destination repository
-DESTINATION_REPOSITORY_NAME=
-DESTINATION_WRITE_TOKEN=
-DESTINATION_CONTENT_TOKEN=
+# Repositories — add as many ENV_N_* blocks as needed (0-indexed)
+ENV_0_REPOSITORY_NAME=my-staging-repo
+ENV_0_DESCRIPTION=Staging
+ENV_0_WRITE_TOKEN=
+ENV_0_CONTENT_TOKEN=
+
+ENV_1_REPOSITORY_NAME=my-production-repo
+ENV_1_DESCRIPTION=Production
+ENV_1_WRITE_TOKEN=
+ENV_1_CONTENT_TOKEN=
 ```
+
+> You can declare as many environments as needed by incrementing the index (`ENV_0_*`, `ENV_1_*`, `ENV_2_*`, …). The app reads them all at startup.
 
 ### Run in development
 
@@ -151,13 +174,6 @@ docker run -p 3001:3001 -e APP_MODE=back --env-file .env prismic-migrator
 docker run -p 8080:8080 -e APP_MODE=front prismic-migrator
 ```
 
-### Environment variables (runtime)
-
-| Variable | Default | Description |
-|---|---|---|
-| `APP_MODE` | `all` | Launch mode: `all` \| `back` \| `front` |
-
----
 
 ## Project structure
 
@@ -175,10 +191,9 @@ prismic-migrator/
 │       ├── components/
 │       ├── pages/
 │       └── services/
-├── shared              
-│   └── types/          # Common types beetween back & front
+├── shared/
+│   └── types/          # Shared TypeScript types (front ↔ back)
 ├── Dockerfile
 ├── entrypoint.sh
 └── .env.example
 ```
-
