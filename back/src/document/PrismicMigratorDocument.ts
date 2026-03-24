@@ -248,7 +248,7 @@ export class PrismicMigratorDocument {
 
   }
 
-  private buildValidationPipeline(repoNameSource: string, repoNameTarget: string, prismicClientSource, prismicClientTarget): ValidationPipeline {
+  private buildValidationPipeline(repoNameSource: string, repoNameTarget: string, prismicClientSource: prismic.Client, prismicClientTarget: prismic.Client): ValidationPipeline {
     const cachedSourceClient = new CachedPrismicClient(prismicClientSource);
     const cachedTargetClient = new CachedPrismicClient(prismicClientTarget);
 
