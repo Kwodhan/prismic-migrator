@@ -6,7 +6,9 @@
   "scripts": {
     "dev": "nodemon src/index.ts",
     "build": "tsc",
-    "start": "node dist/back/src/index.js"
+    "start": "node dist/back/src/index.js",
+    "test": "vitest",
+    "test:coverage": "vitest --coverage"
   },
   "keywords": [],
   "author": "",
@@ -31,6 +33,7 @@
     "@types/lodash": "4.17.23",
     "nodemon": "^3.1.14",
     "ts-node": "^10.9.2",
+    "vitest" : "^4.0.18",
     "typescript": "^5.9.3"
   }
 }

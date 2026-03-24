@@ -40,6 +40,10 @@ testem.log
 /typings
 __screenshots__/
 
+# Test coverage
+.vitest/
+coverage/
+
 # System files
 .DS_Store
 Thumbs.db
