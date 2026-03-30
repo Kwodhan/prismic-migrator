@@ -65,7 +65,7 @@ export class PrismicMigratorCustomType {
 
       if (!customType) {
         console.log(`[updateCustomType] ${idSource} does not exist`);
-        return {success: false, error: `Custom type "${idSource}" introuvable dans le repository source`};
+        return {success: false, error: `Custom type "${idSource}" not found in source repository`};
       }
       console.log(`[updateCustomType] ${customType?.label} started`);
       await this.axiosInstance
@@ -97,6 +97,9 @@ export class PrismicMigratorCustomType {
   /**
    * Migrate a custom type from the source repository to the target repository
    * @param id - Identifier of the custom type to migrate
+   * @param repoNameSource - Name of the source repository
+   * @param repoNameTarget - Name of the target repository
+   * @returns Migration result with success status, error message if any, and migrated custom type info
    */
   async migrateCustomType(repoNameSource: string, repoNameTarget: string, id: string): Promise<CustomTypeMigrationResult> {
     const envSource = this.environments.find(env => env.repoName === repoNameSource);
@@ -116,7 +119,7 @@ export class PrismicMigratorCustomType {
         });
 
       if (!customType) {
-        return {success: false, error: `Custom type "${id}" introuvable dans le repository source`};
+        return {success: false, error: `Custom type "${id}" not found in source repository`};
       }
       console.log(`[migrateCustomType] ${customType?.label} started`);
       // 2. Check if the custom type already exists in the destination repo

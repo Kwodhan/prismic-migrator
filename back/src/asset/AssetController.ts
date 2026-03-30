@@ -10,7 +10,7 @@ export class AssetController {
 
   /**
    * GET /assets/:repoName
-   * Récupère tous les assets du repository
+   * Retrieves all assets from the repository
    */
   getAssets = async (req: Request, res: Response): Promise<void> => {
     const repoName = req.params['repoName'] as string;
@@ -20,22 +20,21 @@ export class AssetController {
 
   /**
    * POST /assets/migrate
-   * Migre un asset depuis une URL source vers le repository
+   * Migrates an asset from a source URL to the repository
    * Body: { sourceUrl, filename?, repoNameTarget }
    */
   migrateAsset = async (req: Request, res: Response): Promise<void> => {
     const {sourceUrl, repoNameTarget, filename} = req.body;
 
     if (!sourceUrl) {
-      res.status(400).json({error: 'sourceUrl est requis'});
+      res.status(400).json({error: 'sourceUrl is required'});
       return;
     }
     if (!repoNameTarget) {
-      res.status(400).json({error: 'repoNameTarget est requis'});
+      res.status(400).json({error: 'repoNameTarget is required'});
       return;
     }
     const result = await this.migratorAsset.migrateAsset(repoNameTarget, sourceUrl, filename);
     res.json(result);
   };
 }
-

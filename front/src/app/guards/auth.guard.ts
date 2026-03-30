@@ -3,8 +3,7 @@ import { CanActivateFn } from '@angular/router';
 import { AuthService } from '../services/auth.service';
 
 /**
- * Protège toutes les routes : redirige vers l'IdP si non authentifié.
- * Aucune sauvegarde serveur — l'identité vient exclusivement des claims OIDC.
+ * Protects all routes: redirects to the IdP if not authenticated.
  */
 export const authGuard: CanActivateFn = () => {
   const auth = inject(AuthService);

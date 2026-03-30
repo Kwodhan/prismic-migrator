@@ -11,7 +11,7 @@ export class CustomTypeController {
 
   /**
    * GET /custom-types/:repoName
-   * Récupère tous les custom types du repository de destination
+   * Retrieves all custom types from the target repository
    */
   getCustomTypes = async (req: Request, res: Response): Promise<void> => {
     const repoName = req.params['repoName'] as string;
@@ -21,21 +21,21 @@ export class CustomTypeController {
 
   /**
    * POST /custom-types/migrate
-   * Migre un custom type depuis le repository source vers le repository de destination
+   * Migrates a custom type from the source repository to the target repository
    * Body: { idSource, repoNameSource, repoNameTarget }
    */
   migrateCustomType = async (req: Request, res: Response): Promise<void> => {
     const {idSource, repoNameSource, repoNameTarget} = req.body;
     if (!idSource) {
-      res.status(400).json({error: 'idSource est requis'});
+      res.status(400).json({error: 'idSource is required'});
       return;
     }
     if (!repoNameSource) {
-      res.status(400).json({error: 'repoNameSource est requis'});
+      res.status(400).json({error: 'repoNameSource is required'});
       return;
     }
     if (!repoNameTarget) {
-      res.status(400).json({error: 'repoNameTarget est requis'});
+      res.status(400).json({error: 'repoNameTarget is required'});
       return;
     }
     const result = await this.migratorCustomType.migrateCustomType(repoNameSource, repoNameTarget,idSource);
@@ -44,25 +44,24 @@ export class CustomTypeController {
 
   /**
    * PUT /custom-types/update
-   * Met à jour un custom type existant dans le repository de destination
+   * Updates an existing custom type in the target repository
    * Body: { idSource, repoNameSource, repoNameTarget }
    */
   updateCustomType = async (req: Request, res: Response): Promise<void> => {
     const {idSource, repoNameSource, repoNameTarget} = req.body;
     if (!idSource) {
-      res.status(400).json({error: 'idSource est requis'});
+      res.status(400).json({error: 'idSource is required'});
       return;
     }
     if (!repoNameSource) {
-      res.status(400).json({error: 'repoNameSource est requis'});
+      res.status(400).json({error: 'repoNameSource is required'});
       return;
     }
     if (!repoNameTarget) {
-      res.status(400).json({error: 'repoNameTarget est requis'});
+      res.status(400).json({error: 'repoNameTarget is required'});
       return;
     }
     const result = await this.migratorCustomType.updateCustomType(repoNameSource, repoNameTarget, idSource);
     res.json(result);
   };
 }
-

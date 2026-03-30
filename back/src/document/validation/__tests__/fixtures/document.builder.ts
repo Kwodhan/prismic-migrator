@@ -1,11 +1,8 @@
 import * as prismic from '@prismicio/client';
 
 /**
- * Document Builder pour créer des documents de test sans les recréer à chaque fois.
- * Utilise le pattern Builder pour composer facilement des documents complexes.
+ * Document Builder for creating test documents without recreating them each time.
  *
- * Avantage clé : les documents volumineux sont créés une seule fois et réutilisés
- * dans tous les tests grâce aux méthodes build().
  */
 export class DocumentBuilder {
   private id: string = 'test-doc-id';
@@ -37,18 +34,14 @@ export class DocumentBuilder {
     return this;
   }
 
-  /**
-   * Remplace entièrement les données du document.
-   * Utile pour tester des structures de données spécifiques.
-   */
   withData(data: Record<string, any>): this {
     this.data = { ...data };
     return this;
   }
 
   /**
-   * Crée un document volumineux avec beaucoup de paragraphes.
-   * Utile pour tester les performances sans recréer le document à chaque test.
+   * Creates a large document with many paragraphs.
+   * Useful for testing performance without recreating the document for each test.
    */
   withLargeBody(paragraphs: number = 100): this {
     this.data = {
@@ -62,8 +55,8 @@ export class DocumentBuilder {
   }
 
   /**
-   * Ajoute des images au document pour tester la validation d'assets.
-   * Crée une galerie avec un nombre configurable d'images.
+   * Adds images to the document to test asset validation.
+   * Creates a gallery with a configurable number of images.
    */
   withImages(count: number = 3): this {
     this.data = {
@@ -83,8 +76,8 @@ export class DocumentBuilder {
   }
 
   /**
-   * Ajoute des liens de documents pour tester la validation de références.
-   * Crée des champs de relations vers d'autres documents.
+   * Adds document links to test reference validation.
+   * Creates relation fields pointing to other documents.
    */
   withLinks(count: number = 3): this {
     this.data = {
@@ -107,8 +100,8 @@ export class DocumentBuilder {
   }
 
   /**
-   * Crée et retourne le document Prismic construit.
-   * Cette méthode crée l'objet final une seule fois, réutilisable dans les tests.
+   * Builds and returns the constructed Prismic document.
+   * This method creates the final object once, reusable across tests.
    */
   build(): prismic.PrismicDocument {
     return {
@@ -126,4 +119,3 @@ export class DocumentBuilder {
     } as unknown as prismic.PrismicDocument;
   }
 }
-

@@ -2,10 +2,10 @@ import { CachedPrismicClient } from '../../CachedPrismicClient';
 import * as prismic from '@prismicio/client';
 
 /**
- * Mock réutilisable du CachedPrismicClient.
- * Permet de simuler les réponses du client Prismic sans faire d'appels réels.
+ * Reusable mock for CachedPrismicClient.
+ * Allows simulating Prismic client responses without making real API calls.
  *
- * Utilisation :
+ * Usage:
  *   const mock = new MockCachedPrismicClient();
  *   mock.addDocument(doc1).addDocument(doc2);  // Fluent API
  *   const result = await mock.getByID(doc1.id);
@@ -16,8 +16,8 @@ export class MockCachedPrismicClient implements Partial<CachedPrismicClient> {
   private documentsByUID = new Map<string, prismic.PrismicDocument>();
 
   /**
-   * Ajoute un document au mock (indexé par ID, type, et UID si présent).
-   * Retourne this pour permettre la chaîne d'appels (fluent API).
+   * Adds a document to the mock (indexed by ID, type, and UID if present).
+   * Returns this to allow method chaining (fluent API).
    */
   addDocument(doc: prismic.PrismicDocument): this {
     this.documentsById.set(doc.id, doc);
@@ -36,8 +36,8 @@ export class MockCachedPrismicClient implements Partial<CachedPrismicClient> {
   }
 
   /**
-   * Récupère un document par son ID.
-   * Lance une erreur si le document n'existe pas.
+   * Retrieves a document by its ID.
+   * Throws an error if the document does not exist.
    */
   async getByID(id: string): Promise<prismic.PrismicDocument> {
     const doc = this.documentsById.get(id);
@@ -46,16 +46,16 @@ export class MockCachedPrismicClient implements Partial<CachedPrismicClient> {
   }
 
   /**
-   * Récupère tous les documents d'un type donné.
-   * Retourne un tableau vide si aucun document du type n'existe.
+   * Retrieves all documents of a given type.
+   * Returns an empty array if no document of that type exists.
    */
   async getByType(type: string): Promise<prismic.PrismicDocument[]> {
     return this.documentsByType.get(type) ?? [];
   }
 
   /**
-   * Récupère un document par son type et son UID.
-   * Lance une erreur si le document n'existe pas.
+   * Retrieves a document by its type and UID.
+   * Throws an error if the document does not exist.
    */
   async getByUID(type: string, uid: string): Promise<prismic.PrismicDocument> {
     const doc = this.documentsByUID.get(`${type}:${uid}`);
@@ -64,7 +64,7 @@ export class MockCachedPrismicClient implements Partial<CachedPrismicClient> {
   }
 
   /**
-   * Réinitialise le mock (utile pour nettoyer entre les tests).
+   * Resets the mock (useful for cleaning up between tests).
    */
   reset(): void {
     this.documentsById.clear();
@@ -72,4 +72,3 @@ export class MockCachedPrismicClient implements Partial<CachedPrismicClient> {
     this.documentsByUID.clear();
   }
 }
-

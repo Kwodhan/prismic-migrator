@@ -2,9 +2,6 @@ import { expressjwt } from 'express-jwt';
 import jwksRsa from 'jwks-rsa';
 import type { Request, Response, NextFunction } from 'express';
 
-// ─── Factory ──────────────────────────────────────────────────────────────────
-// jwksUri est résolu au démarrage (index.ts) et passé explicitement,
-// sans mutation de process.env.
 export function oidcMiddleware(jwksUri: string) {
   const middleware = expressjwt({
     secret: jwksRsa.expressJwtSecret({

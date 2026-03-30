@@ -3,9 +3,7 @@ import { inject } from '@angular/core';
 import { TokenStoreService } from '../services/token-store.service';
 
 /**
- * Ajoute le Bearer token OIDC à chaque requête HTTP sortante.
- * Utilise TokenStoreService (sans HttpClient) pour éviter toute
- * dépendance circulaire avec AuthService.
+ * Adds the OIDC Bearer token to every outgoing HTTP request.
  */
 export const authInterceptor: HttpInterceptorFn = (req, next) => {
   const tokenStore = inject(TokenStoreService);

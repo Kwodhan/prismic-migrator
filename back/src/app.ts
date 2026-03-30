@@ -15,7 +15,6 @@ export function createApp(axiosInstance: AxiosInstance, proxyUrl?: string, jwksU
     const frontDistPath = path.resolve(__dirname, '../../public');
     app.use(express.static(frontDistPath));
 
-    // ── Route publique : configuration OIDC pour le front ────────────────────
     app.get('/api/auth/config', (_req, res) => {
         res.json({
             issuer: process.env.OIDC_ISSUER ?? '',

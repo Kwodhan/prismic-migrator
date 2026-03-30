@@ -5,8 +5,8 @@ import {PrismicMigratorCustomType} from '../../../custom-type/PrismicMigratorCus
 import {ValidationResult} from "@shared/types";
 
 /**
- * Vérifie que le custom type du document existe dans le repository de destination.
- * BLOCKING : la Migration API refusera la création si le type est absent.
+ * Checks that the custom type of the document exists in the target repository.
+ * BLOCKING: the Migration API will refuse creation if the type is missing.
  */
 export class CustomTypeValidator implements DocumentValidator {
   constructor(
@@ -25,7 +25,7 @@ export class CustomTypeValidator implements DocumentValidator {
           severity: 'BLOCKING',
           code: 'CUSTOM_TYPE_NOT_FOUND',
           validator: this.constructor.name,
-          message: `Le custom type "${doc.type}" n'existe pas dans le repository de destination`,
+          message: `The custom type "${doc.type}" does not exist in the target repository`,
           fixable: false,
         }],
       };

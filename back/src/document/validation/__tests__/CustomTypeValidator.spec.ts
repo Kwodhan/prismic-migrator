@@ -47,14 +47,12 @@ describe('CustomTypeValidator', () => {
   it('should handle large documents efficiently (reuse builder)', async () => {
     mockCustomType.addCustomType('target-repo', 'article', {id: 'article'});
 
-    // Crée un gros document une seule fois, puis le réutilise
     const largeDoc = DocumentBuilder.create()
       .withType('article')
-      .withLargeBody(100) // 100 paragraphes
+      .withLargeBody(100) // 100 paragraphs
       .withImages(10)
       .build();
 
-    // Valider le même document plusieurs fois sans le recréer
     const result1 = await validator.validate(largeDoc);
     const result2 = await validator.validate(largeDoc);
     const result3 = await validator.validate(largeDoc);
@@ -62,7 +60,6 @@ describe('CustomTypeValidator', () => {
     expect(result1.valid).toBe(true);
     expect(result2.valid).toBe(true);
     expect(result3.valid).toBe(true);
-    // Aucune recréation d'objet, juste réutilisation
   });
 
   it('should have correct error message with custom type name', async () => {
@@ -73,7 +70,7 @@ describe('CustomTypeValidator', () => {
     const result = await validator.validate(doc);
 
     expect(result.issues[0].message).toContain('special_article');
-    expect(result.issues[0].message).toContain('n\'existe pas');
+    expect(result.issues[0].message).toContain('does not exist');
   });
 });
 

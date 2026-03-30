@@ -7,10 +7,10 @@ import {CachedPrismicClient} from "../CachedPrismicClient";
 
 
 /**
- * Certains documents ne possèdent pas d'uid, il est donc difficile de savoir s'il existe déjà un document équivalent dans la destination.
- * Cette validation tente de faire une comparaison profonde entre le document source et les documents de même type dans la destination
- * pour vérifier qu'il n'existe pas déjà un document équivalent.
- * BLOCKING : la Migration API refusera la création s'il y a exactement le même document.
+ * Some documents do not have a uid, making it difficult to know whether an equivalent document already exists in the destination.
+ * This validation attempts a deep comparison between the source document and documents of the same type in the destination
+ * to verify that no equivalent document already exists.
+ * BLOCKING: the Migration API will refuse creation if an identical document exists.
  */
 export class ExactlySameDocumentValidator implements DocumentValidator {
     constructor(
@@ -31,7 +31,7 @@ export class ExactlySameDocumentValidator implements DocumentValidator {
                             severity: 'BLOCKING',
                             code: 'DOCUMENT_ALREADY_EXISTS',
                             validator: this.constructor.name,
-                            message: `Un document existe déja dans le repertoire de destination avec exactement le même contenu (id: ${docDest.id})`,
+                            message: `A document already exists in the target repository with exactly the same content (id: ${docDest.id})`,
                             fixable: false,
                         }],
                     };

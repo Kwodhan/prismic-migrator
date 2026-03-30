@@ -10,12 +10,12 @@ export class DocumentController {
 
   /**
    * GET /documents/:repoName?page=1&type=searchType
-   * Récupère les documents du repository (30 par page), filtrés par type si search fourni
+   * Retrieves documents from the repository (30 per page), filtered by type if search is provided
    */
   getDocuments = async (req: Request, res: Response): Promise<void> => {
     const repoName = req.params['repoName'] as string;
     if (!repoName) {
-      res.status(400).json({error: 'repoName est requis'});
+      res.status(400).json({error: 'repoName is required'});
       return;
     }
     const type = req.query['type'] as string | undefined;
@@ -34,15 +34,15 @@ export class DocumentController {
     const repoNameSource = req.query['repoNameSource'] as string;
     const repoNameTarget = req.query['repoNameTarget'] as string;
     if (!idSource) {
-      res.status(400).json({error: 'idSource est requis'});
+      res.status(400).json({error: 'idSource is required'});
       return;
     }
     if (!repoNameSource) {
-      res.status(400).json({error: 'repoNameSource est requis'});
+      res.status(400).json({error: 'repoNameSource is required'});
       return;
     }
     if (!repoNameTarget) {
-      res.status(400).json({error: 'repoNameTarget est requis'});
+      res.status(400).json({error: 'repoNameTarget is required'});
       return;
     }
     const result = await this.migratorDocument.reportMigrateDocument(repoNameSource, repoNameTarget, idSource);
@@ -51,20 +51,20 @@ export class DocumentController {
 
   /**
    * POST /documents/migrate
-   * Migre un document depuis le repository source vers le repository de destination
+   * Migrates a document from the source repository to the target repository
    */
   migrateDocument = async (req: Request, res: Response): Promise<void> => {
     const {idSource, repoNameSource, repoNameTarget} = req.body;
     if (!idSource) {
-      res.status(400).json({error: 'idSource est requis'});
+      res.status(400).json({error: 'idSource is required'});
       return;
     }
     if (!repoNameSource) {
-      res.status(400).json({error: 'repoNameSource est requis'});
+      res.status(400).json({error: 'repoNameSource is required'});
       return;
     }
     if (!repoNameTarget) {
-      res.status(400).json({error: 'repoNameTarget est requis'});
+      res.status(400).json({error: 'repoNameTarget is required'});
       return;
     }
     const result = await this.migratorDocument.migrateDocument(repoNameSource, repoNameTarget, idSource);

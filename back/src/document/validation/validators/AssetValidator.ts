@@ -92,14 +92,14 @@ export class AssetValidator implements DocumentValidator {
         for (const key of Object.keys(obj)) {
             const value = obj[key];
             if (this.isImageField(value)) {
-                // Créer une copie de l'image sans les clés thumbnails avant de push
+                // Create a copy of the image without the thumbnail keys before pushing
                 const imageOnly = Object.fromEntries(
                     Object.entries(value as unknown as Record<string, unknown>)
                         .filter(([, v]) => !this.isImageField(v))
                 ) as unknown as prismic.FilledImageFieldImage;
                 found.push(imageOnly);
 
-                // Collecter les thumbnails séparément
+                // Collect thumbnails separately
                 for (const thumbKey of Object.keys(value as object)) {
                     const thumb = (value as unknown as Record<string, unknown>)[thumbKey];
                     if (this.isImageField(thumb)) {

@@ -19,12 +19,12 @@ async function bootstrap(): Promise<void> {
       const cfg = res.ok ? await res.json() as { jwks_uri?: string } : null;
       jwksUri = cfg?.jwks_uri;
       if (!jwksUri) {
-        console.error(`[Auth] jwks_uri introuvable dans le discovery document (HTTP ${res.status})`);
+        console.error(`[Auth] jwks_uri not found in discovery document (HTTP ${res.status})`);
         process.exit(1);
       }
-      console.info('[Auth] JWKS URI découvert :', jwksUri);
+      console.info('[Auth] JWKS URI discovered:', jwksUri);
     } catch (err) {
-      console.error('[Auth] Impossible de joindre le discovery document :', err);
+      console.error('[Auth] Unable to reach the discovery document:', err);
       process.exit(1);
     }
 
