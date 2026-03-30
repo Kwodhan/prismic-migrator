@@ -44,9 +44,10 @@ export function buildRouter(
     proxyUrl,
   );
 
-  const assetController = new AssetController(migratorAsset);
-  const customTypeController = new CustomTypeController(migratorCustomType);
-  const documentController = new DocumentController(migratorDocument);
+  const allowedRepoNames = environments.map((environment) => environment.repoName);
+  const assetController = new AssetController(migratorAsset, allowedRepoNames);
+  const customTypeController = new CustomTypeController(migratorCustomType, allowedRepoNames);
+  const documentController = new DocumentController(migratorDocument, allowedRepoNames);
 
   router.get('/config', (_req, res) => {
     res.json(environments.map(e => _.pick(e, ['description', 'repoName'])

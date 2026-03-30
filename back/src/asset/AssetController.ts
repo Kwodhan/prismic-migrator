@@ -1,11 +1,17 @@
 import {Request, Response} from 'express';
 import {PrismicMigratorAssets} from './PrismicMigratorAssets';
+import {z} from 'zod';
+import {createGetAssetsParamsSchema, createMigrateAssetSchema} from './asset.schema';
 
 export class AssetController {
   private readonly migratorAsset: PrismicMigratorAssets;
+  private readonly getAssetsParamsSchema: ReturnType<typeof createGetAssetsParamsSchema>;
+  private readonly migrateAssetSchema: ReturnType<typeof createMigrateAssetSchema>;
 
-  constructor(migratorAsset: PrismicMigratorAssets) {
+  constructor(migratorAsset: PrismicMigratorAssets, allowedRepoNames: string[]) {
     this.migratorAsset = migratorAsset;
+    this.getAssetsParamsSchema = createGetAssetsParamsSchema(allowedRepoNames);
+    this.migrateAssetSchema = createMigrateAssetSchema(allowedRepoNames);
   }
 
   /**
@@ -13,7 +19,16 @@ export class AssetController {
    * Retrieves all assets from the repository
    */
   getAssets = async (req: Request, res: Response): Promise<void> => {
-    const repoName = req.params['repoName'] as string;
+    const paramsValidation = this.getAssetsParamsSchema.safeParse(req.params);
+    if (!paramsValidation.success) {
+      res.status(400).json({
+        error: 'Invalid request parameters',
+        details: z.treeifyError(paramsValidation.error),
+      });
+      return;
+    }
+
+    const {repoName} = paramsValidation.data;
     const assets = await this.migratorAsset.getAssets(repoName);
     res.json(assets);
   };
@@ -24,16 +39,15 @@ export class AssetController {
    * Body: { sourceUrl, filename?, repoNameTarget }
    */
   migrateAsset = async (req: Request, res: Response): Promise<void> => {
-    const {sourceUrl, repoNameTarget, filename} = req.body;
-
-    if (!sourceUrl) {
-      res.status(400).json({error: 'sourceUrl is required'});
+    const validation = this.migrateAssetSchema.safeParse(req.body);
+    if (!validation.success) {
+      res.status(400).json({
+        error: 'Invalid request body',
+        details: z.treeifyError(validation.error),
+      });
       return;
     }
-    if (!repoNameTarget) {
-      res.status(400).json({error: 'repoNameTarget is required'});
-      return;
-    }
+    const {sourceUrl, repoNameTarget, filename} = validation.data;
     const result = await this.migratorAsset.migrateAsset(repoNameTarget, sourceUrl, filename);
     res.json(result);
   };
