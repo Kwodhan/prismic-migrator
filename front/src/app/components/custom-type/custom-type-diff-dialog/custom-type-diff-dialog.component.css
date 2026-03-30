@@ -5,7 +5,7 @@
   background-color: white;
 }
 
-/* Styles existants pour jsondiffpatch */
+/* Existing styles for jsondiffpatch */
 .jsondiffpatch-delta {
   font-family: monospace;
   font-size: 12px;
@@ -75,7 +75,7 @@
   text-decoration: line-through;
 }
 
-/* Nouveaux styles pour la vue structurée */
+/* New styles for the structured view */
 .diff-section {
   border: 1px solid #e0e0e0;
   border-radius: 4px;

@@ -6,14 +6,12 @@ import {PrismicMigratorAssets} from "../../../asset/PrismicMigratorAssets";
 import {ValidationIssue, ValidationResult} from "@shared/types";
 
 /**
- * Parcourt récursivement les champs du document à la recherche de références
- * vers des assets (images, link to media) et vérifie leur existence dans la destination.
+ * Recursively scans document fields for asset references
+ * (images, media links) and checks their existence in the target repository.
  *
- * WARNING : la migration peut réussir mais les champs image seront vides.
+ * WARNING: migration can succeed while image fields remain empty.
  *
- * FIX : télécharge chaque asset manquant depuis son URL source et l'uploade
- *       vers https://asset-api.prismic.io/assets de la destination,
- *       puis remplace les URLs dans le document par celles des nouveaux assets.
+ * AUTO-FIX: Search in the target repository the same image
  */
 export class AssetValidator implements DocumentValidator {
     constructor(
@@ -24,8 +22,8 @@ export class AssetValidator implements DocumentValidator {
     }
 
     /**
-     * Détecte si un objet est un FilledImageFieldImage Prismic.
-     * Discriminant : présence de url (string), id (string) et dimensions.width/height (number).
+     * Detects whether an object is a Prismic FilledImageFieldImage.
+     * Discriminant: it has url (string), id (string), and dimensions.width/height (number).
      */
     private isImageField(value: unknown): value is prismic.FilledImageFieldImage {
         if (!value || typeof value !== 'object' || Array.isArray(value)) return false;
@@ -41,8 +39,8 @@ export class AssetValidator implements DocumentValidator {
     }
 
     /**
-     * Détecte si un noeud est un RTImageNode dans un richText.
-     * Discriminant : type === 'image' + id + url + dimensions.
+     * Detects whether a node is an RTImageNode in rich text.
+     * Discriminant: type === 'image' + id + url + dimensions.
      */
     private isRichTextImageNode(node: unknown): node is prismic.RTImageNode {
         if (!node || typeof node !== 'object' || Array.isArray(node)) return false;
@@ -57,7 +55,7 @@ export class AssetValidator implements DocumentValidator {
     }
 
     /**
-     * Parcourt un tableau de noeuds richText et collecte les RTImageNode.
+     * Scans a rich text node array and collects RTImageNode entries.
      */
     private extractImagesFromRichText(nodes: unknown[]): prismic.FilledImageFieldImage[] {
         const found: prismic.FilledImageFieldImage[] = [];
@@ -70,14 +68,14 @@ export class AssetValidator implements DocumentValidator {
     }
 
     /**
-     * Parcourt récursivement les données du document et collecte toutes les images.
-     * Traite maintenant aussi les richText au lieu de les ignorer.
+     * Recursively scans document data and collects all images.
+     * It now also processes rich text instead of ignoring it.
      */
     private extractImages(data: unknown, found: prismic.FilledImageFieldImage[] = []): prismic.FilledImageFieldImage[] {
         if (!data || typeof data !== 'object') return found;
 
         if (Array.isArray(data)) {
-            // RichText : tableau dont le premier élément a un champ "type" string
+            // RichText: array whose first element has a string "type" field
             if (data.length > 0 && typeof (data[0] as Record<string, unknown>)['type'] === 'string') {
                 found.push(...this.extractImagesFromRichText(data));
                 return found;
@@ -135,28 +133,28 @@ export class AssetValidator implements DocumentValidator {
     }
 
     /**
-     * Cherche dans les assets du repository de destination un asset dont l'URL
-     * contient le même nom de fichier que l'asset source.
+     * Searches target repository assets for an asset whose URL
+     * contains the same filename as the source asset.
      *
-     * Format URL source : https://images.prismic.io/${repository}/${id}_${nom}.ext
-     * On extrait ${nom} et on cherche une URL target qui le contient via regex.
+     * Source URL format: https://images.prismic.io/${repository}/${id}_${name}.ext
+     * Extracts ${name} and searches for a target URL containing it via regex.
      *
-     * @returns l'URL de l'asset trouvé dans la destination, ou null si absent
+     * @returns the target asset URL if found, or null otherwise
      */
     private async findMatchingAssetUrl(id: string, node: FilledImageFieldImage): Promise<FilledImageFieldImage | null> {
-        // 1. Chercher les infos de l'image source à partir de son id
+        // 1. Find source image metadata from its id
         const sourceAssets = await this.prismicMigratorAssets.getAssets(this.repoNameSource);
         const sourceAsset = sourceAssets.find(a => a.id === id);
         if (!sourceAsset) return null;
 
-        // 2. Récupérer le filename
+        // 2. Get the filename
         const filename = sourceAsset.filename;
 
-        // 3. Chercher dans les assets target un fichier avec ce nom
+        // 3. Search target assets for a file with this name
         const targetAssets = await this.prismicMigratorAssets.getAssets(this.repoNameTarget);
         const match = targetAssets.find(a => a.filename === filename);
 
-        // 4 & 5. Si trouvé, construire et retourner le FilledImageFieldImage
+        // 4 & 5. If found, build and return the FilledImageFieldImage
         if (match) {
             const newUrl = match.url + node.url.replaceAll(sourceAsset.url, '');
             return {
@@ -169,7 +167,7 @@ export class AssetValidator implements DocumentValidator {
             };
         }
 
-        // 6. Pas trouvé
+        // 6. Not found
         return null;
     }
 
@@ -183,7 +181,7 @@ export class AssetValidator implements DocumentValidator {
         if (!data || typeof data !== 'object') return data;
 
         if (Array.isArray(data)) {
-            // RichText : traiter chaque noeud individuellement pour mettre à jour les RTImageNode
+            // RichText: process each node individually to update RTImageNode entries
             if (data.length > 0 && typeof (data[0] as Record<string, unknown>)['type'] === 'string') {
                 return Promise.all(data.map(async node => {
                     if (this.isRichTextImageNode(node) && idsToFix.has(node.id)) {
@@ -211,7 +209,6 @@ export class AssetValidator implements DocumentValidator {
         if (this.isImageField(data)) {
             const img = data;
             let result: Record<string, unknown> = {};
-            // Traiter l'image principale
             if (idsToFix.has(img.id)) {
                 const targetAsset = await this.findMatchingAssetUrl(img.id, img);
                 if (targetAsset) {

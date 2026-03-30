@@ -96,10 +96,10 @@ describe('ExactlySameDocumentValidator', () => {
       .withId('source-id')
       .build();
 
-    // Même data mais type différent
+    // Same data but different type
     const destDoc = DocumentBuilder.create()
       .withUid(null)
-      .withType('article')  // Type différent
+      .withType('article')  // Different type
       .withData(sharedData)
       .withId('dest-id')
       .build();
@@ -109,7 +109,7 @@ describe('ExactlySameDocumentValidator', () => {
 
     const result = await validator.validate(sourceDoc);
 
-    // Pas de conflit car types différents
+    // No conflict because types are different
     expect(result.valid).toBe(true);
   });
 

@@ -4,7 +4,7 @@ import * as prismic from '@prismicio/client';
 type CacheEntry = { value: unknown; expiresAt: number };
 
 /**
- * Wrapper simple pour prismic.Client avec cache TTL + LRU + in-flight dedupe.
+ * Simple wrapper for prismic.Client with TTL cache + LRU + in-flight dedupe.
  */
 export class CachedPrismicClient {
     private readonly cache = new Map<string, CacheEntry>();
@@ -12,7 +12,7 @@ export class CachedPrismicClient {
 
     constructor(
         private readonly client: prismic.Client,
-        private readonly ttlMs = 60_000, // 1 minute par défaut
+        private readonly ttlMs = 60_000, // 1 minute by default
         private readonly maxSize = 1000
     ) {
     }
@@ -21,7 +21,7 @@ export class CachedPrismicClient {
         try {
             return method + ':' + JSON.stringify(args);
         } catch {
-            // fallback si JSON.stringify plante
+            // Fallback if JSON.stringify fails
             return method + ':' + args.map(String).join('|');
         }
     }
@@ -33,7 +33,7 @@ export class CachedPrismicClient {
             this.cache.delete(key);
             return null;
         }
-        // LRU bump: réinsérer pour le mettre en fin
+        // LRU bump: reinsert to move it to the end
         this.cache.delete(key);
         this.cache.set(key, entry);
         return structuredClone(entry.value) as T;
@@ -42,7 +42,7 @@ export class CachedPrismicClient {
     private setCache(key: string, value: unknown) {
         if (this.cache.has(key)) this.cache.delete(key);
         this.cache.set(key, {value, expiresAt: Date.now() + this.ttlMs});
-        // Eviction LRU simple
+        // Simple LRU eviction
         while (this.cache.size > this.maxSize) {
             const oldestKey = this.cache.keys().next().value;
             if (!oldestKey) break;
@@ -74,7 +74,7 @@ export class CachedPrismicClient {
         return p;
     }
 
-    // Exemples de méthodes courantes utilisées
+    // Examples of commonly used methods
     async getByID(id: string, options?: unknown): Promise<prismic.PrismicDocument> {
         const key = this.makeKey('getByID', id, options ?? null);
         return this.fetchWithCache(key, () => this.client.getByID(id, options as any));
@@ -90,21 +90,21 @@ export class CachedPrismicClient {
         return this.fetchWithCache(key, async () => {
             const all: prismic.PrismicDocument[] = [];
 
-            // Commencer à la page fournie dans options ou page 1
+            // Start at the page provided in options, or page 1
             const opts = (options ?? {}) as any;
             let page = typeof opts.page === 'number' ? opts.page : 1;
 
-            // Récupérer la première page puis itérer tant qu'il y a une `next_page`
+            // Fetch the first page, then iterate while `next_page` exists
             let resp: any = await this.client.getByType(type, {...opts, page});
             all.push(...(resp.results ?? []));
 
-            // Boucler tant que Prismic indique une page suivante
+            // Loop while Prismic reports a next page
             while (resp?.next_page) {
                 page += 1;
                 resp = await this.client.getByType(type, {...opts, page});
                 all.push(...(resp.results ?? []));
 
-                // Si total_pages est présent, on peut arrêter quand on l'atteint
+                // If total_pages is present, stop when it is reached
                 if (typeof resp.total_pages === 'number' && page >= resp.total_pages) break;
             }
 

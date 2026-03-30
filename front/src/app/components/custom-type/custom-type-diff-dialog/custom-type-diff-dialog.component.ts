@@ -47,7 +47,7 @@ export class CustomTypeDiffDialogComponent implements OnInit {
   diffStructured: ShowDiffLine | undefined;
 
   ngOnInit(): void {
-    // Vue Git Diff (jsondiffpatch)
+    // Git diff view (jsondiffpatch)
     const differ = create({ arrays: { detectMove: false } });
     const delta = differ.diff(this.data.target.json, this.data.source.json);
     this.diffHtml = delta
@@ -81,15 +81,15 @@ export class CustomTypeDiffDialogComponent implements OnInit {
   public formatDiff(target: CustomType, source: CustomType): ShowDiffLine {
     const detailedDiffCustomType: DetailedDiff = detailedDiff(target.json, source.json);
     const show: ShowDiffLine = { added: [], deleted: [], updated: [] };
-    // Traitement des ajouts
+    // Process additions
     if (detailedDiffCustomType.added) {
       show.added = this.processDiff(detailedDiffCustomType.added, 'Added');
     }
-    // Traitement des suppressions
+    // Process deletions
     if (detailedDiffCustomType.deleted) {
       show.deleted = this.processDiff(detailedDiffCustomType.deleted, 'Delete', target.json);
     }
-    // Traitement des mises à jour
+    // Process updates
     if (detailedDiffCustomType.updated) {
       show.updated = this.processDiff(detailedDiffCustomType.updated, 'Update', target.json);
     }

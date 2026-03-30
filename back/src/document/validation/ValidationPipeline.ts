@@ -4,8 +4,8 @@ import * as prismic from '@prismicio/client';
 import {ValidationResult} from "@shared/types";
 
 /**
- * Exécute tous les validators en parallèle et fusionne les résultats.
- * Si un BLOCKING est trouvé, la migration ne doit pas être lancée.
+ * Runs all validators in parallel and merges their results.
+ * If a BLOCKING issue is found, migration must not start.
  */
 export class ValidationPipeline {
     private readonly validators: DocumentValidator[];
@@ -22,17 +22,14 @@ export class ValidationPipeline {
     }
 
     /**
-     * Applique séquentiellement les fix de chaque validator qui en possède un,
-     * puis re-valide le document corrigé.
-     * Les fix sont tentés même si la première validation avait des BLOCKING,
-     * car le fix peut justement résoudre le BLOCKING.
-     * Retourne la validation finale + le document potentiellement modifié.
+     * Applies each validator fix sequentially when available,
+     * then re-validates the corrected document.
+     * Returns the final validation result and the potentially modified document.
      */
     async runWithFix(doc: prismic.PrismicDocument): Promise<{
         result: ValidationResult;
         doc: prismic.PrismicDocument
     }> {
-        // Validation initiale pour collecter les issues
         const initialResult = await this.run(doc);
 
         let fixedDoc = doc;
@@ -43,11 +40,10 @@ export class ValidationPipeline {
             }
         }
 
-        // Re-valider après les fix pour savoir si des BLOCKING subsistent
         const reValidation = await this.run(fixedDoc);
         const result: ValidationResult = {
             valid: reValidation.valid,
-            issues: initialResult.issues, // issues originales mutées avec fixed/fixDescription
+            issues: initialResult.issues, // original issues mutated with fixed/fixDescription
         };
         return { result, doc: fixedDoc };
     }

@@ -21,7 +21,7 @@ export class AuthService {
     try {
       const config = await firstValueFrom(this.http.get<OidcConfig>(`${this.apiUrl}/auth/config`));
 
-      // OIDC non configuré → pas d'auth requise
+      // OIDC not configured -> no auth required
       if (!config.issuer || !config.clientId) {
         console.info('[Auth] OIDC non configuré — authentification désactivée.');
         this.isAuthenticated.set(true);
@@ -36,10 +36,10 @@ export class AuthService {
         userStore: new WebStorageStateStore({ store: sessionStorage }),
       });
 
-      // Retour depuis l'IdP (code dans l'URL)
+      // Return from the IdP
       if (new URLSearchParams(window.location.search).has('code')) {
         const user = await this.manager.signinRedirectCallback();
-        // Restaure l'URL d'origine sauvegardée dans le state OIDC
+        // Restore the original URL saved in the OIDC state
         const redirect = (user.state as { redirect?: string } | null)?.redirect;
         const target = new URL(redirect ?? '/', window.location.origin);
         target.search = '';
@@ -48,7 +48,7 @@ export class AuthService {
         return;
       }
 
-      // Session existante en sessionStorage
+      // Existing session in sessionStorage
       const user = await this.manager.getUser();
       if (user && !user.expired) {
         this.applyUser(user);

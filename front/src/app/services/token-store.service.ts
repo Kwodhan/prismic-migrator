@@ -3,9 +3,7 @@ import { Injectable } from '@angular/core';
 const SESSION_KEY = 'oidc_access_token';
 
 /**
- * Stockage minimal du token OIDC (sessionStorage).
- * Séparé de AuthService pour éviter toute dépendance circulaire
- * avec l'intercepteur HTTP.
+ * Minimal OIDC token storage (sessionStorage).
  */
 @Injectable({ providedIn: 'root' })
 export class TokenStoreService {
