@@ -1,14 +1,14 @@
-import { Injectable } from '@angular/core';
+import { inject, Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { API_URL } from '../constants/api';
 import { CustomType, CustomTypeMigrationResult } from '@shared/types';
+import { API_BASE_URL } from '../app.config';
 
 @Injectable({
   providedIn: 'root',
 })
 export class CustomTypeService {
-  private readonly apiUrl = API_URL;
+  private readonly apiUrl = inject(API_BASE_URL);
 
   constructor(private readonly http: HttpClient) {}
 

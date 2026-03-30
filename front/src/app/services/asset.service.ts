@@ -1,14 +1,14 @@
-import { Injectable } from '@angular/core';
+import { inject, Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { API_URL } from '../constants/api';
 import { AssetFile, AssetMigrationResult } from '@shared/types';
+import { API_BASE_URL } from '../app.config';
 
 @Injectable({
   providedIn: 'root',
 })
 export class AssetService {
-  private readonly apiUrl = API_URL;
+  private readonly apiUrl = inject(API_BASE_URL);
 
   constructor(private readonly http: HttpClient) {}
 

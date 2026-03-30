@@ -1,15 +1,16 @@
-import { Injectable, inject, signal } from '@angular/core';
+import { inject, Injectable, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
 import { User, UserManager, WebStorageStateStore } from 'oidc-client-ts';
 import { OidcClaims, OidcConfig } from '@shared/types';
 import { TokenStoreService } from './token-store.service';
-import { API_URL } from '../constants/api';
+import { API_BASE_URL } from '../app.config';
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
   private readonly http = inject(HttpClient);
   private readonly tokenStore = inject(TokenStoreService);
+  private readonly apiUrl = inject(API_BASE_URL);
 
   private manager: UserManager | null = null;
 
@@ -18,9 +19,7 @@ export class AuthService {
 
   async initialize(): Promise<void> {
     try {
-      const config = await firstValueFrom(
-        this.http.get<OidcConfig>(`${API_URL}/auth/config`)
-      );
+      const config = await firstValueFrom(this.http.get<OidcConfig>(`${this.apiUrl}/auth/config`));
 
       // OIDC non configuré → pas d'auth requise
       if (!config.issuer || !config.clientId) {
@@ -55,7 +54,7 @@ export class AuthService {
         this.applyUser(user);
       }
     } catch (err) {
-      console.error('[Auth] Erreur d\'initialisation OIDC :', err);
+      console.error("[Auth] Erreur d'initialisation OIDC :", err);
     }
   }
 
@@ -80,5 +79,3 @@ export class AuthService {
     this.isAuthenticated.set(true);
   }
 }
-
-

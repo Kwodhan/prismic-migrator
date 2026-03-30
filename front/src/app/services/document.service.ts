@@ -1,8 +1,8 @@
-import { Injectable } from '@angular/core';
+import { inject, Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { map, Observable } from 'rxjs';
-import { API_URL } from '../constants/api';
 import { DocumentMigrationResult, PaginatedDocuments, ReportMigrationResult } from '@shared/types';
+import { API_BASE_URL } from '../app.config';
 
 interface CustomType {
   id: string;
@@ -13,7 +13,7 @@ interface CustomType {
   providedIn: 'root',
 })
 export class DocumentService {
-  private readonly apiUrl = API_URL;
+  private readonly apiUrl = inject(API_BASE_URL);
 
   constructor(private readonly http: HttpClient) {}
 
