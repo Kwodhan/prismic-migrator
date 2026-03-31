@@ -62,7 +62,7 @@ export class LinkDocumentValidator implements DocumentValidator {
                 severity: 'WARNING',
                 code: 'LINKED_DOCUMENT_NOT_FOUND',
                 validator: this.constructor.name,
-                message: `Linked document missing in destination (uid: ${link.uid}, type: ${link.type})`,
+                message: `Linked document missing in target (uid: ${link.uid}, type: ${link.type})`,
                 fixable: true,
                 fixed: false,
                 urlHint: `https://${this.sourcePrismicClient.repositoryName}.prismic.io/builder/pages/${link.id}`,
@@ -74,7 +74,7 @@ export class LinkDocumentValidator implements DocumentValidator {
     }
 
     async fix(doc: prismic.PrismicDocument, issues: ValidationIssue[]): Promise<prismic.PrismicDocument> {
-        // Build a map uid -> new id in destination
+        // Build a map uid -> new id in target
         const replacements = new Map<string, string>();
 
         for (const issue of issues) {
@@ -90,7 +90,7 @@ export class LinkDocumentValidator implements DocumentValidator {
                 if (idTarget) {
                     replacements.set(issue.context!['id'] as string, idTarget);
                     issue.fixed = true;
-                    issue.fixDescription = `Linked document found in destination (id: ${idTarget})`;
+                    issue.fixDescription = `Linked document found in target (id: ${idTarget})`;
                 }
 
             }
@@ -100,7 +100,7 @@ export class LinkDocumentValidator implements DocumentValidator {
             if (found) {
                 replacements.set(issue.context!['id'] as string, found.id);
                 issue.fixed = true;
-                issue.fixDescription = `Linked document found in destination (id: ${found.id})`;
+                issue.fixDescription = `Linked document found in target (id: ${found.id})`;
             }
 
         }
@@ -137,7 +137,7 @@ export class LinkDocumentValidator implements DocumentValidator {
     }
 
     /**
-     * Attempt to find in the destination a document equivalent to the source document identified by idSource and type.
+     * Attempt to find in the target a document equivalent to the source document identified by idSource and type.
      * Comparison uses deep equality (lodash.isEqual) between the two documents.
      * @param idSource
      * @param type

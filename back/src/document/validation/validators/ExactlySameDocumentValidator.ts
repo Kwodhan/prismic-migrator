@@ -7,8 +7,8 @@ import {CachedPrismicClient} from "../CachedPrismicClient";
 
 
 /**
- * Some documents do not have a uid, making it difficult to know whether an equivalent document already exists in the destination.
- * This validation attempts a deep comparison between the source document and documents of the same type in the destination
+ * Some documents do not have a uid, making it difficult to know whether an equivalent document already exists in the target.
+ * This validation attempts a deep comparison between the source document and documents of the same type in the target
  * to verify that no equivalent document already exists.
  * BLOCKING: the Migration API will refuse creation if an identical document exists.
  */

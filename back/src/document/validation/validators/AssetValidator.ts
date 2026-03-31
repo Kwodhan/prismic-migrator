@@ -122,7 +122,7 @@ export class AssetValidator implements DocumentValidator {
             severity: 'WARNING',
             code: 'ASSET_NOT_FOUND',
             validator: this.constructor.name,
-            message: `Asset "${img.url}" non trouvé dans la destination `,
+            message: `Asset "${img.url}" missing in target`,
             fixable: true,
             fixed: false,
             urlHint: img.url,
@@ -189,7 +189,7 @@ export class AssetValidator implements DocumentValidator {
                         if (targetAsset) {
                             const issue = issues.find(i => i.context?.['url'] === node.url);
                             if (issue) {
-                                issue.fixDescription = `Asset trouvé : "${targetAsset.url}"`;
+                                issue.fixDescription = `Asset found in target: "${targetAsset.url}"`;
                                 issue.fixed = true;
                             }
                             return {
@@ -214,7 +214,7 @@ export class AssetValidator implements DocumentValidator {
                 if (targetAsset) {
                     const issue = issues.find(i => i.context?.['url'] === img.url);
                     if (issue) {
-                        issue.fixDescription = `Asset trouvé : "${targetAsset.url}"`;
+                        issue.fixDescription = `Asset found in target: "${targetAsset.url}"`;
                         issue.fixed = true;
                     }
                     result = {...(targetAsset as unknown as Record<string, unknown>)};

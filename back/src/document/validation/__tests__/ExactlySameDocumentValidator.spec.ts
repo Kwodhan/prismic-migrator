@@ -17,7 +17,7 @@ describe('ExactlySameDocumentValidator', () => {
     );
   });
 
-  it('should return BLOCKING when exactly same document (without UID) exists in destination', async () => {
+  it('should return BLOCKING when exactly same document (without UID) exists in target', async () => {
     const sharedData = {
       title: [{type: 'heading1', text: 'Same Title'}],
       content: 'Same content',

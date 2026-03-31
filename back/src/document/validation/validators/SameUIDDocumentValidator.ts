@@ -6,7 +6,7 @@ import {CachedPrismicClient} from "../CachedPrismicClient";
 
 
 /**
- * Ensure no document with the same uid already exists in the destination repository.
+ * Ensure no document with the same uid already exists in the target repository.
  * BLOCKING: Migration will refuse creation if a document with the same uid already exists.
  */
 export class SameUIDDocumentValidator implements DocumentValidator {
@@ -25,7 +25,7 @@ export class SameUIDDocumentValidator implements DocumentValidator {
                         severity: 'BLOCKING',
                         code: 'DOCUMENT_ALREADY_EXISTS',
                         validator: this.constructor.name,
-                        message: `A document already exists in the destination repository with the same uid (uid: ${doc.uid})`,
+                        message: `A document already exists in the target repository with the same uid (uid: ${doc.uid})`,
                         fixable: false,
                     }],
                 };

@@ -28,7 +28,7 @@ export class LinkMediaValidator implements DocumentValidator {
           severity: 'WARNING',
           code: 'LINKED_MEDIA_NOT_FOUND',
           validator: this.constructor.name,
-          message: `Linked media missing in destination (id: ${link.id}, name: ${link.name})`,
+          message: `Linked media missing in target (id: ${link.id}, name: ${link.name})`,
           fixable: true,
           context: {id: link.id, url: link.url, name: link.name, kind: link.kind},
         });
@@ -51,7 +51,7 @@ export class LinkMediaValidator implements DocumentValidator {
       if (match) {
         replacements.set(id, match);
         issue.fixed = true;
-        issue.fixDescription = `Media found in destination: "${match.filename}"`;
+        issue.fixDescription = `Linked media found in target: "${match.filename}"`;
       } else {
         replacements.set(id, null); // not found -> will be emptied
       }

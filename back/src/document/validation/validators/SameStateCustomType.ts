@@ -32,7 +32,7 @@ export class SameStateCustomType implements DocumentValidator {
         severity: 'BLOCKING',
         code: 'CUSTOM_TYPE_NOT_SAME',
         validator: this.constructor.name,
-        message: `Le customType ${doc.type} est différent entre la source et la destination`,
+        message: `The custom type ${doc.type} differs between source and target`,
         fixable: false,
       }],
     };
