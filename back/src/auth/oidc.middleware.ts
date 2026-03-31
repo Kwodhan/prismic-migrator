@@ -1,15 +1,17 @@
-import { expressjwt } from 'express-jwt';
+import {expressjwt} from 'express-jwt';
 import jwksRsa from 'jwks-rsa';
-import type { Request, Response, NextFunction } from 'express';
+import type {NextFunction, Request, Response} from 'express';
 
 export function oidcMiddleware(jwksUri: string) {
+  const audience = process.env.OIDC_AUDIENCE;
   const middleware = expressjwt({
     secret: jwksRsa.expressJwtSecret({
       cache: true,
       cacheMaxAge: 600_000, // 10 min
       jwksUri,
     }) as jwksRsa.GetVerificationKey,
-    issuer:   process.env.OIDC_ISSUER   ?? '',
+    issuer: process.env.OIDC_ISSUER ?? '',
+    audience: audience,
     algorithms: ['RS256', 'ES256'],
   });
 

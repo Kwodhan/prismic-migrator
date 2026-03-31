@@ -41,11 +41,12 @@ Prismic Migrator supports **optional OpenID Connect (OIDC) authentication**. Whe
 
 ### Environment variables
 
-| Variable |  Description |
-|---|---|
-| `OIDC_ISSUER` |Base URL of the identity provider (e.g. `https://sso.example.com/realms/my-realm`) |
-| `OIDC_CLIENT_ID` | OIDC client ID registered in the IdP |
-| `OIDC_SCOPE` | Space-separated scopes (default: `openid profile email`) |
+| Variable | Description                                                                        |
+|---|------------------------------------------------------------------------------------|
+| `OIDC_ISSUER` | Base URL of the identity provider (e.g. `https://sso.example.com/realms/my-realm`) |
+| `OIDC_CLIENT_ID` | OIDC client ID registered in the IdP                                               |
+| `OIDC_SCOPE` | Space-separated scopes (default: `openid profile email`)                           |
+| `OIDC_AUDIENCE` | Expected `aud` claim in the access token (default: `prismic-migrator`).            |
 
 > The IdP must expose `{OIDC_ISSUER}/.well-known/openid-configuration` and support the **Authorization Code Flow** with `RS256` or `ES256` tokens.
 
