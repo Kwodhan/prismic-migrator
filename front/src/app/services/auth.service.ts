@@ -3,16 +3,17 @@ import { HttpClient } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
 import { User, UserManager, WebStorageStateStore } from 'oidc-client-ts';
 import { OidcClaims, OidcConfig } from '@shared/types';
-import { TokenStoreService } from './token-store.service';
 import { API_BASE_URL } from '../app.config';
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
   private readonly http = inject(HttpClient);
-  private readonly tokenStore = inject(TokenStoreService);
   private readonly apiUrl = inject(API_BASE_URL);
 
   private manager: UserManager | null = null;
+  private accessToken: string | null = null;
+  private oidcEnabled = false;
+  private loginRedirectInProgress = false;
 
   readonly claims = signal<OidcClaims | null>(null);
   readonly isAuthenticated = signal<boolean>(false);
@@ -27,6 +28,8 @@ export class AuthService {
         this.isAuthenticated.set(true);
         return;
       }
+
+      this.oidcEnabled = true;
 
       this.manager = new UserManager({
         authority: config.issuer,
@@ -44,6 +47,7 @@ export class AuthService {
         const target = new URL(redirect ?? '/', window.location.origin);
         target.search = '';
         window.history.replaceState({}, '', target.toString());
+        this.loginRedirectInProgress = false;
         this.applyUser(user);
         return;
       }
@@ -59,22 +63,55 @@ export class AuthService {
   }
 
   login(): void {
-    this.manager?.signinRedirect({
-      state: { redirect: window.location.href },
-    });
+    if (!this.oidcEnabled || !this.manager || this.loginRedirectInProgress) {
+      return;
+    }
+
+    this.loginRedirectInProgress = true;
+    void this.manager
+      .signinRedirect({
+        state: { redirect: window.location.href },
+      })
+      .catch((err) => {
+        this.loginRedirectInProgress = false;
+        console.error('[Auth] Erreur lors de la redirection vers le login :', err);
+      });
+  }
+
+  getAccessToken(): string | null {
+    return this.accessToken;
+  }
+
+  handleUnauthorized(): void {
+    if (!this.oidcEnabled) {
+      return;
+    }
+
+    this.clearLocalAuthState();
+
+    if (!this.loginRedirectInProgress) {
+      this.login();
+    }
   }
 
   logout(): void {
-    this.tokenStore.clearToken();
-    this.claims.set(null);
-    this.isAuthenticated.set(false);
+    this.clearLocalAuthState();
     this.manager?.signoutRedirect({
       post_logout_redirect_uri: window.location.origin,
     });
   }
 
+  private clearLocalAuthState(): void {
+    this.accessToken = null;
+    this.claims.set(null);
+    this.isAuthenticated.set(false);
+    void this.manager?.removeUser().catch((err) => {
+      console.error('[Auth] Erreur lors du nettoyage de la session locale :', err);
+    });
+  }
+
   private applyUser(user: User): void {
-    this.tokenStore.setToken(user.access_token);
+    this.accessToken = user.access_token;
     this.claims.set(user.profile as unknown as OidcClaims);
     this.isAuthenticated.set(true);
   }
