@@ -1,7 +1,7 @@
 import { inject, Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { map, Observable } from 'rxjs';
-import { DocumentMigrationResult, PaginatedDocuments, ReportMigrationResult } from '@shared/types';
+import { DocumentMigrationResult, PaginatedDocuments } from '@shared/types';
 import { API_BASE_URL } from '../app.config';
 
 interface CustomType {
@@ -27,7 +27,7 @@ export class DocumentService {
     repoNameSource: string,
     repoNameTarget: string,
     idSource: string,
-  ): Observable<ReportMigrationResult> {
+  ): Observable<DocumentMigrationResult> {
     const params: Record<string, string> = { repoNameSource, repoNameTarget, idSource };
     return this.http.get<DocumentMigrationResult>(`${this.apiUrl}/documents/migrate`, { params });
   }

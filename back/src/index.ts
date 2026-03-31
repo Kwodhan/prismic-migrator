@@ -33,7 +33,7 @@ async function bootstrap(): Promise<void> {
   console.log('[Proxy] host:', process.env.PROXY_HOST);
 
   const axiosInstance = axios.create({
-    httpsAgent: new https.Agent({rejectUnauthorized: false}),
+    httpsAgent: new https.Agent({rejectUnauthorized: true}),
     proxy: process.env.PROXY_HOST ? {
       host: process.env.PROXY_HOST,
       port: Number(process.env.PROXY_PORT) || 8080,

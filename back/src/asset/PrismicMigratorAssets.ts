@@ -27,6 +27,7 @@ export class PrismicMigratorAssets {
 
   /**
    * Migrate an asset from a source URL to the destination repository
+   @param repoNameTarget - Target repository name to migrate the asset to
    * @param sourceUrl - Source asset URL to migrate
    * @param filename - Optional filename
    */
@@ -36,7 +37,7 @@ export class PrismicMigratorAssets {
     filename?: string
   ): Promise<AssetMigrationResult> {
     const envTarget = this.environments.find(env => env.repoName === repoNameTarget);
-    if (!envTarget ) {
+    if (!envTarget) {
       return {
         success: false,
         error: `Env ${repoNameTarget}  not found`,
@@ -104,14 +105,14 @@ export class PrismicMigratorAssets {
    */
   private async fetchAssets(repositoryName: string, token: string): Promise<AssetFile[]> {
     const assets: AssetFile[] = [];
-    let page = 1;
     let hasMore = true;
+    let cursor = '';
     console.log(`[fetchAssets] on ${repositoryName}`);
     while (hasMore) {
-      const {data} = await this.axiosInstance.get<{ items: AssetFile[]; total: number }>(
+      const {data} = await this.axiosInstance.get<{ items: AssetFile[]; total: number; cursor: string; }>(
         `https://asset-api.prismic.io/assets`,
         {
-          params: {limit: 99999},
+          params: {limit: 99999, cursor: cursor},
           headers: {
             Authorization: `Bearer ${token}`,
             repository: repositoryName,
@@ -126,7 +127,8 @@ export class PrismicMigratorAssets {
 
       assets.push(...data.items);
       hasMore = assets.length < data.total;
-      page++;
+      cursor = data.cursor;
+
     }
 
     return assets;

@@ -12,7 +12,7 @@ import { MatDialog } from '@angular/material/dialog';
 import { DocumentList } from '../document-list/document-list';
 import { DocumentService } from '../../../services/document.service';
 import { DocumentValidationDialogComponent } from '../document-validation-dialog/document-validation-dialog.component';
-import { ReportMigrationResult } from '@shared/types';
+import { DocumentMigrationResult } from '@shared/types';
 
 @Component({
   selector: 'target-document-list',
@@ -66,7 +66,7 @@ export class TargetDocumentList extends DocumentList implements OnInit, OnDestro
     this.documentService
       .getReportMigrateDocument(repositorySource, this.repository(), document.id)
       .subscribe({
-        next: (result: ReportMigrationResult) => {
+        next: (result: DocumentMigrationResult) => {
           this.migrating.set(false);
 
           this.dialog.open(DocumentValidationDialogComponent, {
