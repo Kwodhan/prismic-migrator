@@ -1,4 +1,4 @@
-# Licence
+# License
 
 This Project is under license WTFPL v2. 
 
