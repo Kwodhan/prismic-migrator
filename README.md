@@ -1,7 +1,8 @@
 # Prismic Migrator
 
 A full-stack web application to migrate content between [Prismic](https://prismic.io) repositories - assets, custom types and documents - through a visual drag-and-drop interface.
-Licence WTFPL
+
+This project is under License WTFPL v2.
 
 ---
 
