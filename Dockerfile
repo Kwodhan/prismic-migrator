@@ -1,7 +1,7 @@
 # ─────────────────────────────────────────────
 # Stage 0 – Installation des dépendances
 # ─────────────────────────────────────────────
-FROM node:24-slim AS deps
+FROM node:24.14.1-trixie-slim AS deps
 
 WORKDIR /app
 
@@ -40,7 +40,7 @@ RUN npm run build
 # ─────────────────────────────────────────────
 # Stage 3 – Image finale (runtime)
 # ─────────────────────────────────────────────
-FROM node:24-slim AS runtime
+FROM node:24.14.1-trixie-slim AS runtime
 
 WORKDIR /app
 
