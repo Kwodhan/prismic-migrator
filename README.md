@@ -1,8 +1,14 @@
-# Prismic Migrator
+# Prismic Migrator [![CI](https://img.shields.io/github/actions/workflow/status/Kwodhan/prismic-migrator/docker-publish.yml?label=CI)](https://github.com/Kwodhan/prismic-migrator/actions/workflows/docker-publish.yml) [![Docker Hub](https://img.shields.io/docker/pulls/kwodhan/prismic-migrator?label=Docker+Hub)](https://hub.docker.com/r/kwodhan/prismic-migrator)
+
+[![License: WTFPL v2](https://img.shields.io/badge/License-WTFPL%20v2-blue.svg)](LICENSE.md)
+[![Release](https://img.shields.io/github/v/release/Kwodhan/prismic-migrator)](https://github.com/Kwodhan/prismic-migrator/releases)
+[![Snyk Back Report](https://img.shields.io/badge/Vulnerability%20Back%20Report-4C4A73?logo=snyk&logoColor=white)](https://snyk.io/test/github/Kwodhan/prismic-migrator?targetFile=back/package.json)
+[![Snyk Front Report](https://img.shields.io/badge/Vulnerability%20Front%20Report-4C4A73?logo=snyk&logoColor=white)](https://snyk.io/test/github/Kwodhan/prismic-migrator?targetFile=front/package.json)
+
+
 
 A full-stack web application to migrate content between [Prismic](https://prismic.io) repositories - assets, custom types and documents - through a visual drag-and-drop interface.
 
-This project is under License WTFPL v2.
 
 ---
 
