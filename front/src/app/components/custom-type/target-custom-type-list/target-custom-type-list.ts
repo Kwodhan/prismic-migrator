@@ -69,11 +69,25 @@ export class TargetCustomTypeList extends CustomTypeList implements OnInit, OnDe
       .migrateCustomType(repositorySource, this.repository(), customType.id)
       .pipe(
         switchMap((result) => {
-          if (result.error === 'ALREADY_EXISTS' && result.target) {
+          if (result.error && result.target) {
             this.migrating.set(false);
-
-            // Check if source and target are identical
-            if (JSON.stringify(customType.json) === JSON.stringify(result.target.json)) {
+            if (result.error === 'DIFF_CUSTOM_TYPE') {
+              // Exists and different → open diff dialog
+              const dialogRef = this.dialog.open(CustomTypeDiffDialogComponent, {
+                width: '800px',
+                maxWidth: '95vw',
+                data: {
+                  source: result.source,
+                  target: result.target,
+                  repoNameSource: repositorySource,
+                  repoNameTarget: this.repository(),
+                },
+              });
+              return dialogRef
+                .afterClosed()
+                .pipe(switchMap((migrated: CustomTypeMigrationResult) => of(migrated)));
+            } else if (result.error === 'EXACTLY_SAME_CUSTOM_TYPE') {
+              // Exists and same → open snackBar
               this.snackBar.open(`ℹ️ Custom types are identical, no changes were made`, 'Close', {
                 duration: 4000,
                 panelClass: ['snack-info'],
@@ -82,21 +96,6 @@ export class TargetCustomTypeList extends CustomTypeList implements OnInit, OnDe
               });
               return of(null);
             }
-
-            // Exists and different → open diff dialog
-            const dialogRef = this.dialog.open(CustomTypeDiffDialogComponent, {
-              width: '800px',
-              maxWidth: '95vw',
-              data: {
-                source: customType,
-                target: result.target,
-                repoNameSource : repositorySource,
-                repoNameTarget : this.repository()
-              },
-            });
-            return dialogRef
-              .afterClosed()
-              .pipe(switchMap((migrated: CustomTypeMigrationResult) => of(migrated)));
           }
           return of(result);
         }),
@@ -107,7 +106,7 @@ export class TargetCustomTypeList extends CustomTypeList implements OnInit, OnDe
           if (!result) return; // dialog cancelled
           if (result.success) {
             this.refreshNeeded.emit();
-            this.snackBar.open(`✅ "${result.label}" migrated successfully`, 'Close', {
+            this.snackBar.open(`✅ "${result.source?.label}" migrated successfully`, 'Close', {
               duration: 4000,
               panelClass: ['snack-success'],
               horizontalPosition: 'end',

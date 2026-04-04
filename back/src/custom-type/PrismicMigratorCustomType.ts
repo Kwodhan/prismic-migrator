@@ -83,7 +83,7 @@ export class PrismicMigratorCustomType {
           throw error;
         });
       console.log(`[updateCustomType] ${customType?.label} successfully updated`);
-      return {success: true, id: customType.id, label: customType.label};
+      return {success: true, source: customType};
     } catch (error) {
       return {
         success: false,
@@ -112,30 +112,37 @@ export class PrismicMigratorCustomType {
     }
     try {
       // 1. Fetch the custom type directly by its id from the source repository
-      const customType = await this.fetchCustomTypeById(id, envSource.repoName, envSource.writeToken)
+      const source = await this.fetchCustomTypeById(id, envSource.repoName, envSource.writeToken)
         .catch((error) => {
           if (axios.isAxiosError(error) && error.response?.status === 404) return null;
           throw error;
         });
 
-      if (!customType) {
+      if (!source) {
         return {success: false, error: `Custom type "${id}" not found in source repository`};
       }
-      console.log(`[migrateCustomType] ${customType?.label} started`);
+      console.log(`[migrateCustomType] ${source?.label} started`);
       // 2. Check if the custom type already exists in the destination repo
-      const existingTarget = await this.fetchCustomTypeById(id, envTarget.repoName, envTarget.writeToken)
+      const target = await this.fetchCustomTypeById(id, envTarget.repoName, envTarget.writeToken)
         .catch((error) => {
           if (axios.isAxiosError(error) && error.response?.status === 404) return null;
           throw error;
         });
 
-      if (existingTarget) {
-        return {success: false, error: 'ALREADY_EXISTS', id, label: customType.label, target: existingTarget};
+
+      if (target) {
+        const same = JSON.stringify(source.json) === JSON.stringify(target.json);
+        return {
+          success: false,
+          error: same ? 'EXACTLY_SAME_CUSTOM_TYPE' : 'DIFF_CUSTOM_TYPE',
+          source,
+          target
+        };
       }
 
       // 3. Insert the custom type into the destination repository
       await this.axiosInstance
-        .post(`${PrismicMigratorCustomType.BASE_URL}/customtypes/insert`, customType, {
+        .post(`${PrismicMigratorCustomType.BASE_URL}/customtypes/insert`, source, {
           headers: {
             Authorization: `Bearer ${envTarget.writeToken}`,
             repository: envTarget.repoName,
@@ -148,8 +155,8 @@ export class PrismicMigratorCustomType {
           }
           throw error;
         });
-      console.log(`[migrateCustomType] ${customType?.label} successfully migrated`);
-      return {success: true, id: customType.id, label: customType.label};
+      console.log(`[migrateCustomType] ${source?.label} successfully migrated`);
+      return {success: true, source};
     } catch (error) {
       return {
         success: false,

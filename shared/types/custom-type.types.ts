@@ -8,8 +8,7 @@ export interface CustomType {
 
 export interface CustomTypeMigrationResult {
   success: boolean;
-  id?: string;
-  label?: string;
+  source?: CustomType;
   target?: CustomType;
   error?: string;
 }
