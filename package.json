@@ -7,9 +7,16 @@
     "back"
   ],
   "supportedArchitectures": {
-    "os": ["win32", "linux"],
-    "cpu": ["x64"],
-    "libc": ["glibc"]
+    "os": [
+      "win32",
+      "linux"
+    ],
+    "cpu": [
+      "x64"
+    ],
+    "libc": [
+      "glibc"
+    ]
   },
   "scripts": {
     "front": "npm run start -w front",
