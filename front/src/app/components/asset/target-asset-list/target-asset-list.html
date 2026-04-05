@@ -38,25 +38,25 @@
       <span class="text-sm">No target assets - drop assets here</span>
     </div>
   } @else {
-    <ul class="grid grid-cols-3 gap-3 list-none p-0 m-0">
+    <ul class="grid grid-cols-4 gap-3 list-none p-0 m-0">
       @for (asset of visibleAssets(); track asset.id) {
-        <li class="flex flex-col items-center gap-2 p-2 rounded-lg border border-gray-200 bg-gray-50 transition-all duration-150">
+        <li class="relative flex flex-col items-center gap-2 p-2 rounded-lg border border-gray-200 bg-gray-50 transition-all duration-150">
           @if (asset.filename.toLowerCase().endsWith('.pdf')) {
-            <div class="flex items-center justify-center w-full h-10">
+            <div class="flex items-center justify-center w-full h-20">
               <mat-icon class="text-red-500" style="font-size: 2rem; width: 2rem; height: 2rem;">picture_as_pdf</mat-icon>
             </div>
           } @else {
             <img [src]="asset.url" [alt]="asset.filename"
                  draggable="false"
-                 class="w-full h-10 object-scale-down rounded" />
+                 class="w-full h-20 object-scale-down rounded" />
           }
-          <span class="text-xs text-center text-gray-600 break-all w-full px-1">{{ asset.filename }}</span>
           <a [href]="asset.url" target="_blank" rel="noopener noreferrer"
              matTooltip="View image"
              (click)="$event.stopPropagation()"
-             class="self-end text-gray-400 hover:text-blue-500 leading-none">
+             class="absolute top-1 right-1 text-gray-400 hover:text-blue-500 leading-none">
             <mat-icon style="font-size: 14px; width: 14px; height: 14px; line-height: 14px;">open_in_new</mat-icon>
           </a>
+          <span class="text-xs text-center text-gray-600 break-all w-full px-1">{{ asset.filename }}</span>
         </li>
       }
     </ul>
