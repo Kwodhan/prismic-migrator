@@ -133,6 +133,7 @@ PROXY_PROTOCOL=
 OIDC_ISSUER=
 OIDC_CLIENT_ID=
 OIDC_SCOPE=openid profile email
+OIDC_AUDIENCE=prismic-migrator
 
 # Repositories — add as many ENV_N_* blocks as needed (0-indexed)
 ENV_0_REPOSITORY_NAME=my-staging-repo

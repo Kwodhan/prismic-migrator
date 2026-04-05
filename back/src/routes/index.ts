@@ -11,23 +11,11 @@ import _ from 'lodash';
 
 export function buildRouter(
   axiosInstance: AxiosInstance,
-  proxyUrl: string | undefined
+  environments: Environment[],
+  proxyUrl?: string
 ): Router {
   const router = Router();
 
-  const environments: Environment[] = [];
-  let i = 0;
-  while (process.env[`ENV_${i}_REPOSITORY_NAME`]) {
-    if (process.env[`ENV_${i}_WRITE_TOKEN`] && process.env[`ENV_${i}_CONTENT_TOKEN`]) {
-      environments.push({
-        repoName: process.env[`ENV_${i}_REPOSITORY_NAME`] ?? "",
-        description: process.env[`ENV_${i}_DESCRIPTION`],
-        writeToken: process.env[`ENV_${i}_WRITE_TOKEN`] ?? "",
-        contentToken: process.env[`ENV_${i}_CONTENT_TOKEN`] ?? "",
-      });
-    }
-    i++;
-  }
   const migratorAsset = new PrismicMigratorAssets(
     environments,
     axiosInstance

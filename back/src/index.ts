@@ -1,51 +1,157 @@
 import dotenv from 'dotenv';
 import path from 'node:path';
-import axios from 'axios';
-import https from 'node:https';
+import net from 'node:net';
+import validator from 'validator';
 import {createApp} from './app';
+import {Environment} from '@shared/types/environment.types';
+
 
 dotenv.config({path: path.resolve(__dirname, '../../.env')});
 
 const PORT = 3001;
+const CONNECTIVITY_TIMEOUT_MS = 5000;
+
+export type ProxyConfig = {
+  host: string;
+  port: number;
+  protocol: string;
+};
+
+export type OidcConfig = {
+  issuer: string;
+  clientId: string;
+  scope: string;
+  audience: string;
+};
+
+function readEnvironments(): Environment[] {
+  const environments: Environment[] = [];
+  let i = 0;
+
+  while (process.env[`ENV_${i}_REPOSITORY_NAME`]) {
+    const repoName = process.env[`ENV_${i}_REPOSITORY_NAME`];
+    const writeToken = process.env[`ENV_${i}_WRITE_TOKEN`];
+    const contentToken = process.env[`ENV_${i}_CONTENT_TOKEN`];
+
+    if (repoName && writeToken && contentToken) {
+      environments.push({
+        repoName,
+        description: process.env[`ENV_${i}_DESCRIPTION`],
+        writeToken,
+        contentToken,
+      });
+    } else {
+      console.warn(`[Config] ENV_${i} ignored: missing WRITE_TOKEN and/or CONTENT_TOKEN`);
+    }
+    i++;
+  }
+
+  return environments;
+}
+
+function assertMinimumEnvironments(environments: Environment[]): void {
+  if (environments.length < 2) {
+    console.error(`[Config] At least 2 environments are required, found ${environments.length}.`);
+    process.exit(1);
+  }
+  console.info(`[Config] ${environments.length} environments configured.`);
+}
+
+function readOidcConfig(): OidcConfig {
+
+  return {
+    issuer: process.env.OIDC_ISSUER?.trim() ?? '',
+    clientId: process.env.OIDC_CLIENT_ID?.trim() ?? '',
+    scope: process.env.OIDC_SCOPE?.trim() ?? 'openid profile email',
+    audience: process.env.OIDC_AUDIENTICE_ID?.trim() ?? 'prismic-migrator',
+  };
+}
+
+function getProxyConfig(): ProxyConfig | undefined {
+  const host = process.env.PROXY_HOST?.trim();
+  if (!host) {
+    return undefined;
+  }
+
+  return {
+    host,
+    port: Number(process.env.PROXY_PORT) || 8080,
+    protocol: process.env.PROXY_PROTOCOL || 'http',
+  };
+}
+
+async function assertProxyReachable(proxy: ProxyConfig): Promise<void> {
+  await new Promise<void>((resolve, reject) => {
+    const socket = net.createConnection({host: proxy.host, port: proxy.port});
+
+    socket.setTimeout(CONNECTIVITY_TIMEOUT_MS);
+    socket.once('connect', () => {
+      socket.end();
+      resolve();
+    });
+    socket.once('timeout', () => {
+      socket.destroy();
+      reject(new Error(`timeout after ${CONNECTIVITY_TIMEOUT_MS}ms`));
+    });
+    socket.once('error', (error) => {
+      socket.destroy();
+      reject(error);
+    });
+  });
+}
+
+async function discoverJwksUri(issuer: string): Promise<string> {
+  const normalizedIssuer = issuer.replace(/\/+$/, '');
+  const discoveryUrl = `${normalizedIssuer}/.well-known/openid-configuration`;
+  const res = await fetch(discoveryUrl, {signal: AbortSignal.timeout(CONNECTIVITY_TIMEOUT_MS)});
+
+  if (!res.ok) {
+    throw new Error(`HTTP ${res.status} on ${discoveryUrl}`);
+  }
+
+  const cfg = await res.json() as { jwks_uri?: string };
+  if (!cfg?.jwks_uri) {
+    throw new Error(`jwks_uri not found in discovery document (${discoveryUrl})`);
+  }
+
+  return cfg.jwks_uri;
+}
 
 async function bootstrap(): Promise<void> {
+  const environments = readEnvironments();
+  assertMinimumEnvironments(environments);
+
+  const oidc = readOidcConfig();
 
   let jwksUri: string | undefined;
-  const issuer = process.env.OIDC_ISSUER;
-  if (issuer) {
 
+  if (validator.isURL(oidc.issuer, {
+    require_protocol: true,
+    protocols: ['http', 'https'],
+    host_whitelist: ['localhost', '127.0.0.1', '::1'],
+  })) {
     try {
-      const res = await fetch(`${issuer}/.well-known/openid-configuration`);
-      const cfg = res.ok ? await res.json() as { jwks_uri?: string } : null;
-      jwksUri = cfg?.jwks_uri;
-      if (!jwksUri) {
-        console.error(`[Auth] jwks_uri not found in discovery document (HTTP ${res.status})`);
-        process.exit(1);
-      }
+      jwksUri = await discoverJwksUri(oidc.issuer);
       console.info('[Auth] JWKS URI discovered:', jwksUri);
     } catch (err) {
       console.error('[Auth] Unable to reach the discovery document:', err);
       process.exit(1);
     }
-
   }
 
-  console.log('[Proxy] host:', process.env.PROXY_HOST);
+  const proxyConfig = getProxyConfig();
+  if (proxyConfig) {
+    try {
+      await assertProxyReachable(proxyConfig);
+      console.info(`[Proxy] Reachable: ${proxyConfig.protocol}://${proxyConfig.host}:${proxyConfig.port}`);
+    } catch (err) {
+      console.error('[Proxy] Unreachable proxy configuration:', err);
+      process.exit(1);
+    }
+  }
 
-  const axiosInstance = axios.create({
-    httpsAgent: new https.Agent({rejectUnauthorized: true}),
-    proxy: process.env.PROXY_HOST ? {
-      host: process.env.PROXY_HOST,
-      port: Number(process.env.PROXY_PORT) || 8080,
-      protocol: process.env.PROXY_PROTOCOL || 'http',
-    } : false,
-  });
 
-  const proxyUrl = process.env.PROXY_HOST
-    ? `${process.env.PROXY_PROTOCOL || 'http'}://${process.env.PROXY_HOST}:${process.env.PROXY_PORT || 8080}`
-    : undefined;
-
-  const app = createApp(axiosInstance, proxyUrl, jwksUri);
+  const app = createApp(environments, oidc, proxyConfig, jwksUri);
   app.listen(PORT, () => {
     console.log(`Server running on http://localhost:${PORT}`);
   });

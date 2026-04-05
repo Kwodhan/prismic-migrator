@@ -29,7 +29,7 @@ export class PrismicMigratorDocument {
   private readonly migratorAsset: PrismicMigratorAssets;
   private readonly migratorCustomType: PrismicMigratorCustomType;
 
-  constructor(environments: Environment[], axiosInstance: AxiosInstance, proxyUrl: string | undefined) {
+  constructor(environments: Environment[], axiosInstance: AxiosInstance, proxyUrl?: string) {
     this.environments = environments;
     this.axiosInstance = axiosInstance;
     this.migratorAsset = new PrismicMigratorAssets(
