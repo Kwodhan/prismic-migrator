@@ -32,6 +32,7 @@
     "@types/express": "^5.0.6",
     "@types/lodash": "4.17.23",
     "@types/node": "^25.5.2",
+    "@vitest/coverage-v8": "^4.1.2",
     "nodemon": "^3.1.14",
     "ts-node": "^10.9.2",
     "typescript": "^5.9.3",

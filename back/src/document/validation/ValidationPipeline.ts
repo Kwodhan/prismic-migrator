@@ -1,23 +1,18 @@
 import {DocumentValidator} from './DocumentValidator';
-import { ValidationResultUtils} from './ValidationResult';
 import * as prismic from '@prismicio/client';
 import {ValidationResult} from "@shared/types";
+import {ValidationResultUtils} from './ValidationResult';
+
 
 /**
  * Runs all validators in parallel and merges their results.
  * If a BLOCKING issue is found, migration must not start.
  */
 export class ValidationPipeline {
-    private readonly validators: DocumentValidator[];
-
-    constructor(validators: DocumentValidator[]) {
-        this.validators = validators;
-    }
+    constructor(private readonly validators: DocumentValidator[]) {}
 
     async run(doc: prismic.PrismicDocument): Promise<ValidationResult> {
-        const results = await Promise.all(
-            this.validators.map(v => v.validate(doc))
-        );
+        const results = await Promise.all(this.validators.map(v => v.validate(doc)));
         return ValidationResultUtils.merge(...results);
     }
 
@@ -35,16 +30,15 @@ export class ValidationPipeline {
         let fixedDoc = doc;
         for (const validator of this.validators) {
             if (validator.fix) {
-                const validatorIssues = initialResult.issues.filter(i => i.validator === validator.constructor.name);
-                fixedDoc = await validator.fix(fixedDoc, validatorIssues);
+                const issues = initialResult.issues.filter(i => i.validator === validator.constructor.name);
+                fixedDoc = await validator.fix(fixedDoc, issues);
             }
         }
 
         const reValidation = await this.run(fixedDoc);
-        const result: ValidationResult = {
-            valid: reValidation.valid,
-            issues: initialResult.issues, // original issues mutated with fixed/fixDescription
+        return {
+            result: { ...reValidation, issues: initialResult.issues }, // original issues mutated with fixed/fixDescription
+            doc: fixedDoc,
         };
-        return { result, doc: fixedDoc };
     }
 }
