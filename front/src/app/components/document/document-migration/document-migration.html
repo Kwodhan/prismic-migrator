@@ -21,6 +21,7 @@
         [types]="sourceTypes()"
         [repository]="sourceRepository()"
         [initialType]="sourceSearch()"
+        [requestError]="sourceRequestError()"
         (refreshNeeded)="refreshSource()"
         (pageNeeded)="loadSourcePage($event)"
         (searchChanged)="onSourceSearch($event)" />
@@ -44,6 +45,7 @@
         [types]="targetTypes()"
         [repository]="targetRepository()"
         [initialType]="targetSearch()"
+        [requestError]="targetRequestError()"
         (refreshNeeded)="refreshTarget()"
         (pageNeeded)="loadTargetPage($event)"
         (searchChanged)="onTargetSearch($event)" />

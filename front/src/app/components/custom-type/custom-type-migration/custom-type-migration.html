@@ -12,7 +12,7 @@
           <span class="text-lg font-normal text-gray-400">- {{ sourceRepository() }}</span>
         }
       </h2>
-      <source-custom-type-list [customTypes]="sourceCustomTypes()" [repository]="sourceRepository()" [initialFilter]="sourceFilter()" (refreshNeeded)="loadSourceCustomTypes()" (filterChanged)="onSourceFilterChange($event)" />
+      <source-custom-type-list [customTypes]="sourceCustomTypes()" [repository]="sourceRepository()" [initialFilter]="sourceFilter()" [requestError]="sourceRequestError()" (refreshNeeded)="loadSourceCustomTypes()" (filterChanged)="onSourceFilterChange($event)" />
     </div>
 
     <div class="w-px bg-gray-200"></div>
@@ -24,7 +24,7 @@
           <span class="text-lg font-normal text-gray-400">- {{ targetRepository() }}</span>
         }
       </h2>
-      <target-custom-type-list [customTypes]="targetCustomTypes()" [repository]="targetRepository()" [initialFilter]="targetFilter()" (refreshNeeded)="loadTargetCustomTypes()" (filterChanged)="onTargetFilterChange($event)" />
+      <target-custom-type-list [customTypes]="targetCustomTypes()" [repository]="targetRepository()" [initialFilter]="targetFilter()" [requestError]="targetRequestError()" (refreshNeeded)="loadTargetCustomTypes()" (filterChanged)="onTargetFilterChange($event)" />
     </div>
 
   </div>

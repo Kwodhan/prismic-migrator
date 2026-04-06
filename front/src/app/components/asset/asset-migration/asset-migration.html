@@ -12,7 +12,7 @@
           <span class="text-lg font-normal text-gray-400">- {{ sourceRepository() }}</span>
         }
       </h2>
-      <source-asset-list [assets]="sourceAssets()" [repository]="sourceRepository()" [initialFilter]="sourceFilter()" (refreshNeeded)="loadSourceAssets()" (filterChanged)="onSourceFilterChange($event)"/>
+      <source-asset-list [assets]="sourceAssets()" [repository]="sourceRepository()" [initialFilter]="sourceFilter()" [requestError]="sourceRequestError()" (refreshNeeded)="loadSourceAssets()" (filterChanged)="onSourceFilterChange($event)"/>
     </div>
 
     <div class="w-px bg-gray-200"></div>
@@ -24,7 +24,7 @@
           <span class="text-lg font-normal text-gray-400">- {{ targetRepository() }}</span>
         }
       </h2>
-      <target-asset-list [assets]="targetAssets()" [repository]="targetRepository()" [initialFilter]="targetFilter()" (refreshNeeded)="loadTargetAssets()" (filterChanged)="onTargetFilterChange($event)" />
+      <target-asset-list [assets]="targetAssets()" [repository]="targetRepository()" [initialFilter]="targetFilter()" [requestError]="targetRequestError()" (refreshNeeded)="loadTargetAssets()" (filterChanged)="onTargetFilterChange($event)" />
     </div>
 
   </div>

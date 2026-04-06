@@ -24,6 +24,25 @@ export class DocumentList {
   types = input<DocumentType[]>([]);
   repository = input.required<string>();
   initialType = input<string>('');
+  requestError = input<{ status?: number; message?: string } | null>(null);
+
+  readonly hasRequestError = computed(() => this.requestError() !== null);
+  readonly requestErrorMessage = computed(() => {
+    const error = this.requestError();
+    if (!error) {
+      return '';
+    }
+
+    if (error.status === 403) {
+      return 'Access denied for this repository.';
+    }
+
+    if (error.status) {
+      return `Failed to load data (HTTP ${error.status}).`;
+    }
+
+    return error.message ?? 'Failed to load data.';
+  });
 
   readonly refreshNeeded = output<void>();
   readonly pageNeeded = output<number>();

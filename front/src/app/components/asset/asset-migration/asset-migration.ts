@@ -1,5 +1,5 @@
 import { Component, inject, OnInit, signal } from '@angular/core';
-import { forkJoin } from 'rxjs';
+import { catchError, forkJoin, finalize, of } from 'rxjs';
 import { ActivatedRoute, Router } from '@angular/router';
 import { SourceAssetList } from '../source-asset-list/source-asset-list';
 import { TargetAssetList } from '../target-asset-list/target-asset-list';
@@ -25,6 +25,8 @@ import { EnvironmentStorageService } from '../../../services/environment-storage
 export class AssetMigration implements OnInit {
   sourceAssets = signal<AssetFile[]>([]);
   targetAssets = signal<AssetFile[]>([]);
+  sourceRequestError = signal<{ status?: number; message?: string } | null>(null);
+  targetRequestError = signal<{ status?: number; message?: string } | null>(null);
   loading = signal(true);
   sourceRepository = signal('');
   targetRepository = signal('');
@@ -49,16 +51,28 @@ export class AssetMigration implements OnInit {
     const params = this.route.snapshot.queryParamMap;
     this.sourceFilter.set(params.get('sourceFilter') ?? '');
     this.targetFilter.set(params.get('targetFilter') ?? '');
+    this.sourceRequestError.set(null);
+    this.targetRequestError.set(null);
 
     forkJoin({
-      source: this.assetService.getAssets(this.sourceRepository()),
-      target: this.assetService.getAssets(this.targetRepository()),
-    }).subscribe(({ source, target }) => {
-      this.sourceAssets.set(source);
-      this.targetAssets.set(target);
-
-      this.loading.set(false);
-    });
+      source: this.assetService.getAssets(this.sourceRepository()).pipe(
+        catchError((error: { status?: number; message?: string }) => {
+          this.sourceRequestError.set({ status: error.status, message: error.message });
+          return of([] as AssetFile[]);
+        }),
+      ),
+      target: this.assetService.getAssets(this.targetRepository()).pipe(
+        catchError((error: { status?: number; message?: string }) => {
+          this.targetRequestError.set({ status: error.status, message: error.message });
+          return of([] as AssetFile[]);
+        }),
+      ),
+    })
+      .pipe(finalize(() => this.loading.set(false)))
+      .subscribe(({ source, target }) => {
+        this.sourceAssets.set(source);
+        this.targetAssets.set(target);
+      });
   }
 
   onSourceFilterChange(filter: string): void {
@@ -72,11 +86,27 @@ export class AssetMigration implements OnInit {
   }
 
   loadTargetAssets(): void {
-    this.assetService.getAssets(this.targetRepository()).subscribe((assets) => this.targetAssets.set(assets));
+    this.assetService.getAssets(this.targetRepository()).subscribe({
+      next: (assets) => {
+        this.targetRequestError.set(null);
+        this.targetAssets.set(assets);
+      },
+      error: (error: { status?: number; message?: string }) => {
+        this.targetRequestError.set({ status: error.status, message: error.message });
+      },
+    });
   }
 
   loadSourceAssets(): void {
-    this.assetService.getAssets(this.sourceRepository()).subscribe((assets) => this.sourceAssets.set(assets));
+    this.assetService.getAssets(this.sourceRepository()).subscribe({
+      next: (assets) => {
+        this.sourceRequestError.set(null);
+        this.sourceAssets.set(assets);
+      },
+      error: (error: { status?: number; message?: string }) => {
+        this.sourceRequestError.set({ status: error.status, message: error.message });
+      },
+    });
   }
 
   private updateQueryParams(): void {

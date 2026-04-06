@@ -1,5 +1,5 @@
 import { Component, inject, OnInit, signal } from '@angular/core';
-import { forkJoin } from 'rxjs';
+import { catchError, forkJoin, finalize, of } from 'rxjs';
 import { ActivatedRoute, Router } from '@angular/router';
 
 import { MatProgressBarModule } from '@angular/material/progress-bar';
@@ -35,6 +35,8 @@ export class DocumentMigration implements OnInit {
   targetSearch = signal('');
   sourceTypes = signal<DocumentType[]>([]);
   targetTypes = signal<DocumentType[]>([]);
+  sourceRequestError = signal<{ status?: number; message?: string } | null>(null);
+  targetRequestError = signal<{ status?: number; message?: string } | null>(null);
   private readonly documentService = inject(DocumentService);
   private readonly storageService = inject(EnvironmentStorageService);
   private readonly route = inject(ActivatedRoute);
@@ -56,13 +58,37 @@ export class DocumentMigration implements OnInit {
 
     this.sourceSearch.set(initialSourceType);
     this.targetSearch.set(initialTargetType);
+    this.sourceRequestError.set(null);
+    this.targetRequestError.set(null);
 
     forkJoin({
-      source: this.documentService.getDocuments(this.sourceRepository(), 1, initialSourceType),
-      target: this.documentService.getDocuments(this.targetRepository(), 1, initialTargetType),
-      sourceTypes: this.documentService.getTypes(this.sourceRepository()),
-      targetTypes: this.documentService.getTypes(this.targetRepository()),
-    }).subscribe(
+      source: this.documentService.getDocuments(this.sourceRepository(), 1, initialSourceType).pipe(
+        catchError((error: { status?: number; message?: string }) => {
+          this.sourceRequestError.set({ status: error.status, message: error.message });
+          return of(this.emptyPaginatedDocuments());
+        }),
+      ),
+      target: this.documentService.getDocuments(this.targetRepository(), 1, initialTargetType).pipe(
+        catchError((error: { status?: number; message?: string }) => {
+          this.targetRequestError.set({ status: error.status, message: error.message });
+          return of(this.emptyPaginatedDocuments());
+        }),
+      ),
+      sourceTypes: this.documentService.getTypes(this.sourceRepository()).pipe(
+        catchError((error: { status?: number; message?: string }) => {
+          this.sourceRequestError.set({ status: error.status, message: error.message });
+          return of({} as Record<string, string>);
+        }),
+      ),
+      targetTypes: this.documentService.getTypes(this.targetRepository()).pipe(
+        catchError((error: { status?: number; message?: string }) => {
+          this.targetRequestError.set({ status: error.status, message: error.message });
+          return of({} as Record<string, string>);
+        }),
+      ),
+    })
+      .pipe(finalize(() => this.initialLoading.set(false)))
+      .subscribe(
       ({
         source,
         target,
@@ -74,20 +100,11 @@ export class DocumentMigration implements OnInit {
         sourceTypes: Record<string, string>;
         targetTypes: Record<string, string>;
       }) => {
-        this.sourceDocuments.set(source.documents);
-        this.sourcePage.set(source.page);
-        this.sourceTotalPages.set(source.totalPages);
-        this.sourceTotalDocuments.set(source.totalDocuments);
-
-        this.targetDocuments.set(target.documents);
-        this.targetPage.set(target.page);
-        this.targetTotalPages.set(target.totalPages);
-        this.targetTotalDocuments.set(target.totalDocuments);
+        this.applySourceResult(source);
+        this.applyTargetResult(target);
 
         this.sourceTypes.set(Object.entries(sourceTypes).map(([id, label]) => ({ id, label })));
         this.targetTypes.set(Object.entries(targetTypes).map(([id, label]) => ({ id, label })));
-
-        this.initialLoading.set(false);
       },
     );
   }
@@ -95,89 +112,144 @@ export class DocumentMigration implements OnInit {
   onSourceSearch(search: string): void {
     this.sourceSearch.set(search);
     this.updateQueryParams();
+    this.sourceRequestError.set(null);
     this.sourceDocuments.set([]);
     this.sourcePage.set(1);
     this.sourceLoading.set(true);
     this.documentService
       .getDocuments(this.sourceRepository(), 1, search)
-      .subscribe((result: PaginatedDocuments) => {
-        this.sourceDocuments.set(result.documents);
-        this.sourcePage.set(result.page);
-        this.sourceTotalPages.set(result.totalPages);
-        this.sourceTotalDocuments.set(result.totalDocuments);
-        this.sourceLoading.set(false);
+      .subscribe({
+        next: (result: PaginatedDocuments) => {
+          this.applySourceResult(result);
+          this.sourceLoading.set(false);
+        },
+        error: (error: { status?: number; message?: string }) => {
+          this.sourceRequestError.set({ status: error.status, message: error.message });
+          this.sourceLoading.set(false);
+        },
       });
   }
 
   onTargetSearch(search: string): void {
     this.targetSearch.set(search);
     this.updateQueryParams();
+    this.targetRequestError.set(null);
     this.targetDocuments.set([]);
     this.targetPage.set(1);
     this.targetLoading.set(true);
     this.documentService
       .getDocuments(this.targetRepository(), 1, search)
-      .subscribe((result: PaginatedDocuments) => {
-        this.targetDocuments.set(result.documents);
-        this.targetPage.set(result.page);
-        this.targetTotalPages.set(result.totalPages);
-        this.targetTotalDocuments.set(result.totalDocuments);
-        this.targetLoading.set(false);
+      .subscribe({
+        next: (result: PaginatedDocuments) => {
+          this.applyTargetResult(result);
+          this.targetLoading.set(false);
+        },
+        error: (error: { status?: number; message?: string }) => {
+          this.targetRequestError.set({ status: error.status, message: error.message });
+          this.targetLoading.set(false);
+        },
       });
   }
 
   loadSourcePage(page: number): void {
     if (this.sourceLoading()) return;
+    this.sourceRequestError.set(null);
     this.sourceLoading.set(true);
     this.documentService
       .getDocuments(this.sourceRepository(),page, this.sourceSearch())
-      .subscribe((result: PaginatedDocuments) => {
-        this.sourceDocuments.update((docs) => [...docs, ...result.documents]);
-        this.sourcePage.set(result.page);
-        this.sourceTotalPages.set(result.totalPages);
-        this.sourceTotalDocuments.set(result.totalDocuments);
-        this.sourceLoading.set(false);
+      .subscribe({
+        next: (result: PaginatedDocuments) => {
+          this.sourceDocuments.update((docs) => [...docs, ...result.documents]);
+          this.sourcePage.set(result.page);
+          this.sourceTotalPages.set(result.totalPages);
+          this.sourceTotalDocuments.set(result.totalDocuments);
+          this.sourceLoading.set(false);
+        },
+        error: (error: { status?: number; message?: string }) => {
+          this.sourceRequestError.set({ status: error.status, message: error.message });
+          this.sourceLoading.set(false);
+        },
       });
   }
 
   loadTargetPage(page: number): void {
     if (this.targetLoading()) return;
+    this.targetRequestError.set(null);
     this.targetLoading.set(true);
     this.documentService
       .getDocuments(this.targetRepository(),page, this.targetSearch())
-      .subscribe((result: PaginatedDocuments) => {
-        this.targetDocuments.update((docs) => [...docs, ...result.documents]);
-        this.targetPage.set(result.page);
-        this.targetTotalPages.set(result.totalPages);
-        this.targetTotalDocuments.set(result.totalDocuments);
-        this.targetLoading.set(false);
+      .subscribe({
+        next: (result: PaginatedDocuments) => {
+          this.targetDocuments.update((docs) => [...docs, ...result.documents]);
+          this.targetPage.set(result.page);
+          this.targetTotalPages.set(result.totalPages);
+          this.targetTotalDocuments.set(result.totalDocuments);
+          this.targetLoading.set(false);
+        },
+        error: (error: { status?: number; message?: string }) => {
+          this.targetRequestError.set({ status: error.status, message: error.message });
+          this.targetLoading.set(false);
+        },
       });
   }
 
   refreshSource(): void {
+    this.sourceRequestError.set(null);
     this.sourceDocuments.set([]);
+    this.sourceLoading.set(true);
     this.documentService
       .getDocuments(this.sourceRepository(),1, this.sourceSearch())
-      .subscribe((result: PaginatedDocuments) => {
-        this.sourceDocuments.set(result.documents);
-        this.sourcePage.set(result.page);
-        this.sourceTotalPages.set(result.totalPages);
-        this.sourceTotalDocuments.set(result.totalDocuments);
-        this.sourceLoading.set(false);
+      .subscribe({
+        next: (result: PaginatedDocuments) => {
+          this.applySourceResult(result);
+          this.sourceLoading.set(false);
+        },
+        error: (error: { status?: number; message?: string }) => {
+          this.sourceRequestError.set({ status: error.status, message: error.message });
+          this.sourceLoading.set(false);
+        },
       });
   }
 
   refreshTarget(): void {
+    this.targetRequestError.set(null);
     this.targetDocuments.set([]);
+    this.targetLoading.set(true);
     this.documentService
       .getDocuments(this.targetRepository(),1, this.targetSearch())
-      .subscribe((result: PaginatedDocuments) => {
-        this.targetDocuments.set(result.documents);
-        this.targetPage.set(result.page);
-        this.targetTotalPages.set(result.totalPages);
-        this.targetTotalDocuments.set(result.totalDocuments);
-        this.targetLoading.set(false);
+      .subscribe({
+        next: (result: PaginatedDocuments) => {
+          this.applyTargetResult(result);
+          this.targetLoading.set(false);
+        },
+        error: (error: { status?: number; message?: string }) => {
+          this.targetRequestError.set({ status: error.status, message: error.message });
+          this.targetLoading.set(false);
+        },
       });
+  }
+
+  private emptyPaginatedDocuments(): PaginatedDocuments {
+    return {
+      documents: [],
+      page: 1,
+      totalPages: 1,
+      totalDocuments: 0,
+    };
+  }
+
+  private applySourceResult(result: PaginatedDocuments): void {
+    this.sourceDocuments.set(result.documents);
+    this.sourcePage.set(result.page);
+    this.sourceTotalPages.set(result.totalPages);
+    this.sourceTotalDocuments.set(result.totalDocuments);
+  }
+
+  private applyTargetResult(result: PaginatedDocuments): void {
+    this.targetDocuments.set(result.documents);
+    this.targetPage.set(result.page);
+    this.targetTotalPages.set(result.totalPages);
+    this.targetTotalDocuments.set(result.totalDocuments);
   }
 
   private updateQueryParams(): void {

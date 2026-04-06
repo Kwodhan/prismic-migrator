@@ -1,5 +1,5 @@
 import { Component, inject, OnInit, signal } from '@angular/core';
-import { forkJoin } from 'rxjs';
+import { catchError, forkJoin, finalize, of } from 'rxjs';
 import { ActivatedRoute, Router } from '@angular/router';
 import { CustomTypeService } from '../../../services/custom-type.service';
 import { SourceCustomTypeList } from '../source-custom-type-list/source-custom-type-list';
@@ -18,6 +18,8 @@ import { EnvironmentStorageService } from '../../../services/environment-storage
 export class CustomTypeMigration implements OnInit {
   sourceCustomTypes = signal<CustomType[]>([]);
   targetCustomTypes = signal<CustomType[]>([]);
+  sourceRequestError = signal<{ status?: number; message?: string } | null>(null);
+  targetRequestError = signal<{ status?: number; message?: string } | null>(null);
   loading = signal(true);
   sourceRepository = signal('');
   targetRepository = signal('');
@@ -42,15 +44,30 @@ export class CustomTypeMigration implements OnInit {
     const params = this.route.snapshot.queryParamMap;
     this.sourceFilter.set(params.get('sourceFilter') ?? '');
     this.targetFilter.set(params.get('targetFilter') ?? '');
+    this.sourceRequestError.set(null);
+    this.targetRequestError.set(null);
 
     forkJoin({
-      source: this.customTypeService.getCustomTypes(this.sourceRepository()),
-      target: this.customTypeService.getCustomTypes(this.targetRepository()),
-    }).subscribe(({ source, target }) => {
-      this.sourceCustomTypes.set(source);
-      this.targetCustomTypes.set(target);
-      this.loading.set(false);
-    });
+      source: this.customTypeService.getCustomTypes(this.sourceRepository()).pipe(
+        catchError((error: { status?: number; message?: string }) => {
+          this.sourceRequestError.set({ status: error.status, message: error.message });
+          return of([] as CustomType[]);
+        }),
+      ),
+      target: this.customTypeService.getCustomTypes(this.targetRepository()).pipe(
+        catchError((error: { status?: number; message?: string }) => {
+          this.targetRequestError.set({ status: error.status, message: error.message });
+          return of([] as CustomType[]);
+        }),
+      ),
+    })
+      .pipe(finalize(() => this.loading.set(false)))
+      .subscribe({
+        next: ({ source, target }) => {
+          this.sourceCustomTypes.set(source);
+          this.targetCustomTypes.set(target);
+        },
+      });
   }
 
   onSourceFilterChange(filter: string): void {
@@ -66,13 +83,29 @@ export class CustomTypeMigration implements OnInit {
   loadSourceCustomTypes(): void {
     this.customTypeService
       .getCustomTypes(this.sourceRepository())
-      .subscribe((ct) => this.sourceCustomTypes.set(ct));
+      .subscribe({
+        next: (ct) => {
+          this.sourceRequestError.set(null);
+          this.sourceCustomTypes.set(ct);
+        },
+        error: (error: { status?: number; message?: string }) => {
+          this.sourceRequestError.set({ status: error.status, message: error.message });
+        },
+      });
   }
 
   loadTargetCustomTypes(): void {
     this.customTypeService
       .getCustomTypes(this.targetRepository())
-      .subscribe((ct) => this.targetCustomTypes.set(ct));
+      .subscribe({
+        next: (ct) => {
+          this.targetRequestError.set(null);
+          this.targetCustomTypes.set(ct);
+        },
+        error: (error: { status?: number; message?: string }) => {
+          this.targetRequestError.set({ status: error.status, message: error.message });
+        },
+      });
   }
 
   private updateQueryParams(): void {
