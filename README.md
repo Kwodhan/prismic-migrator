@@ -60,6 +60,125 @@ Prismic Migrator supports **optional OpenID Connect (OIDC) authentication**. Whe
 
 ---
 
+## Authorization (RBAC) *(optional)*
+
+On top of OIDC authentication, Prismic Migrator supports **Role-Based Access Control (RBAC)** to restrict which environments a user can access and with which permissions.
+
+RBAC is fully optional: if no `ENV_N_ROLE_PREFIX` is set for an environment, that environment is open to any authenticated user.
+
+---
+
+### How it works
+
+Each API route requires one or more **permissions**. Before fulfilling the request, the middleware:
+
+1. Extracts the roles embedded in the user's JWT access token.
+2. Looks up the roles that match the target environment's **role prefix**.
+3. Checks that at least one of those roles matches the required permission.
+
+#### Available permissions
+
+| Permission | Grants access to |
+|---|---|
+| `Read` | Browsing environments, listing resources |
+| `Asset` | Asset migration |
+| `CustomType` | Custom type migration |
+| `Document` | Document migration |
+
+#### Role naming convention
+
+Roles follow the pattern `<rolePrefix><separator><permission>`.
+
+For exemple, with the separator `_` and a role prefix of `app_dev`:
+
+```
+app_dev_read        → Read access on the "app_dev" environment
+app_dev_asset       → Asset migration on the "app_dev" environment
+app_dev_customtype  → Custom-type migration on the "app_dev" environment
+app_dev_document    → Document migration on the "app_dev" environment
+```
+
+A user holding `app_dev_read` and `app_prod_read` can browse both environments but cannot migrate anything.
+
+---
+
+### Keycloak setup *(recommended)*
+
+Set `ROLE_EXTRACTOR=keycloak` (this is also the default when OIDC is enabled).
+
+The extractor reads roles from the standard Keycloak claim:
+
+```
+resource_access.<OIDC_CLIENT_ID>.roles
+```
+
+**Steps in Keycloak:**
+
+1. Open your realm → **Clients** → select your client (`OIDC_CLIENT_ID`).
+2. Go to **Roles** → create one role per environment/permission combination:
+   - `app-dev-read`, `app-dev-asset`, `app-prod-read`, …
+3. Assign the roles to users or groups via **Users** → **Role mapping** → **Client roles**.
+
+**Environment variables:**
+
+| Variable | Description                                      | Default |
+|---|--------------------------------------------------|---|
+| `ROLE_EXTRACTOR` | Must be `keycloak`                               | `keycloak` |
+| `OIDC_CLIENT_ID` | Client ID — used as the key in `resource_access` | *(required for OIDC)* |
+| `ENV_N_ROLE_PREFIX` | Role prefix for environment N (e.g. `app-dev`)   | *(required)* |
+
+**.env example:**
+
+```env
+ROLE_EXTRACTOR=keycloak
+
+ENV_0_REPOSITORY_NAME=my-staging-repo
+ENV_0_ROLE_PREFIX=app_staging
+
+ENV_1_REPOSITORY_NAME=my-production-repo
+ENV_1_ROLE_PREFIX=app_prod
+```
+
+---
+
+### Generic IdP setup
+
+For identity providers that expose roles as a flat array in a custom JWT claim, set `ROLE_EXTRACTOR=generic`.
+
+**Environment variables:**
+
+| Variable | Description | Default |
+|---|---|---|
+| `ROLE_EXTRACTOR` | Must be `generic` | `keycloak` |
+| `ROLE_CLAIM` | JWT claim containing the flat role array | `roles` |
+| `ROLE_SEPARATOR` | Separator between prefix and permission in role names | `_` |
+| `ENV_N_ROLE_PREFIX` | Role prefix for environment N | *(required)* |
+
+**Expected token structure** (with `ROLE_CLAIM=roles`, `ROLE_SEPARATOR=_`):
+
+```json
+{
+  "sub": "user-id",
+  "roles": ["app_staging_read", "app_staging_document", "app_prod_read"]
+}
+```
+
+**.env example:**
+
+```env
+ROLE_EXTRACTOR=generic
+ROLE_CLAIM=roles
+ROLE_SEPARATOR=_
+
+ENV_0_REPOSITORY_NAME=my-staging-repo
+ENV_0_ROLE_PREFIX=app_staging
+
+ENV_1_REPOSITORY_NAME=my-production-repo
+ENV_1_ROLE_PREFIX=app_prod
+```
+
+---
+
 ## Document Migration & Validation Pipeline
 
 Document migration is the most complex operation. Before sending a document to the [Prismic Migration API](https://prismic.io/docs/migration-api-technical-reference), the application runs a **validation pipeline** that inspects the document and collects issues.
@@ -135,16 +254,23 @@ OIDC_CLIENT_ID=
 OIDC_SCOPE=openid profile email
 OIDC_AUDIENCE=prismic-migrator
 
+# Optional RBAC (requires OIDC). Values: keycloak (default) | generic
+ROLE_EXTRACTOR=keycloak
+# ROLE_CLAIM=roles         # generic only — JWT claim holding the role array
+# ROLE_SEPARATOR=_         # generic only — separator between prefix and permission
+
 # Repositories — add as many ENV_N_* blocks as needed (0-indexed)
 ENV_0_REPOSITORY_NAME=my-staging-repo
 ENV_0_DESCRIPTION=Staging
 ENV_0_WRITE_TOKEN=
 ENV_0_CONTENT_TOKEN=
+# ENV_0_ROLE_PREFIX=app-staging   # optional — restricts access via RBAC
 
 ENV_1_REPOSITORY_NAME=my-production-repo
 ENV_1_DESCRIPTION=Production
 ENV_1_WRITE_TOKEN=
 ENV_1_CONTENT_TOKEN=
+# ENV_1_ROLE_PREFIX=app-prod      # optional — restricts access via RBAC
 ```
 
 > You can declare as many environments as needed by incrementing the index (`ENV_0_*`, `ENV_1_*`, `ENV_2_*`, …). The app reads them all at startup.
