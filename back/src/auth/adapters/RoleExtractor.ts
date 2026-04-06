@@ -2,7 +2,7 @@ import {OidcClaims, PERMISSIONS, RolesMap} from '@shared/types';
 
 export abstract class RoleExtractor {
 
-  protected constructor(protected readonly roleClaim: string) {
+  protected constructor(protected readonly roleClaim: string, protected readonly separator: string) {
 
   }
 
@@ -17,8 +17,8 @@ export abstract class RoleExtractor {
 
     const result: RolesMap = {};
     for (const role of roles) {
-      const parts = role.split('_');
-      if(parts.length < 2) {
+      const parts = role.split(this.separator);
+      if (parts.length < 2) {
         continue;
       }
       const permission = PERMISSIONS.find(
@@ -28,7 +28,7 @@ export abstract class RoleExtractor {
         continue;
       }
 
-      const prefix = parts.slice(0, -1).join('_');
+      const prefix = parts.slice(0, -1).join(this.separator);
       if (!result[prefix]) {
         result[prefix] = [];
       }

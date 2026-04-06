@@ -8,7 +8,7 @@ import {RoleExtractor} from './RoleExtractor';
  */
 export class KeycloakRoleExtractor extends RoleExtractor {
   constructor(private readonly clientId: string) {
-    super('resource_access');
+    super('resource_access','-');
   }
 
   extract(claims: OidcClaims): RolesMap {

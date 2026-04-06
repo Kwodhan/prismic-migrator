@@ -11,6 +11,7 @@ export function createRoleExtractor(
   type: RoleExtractorType = 'keycloak',
   clientId?: string,
   roleClaim?: string,
+  roleSeparator?: string,
 ): RoleExtractor {
   switch (type) {
     case 'keycloak':
@@ -19,7 +20,7 @@ export function createRoleExtractor(
       }
       return new KeycloakRoleExtractor(clientId);
     case 'generic':
-      return new GenericRoleExtractor(roleClaim);
+      return new GenericRoleExtractor(roleClaim, roleSeparator);
     default:
       throw new Error(`Unknown role extractor type: ${type}`);
   }

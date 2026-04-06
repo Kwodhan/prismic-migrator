@@ -91,9 +91,9 @@ function getRbacConfig(): RbacConfig {
   const roleExtractorType = (process.env.ROLE_EXTRACTOR) as RoleExtractorType;
   const clientId = process.env.OIDC_CLIENT_ID;
   const roleClaim = process.env.ROLE_CLAIM;
+  const roleSeparator = process.env.ROLE_SEPARATOR;
 
-  const roleExtractor = createRoleExtractor(roleExtractorType, clientId, roleClaim);
-
+  const roleExtractor = createRoleExtractor(roleExtractorType, clientId, roleClaim, roleSeparator);
   return {
     roleExtractor,
   };

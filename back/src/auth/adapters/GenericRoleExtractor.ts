@@ -6,8 +6,8 @@ import {RoleExtractor} from './RoleExtractor';
  * Expected claim format: ['envPrefix_Read', 'envPrefix_Asset']
  */
 export class GenericRoleExtractor extends RoleExtractor {
-  constructor(roleClaim: string = 'roles') {
-    super(roleClaim);
+  constructor(roleClaim: string = 'roles', separator: string = '_') {
+    super(roleClaim, separator);
   }
 
   extract(claims: OidcClaims): RolesMap {
