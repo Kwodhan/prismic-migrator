@@ -1,10 +1,10 @@
 #!/bin/sh
 set -e
 
-# ── Mode de lancement ──────────────────────────────────────────────────────────
-# APP_MODE=back  → Express API seul        (port 3001)
-# APP_MODE=front → serve statique Angular  (port 8080)
-# APP_MODE=all   → les deux ensemble       (défaut)
+# ── Launch mode ────────────────────────────────────────────────────────────
+# APP_MODE=back  → Express API only        (port 3001)
+# APP_MODE=front → Angular static serving  (port 8080)
+# APP_MODE=all   → both together           (default)
 APP_MODE=${APP_MODE:-all}
 
 echo "[entrypoint] APP_MODE=${APP_MODE}"
@@ -13,22 +13,22 @@ case "${APP_MODE}" in
 
   back)
     exec node /app/back/src/index.js
-    echo "[entrypoint] Front sur le port 3001."
+    echo "[entrypoint] Back on port 3001."
     ;;
 
   front)
     exec npx --yes serve -s /app/public -l 8080
-    echo "[entrypoint] Front sur le port 8080."
+    echo "[entrypoint] Front on port 8080."
     ;;
 
   all)
-    # Lance le back en arrière-plan puis le front au premier plan.
-    # Si l'un des deux s'arrête, le conteneur s'arrête via le trap.
+    # Start the back in the background, then the front in the foreground.
+    # If either stops, the container stops via the trap.
     node /app/back/src/index.js &
     BACK_PID=$!
 
-    # Attente que le back soit prêt (max 15 s)
-    echo "[entrypoint] Attente du back (PID ${BACK_PID})..."
+    # Wait for the back to be ready (max 15 s)
+    echo "[entrypoint] Waiting for back (PID ${BACK_PID})..."
     i=0
     while [ $i -lt 15 ]; do
       if kill -0 "${BACK_PID}" 2>/dev/null; then
@@ -38,15 +38,15 @@ case "${APP_MODE}" in
       i=$((i + 1))
     done
 
-    # Le front est servi par Express (express.static) sur le même port 3001.
-    # En mode "all" on n'a donc pas besoin d'un second processus :
-    # le back sert déjà le front. On attend simplement que le back se termine.
-    echo "[entrypoint] Back + Front sur le port 3001."
+    # The front is served by Express (express.static) on the same port 3001.
+    # In "all" mode there is therefore no need for a second process:
+    # the back already serves the front. We simply wait for the back to finish.
+    echo "[entrypoint] Back + Front on port 3001."
     wait "${BACK_PID}"
     ;;
 
   *)
-    echo "[entrypoint] APP_MODE inconnu : '${APP_MODE}'. Valeurs acceptées : back | front | all"
+    echo "[entrypoint] Unknown APP_MODE: '${APP_MODE}'. Accepted values: back | front | all"
     exit 1
     ;;
 

@@ -24,7 +24,7 @@ export class AuthService {
 
       // OIDC not configured -> no auth required
       if (!config.issuer || !config.clientId) {
-        console.info('[Auth] OIDC non configuré — authentification désactivée.');
+        console.info('[Auth] OIDC not configured — authentication disabled.');
         this.isAuthenticated.set(true);
         return;
       }
@@ -58,7 +58,7 @@ export class AuthService {
         this.applyUser(user);
       }
     } catch (err) {
-      console.error("[Auth] Erreur d'initialisation OIDC :", err);
+      console.error("[Auth] OIDC initialization error:", err);
     }
   }
 
@@ -74,7 +74,7 @@ export class AuthService {
       })
       .catch((err) => {
         this.loginRedirectInProgress = false;
-        console.error('[Auth] Erreur lors de la redirection vers le login :', err);
+        console.error('[Auth] Error during login redirect:', err);
       });
   }
 
@@ -106,7 +106,7 @@ export class AuthService {
     this.claims.set(null);
     this.isAuthenticated.set(false);
     void this.manager?.removeUser().catch((err) => {
-      console.error('[Auth] Erreur lors du nettoyage de la session locale :', err);
+      console.error('[Auth] Error while clearing local session:', err);
     });
   }
 

@@ -3,19 +3,19 @@
 
     <!-- Header -->
     <div class="mb-8">
-      <h1 class="text-2xl font-semibold text-slate-800">Migration d'environnements</h1>
-      <p class="text-slate-500 mt-1 text-sm">Sélectionnez les environnements source et cible</p>
+      <h1 class="text-2xl font-semibold text-slate-800">Environment Migration</h1>
+      <p class="text-slate-500 mt-1 text-sm">Select the source and target environments</p>
     </div>
 
-    <!-- Chargement -->
+    <!-- Loading -->
     @if (isLoading()) {
       <div class="flex items-center gap-3 py-10">
         <div class="w-5 h-5 border-2 border-slate-400 border-t-transparent rounded-full animate-spin"></div>
-        <span class="text-slate-500 text-sm">Chargement...</span>
+        <span class="text-slate-500 text-sm">Loading...</span>
       </div>
     } @else {
 
-      <!-- Sélecteurs -->
+      <!-- Selectors -->
       <div class="grid grid-cols-1 md:grid-cols-[1fr_auto_1fr] gap-4 items-start">
 
         <!-- Source -->
@@ -26,7 +26,7 @@
           </div>
 
           <mat-form-field appearance="outline" class="w-full">
-            <mat-label>Environnement source</mat-label>
+            <mat-label>Source environment</mat-label>
             <mat-select
               [value]="selectedSource()?.repoName ?? ''"
               (valueChange)="onSourceChange($event)">
@@ -59,7 +59,7 @@
             mat-icon-button
             [disabled]="!isReadyToMigrate()"
             (click)="swapEnvironments()"
-            matTooltip="Inverser">
+            matTooltip="Swap">
             <mat-icon >swap_horiz</mat-icon>
           </button>
         </div>
@@ -68,11 +68,11 @@
         <div class="bg-white border border-slate-200 rounded-lg p-5 shadow-sm">
           <div class="flex items-center gap-2 mb-4">
             <mat-icon class="!text-slate-500 !text-base">download</mat-icon>
-            <span class="text-sm font-medium text-slate-600 uppercase tracking-wider">Cible</span>
+            <span class="text-sm font-medium text-slate-600 uppercase tracking-wider">Target</span>
           </div>
 
           <mat-form-field appearance="outline" class="w-full">
-            <mat-label>Environnement cible</mat-label>
+            <mat-label>Target environment</mat-label>
             <mat-select
               [value]="selectedTarget()?.repoName ?? ''"
               (valueChange)="onTargetChange($event)">
@@ -100,14 +100,14 @@
 
       </div>
 
-      <!-- Résumé & Actions -->
+      <!-- Summary & Actions -->
       <div class="mt-6">
 
         @if (isReadyToMigrate()) {
           <div
             class="mb-4 p-3 rounded-md bg-slate-50 border border-slate-200 flex flex-wrap items-center gap-2 text-sm text-slate-600">
             <mat-icon class="!text-slate-400 !text-base">route</mat-icon>
-            <span>Migration de</span>
+            <span>Migrating from</span>
             <span class="font-medium text-slate-800">{{ selectedSource()!.repoName }}</span>
             <mat-icon class="!text-slate-400 !text-base">arrow_forward</mat-icon>
             <span class="font-medium text-slate-800">{{ selectedTarget()!.repoName }}</span>
@@ -120,7 +120,7 @@
             (click)="resetSelection()"
             [disabled]="!selectedSource() && !selectedTarget()">
             <mat-icon>restart_alt</mat-icon>
-            Réinitialiser
+            Reset
           </button>
 
           <button
@@ -129,7 +129,7 @@
             (click)="startMigration()"
             [disabled]="!isReadyToMigrate()">
             <mat-icon>play_arrow</mat-icon>
-            Démarrer la migration
+            Start migration
           </button>
         </div>
 

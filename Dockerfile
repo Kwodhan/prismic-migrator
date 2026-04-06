@@ -1,5 +1,5 @@
 # ─────────────────────────────────────────────
-# Stage 0 – Installation des dépendances
+# Stage 0 – Dependencies installation
 # ─────────────────────────────────────────────
 FROM node:24.14.1-trixie-slim AS deps
 

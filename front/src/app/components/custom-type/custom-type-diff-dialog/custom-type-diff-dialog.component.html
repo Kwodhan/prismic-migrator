@@ -6,12 +6,12 @@
 <mat-dialog-content>
   <mat-tab-group>
 
-    <!-- Onglet Structured -->
+    <!-- Structured tab -->
     <mat-tab label="Structured">
       @if (diffStructured) {
         <div class="max-h-[60vh] overflow-y-auto pt-4 space-y-4">
 
-          <!-- Section : Ajouts -->
+          <!-- Section: Additions -->
           @if (diffStructured.added.length > 0) {
             <div class="diff-section">
               <h3 class="flex items-center gap-2 text-sm font-semibold text-green-700 mb-2">
@@ -29,7 +29,7 @@
             </div>
           }
 
-          <!-- Section : Suppressions -->
+          <!-- Section: Deletions -->
           @if (diffStructured.deleted.length > 0) {
             <div class="diff-section">
               <h3 class="flex items-center gap-2 text-sm font-semibold text-red-700 mb-2">
@@ -46,7 +46,7 @@
             </div>
           }
 
-          <!-- Section : Modifications -->
+          <!-- Section: Updates -->
           @if (diffStructured.updated.length > 0) {
             <div class="diff-section">
               <h3 class="flex items-center gap-2 text-sm font-semibold text-orange-700 mb-2">
@@ -68,7 +68,7 @@
             </div>
           }
 
-          <!-- Aucune différence -->
+          <!-- No differences -->
           @if (diffStructured.added.length === 0 &&
           diffStructured.deleted.length === 0 &&
           diffStructured.updated.length === 0) {
@@ -79,7 +79,7 @@
       }
     </mat-tab>
 
-    <!-- Onglet Json -->
+    <!-- Json tab -->
     <mat-tab label="Json">
       <div class="max-h-[60vh] overflow-y-auto pt-4">
 
