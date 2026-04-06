@@ -13,6 +13,7 @@ import { DocumentList } from '../document-list/document-list';
 import { DocumentService } from '../../../services/document.service';
 import { DocumentValidationDialogComponent } from '../document-validation-dialog/document-validation-dialog.component';
 import { DocumentMigrationResult } from '@shared/types';
+import { MatSnackBar } from '@angular/material/snack-bar';
 
 @Component({
   selector: 'target-document-list',
@@ -34,6 +35,7 @@ export class TargetDocumentList extends DocumentList implements OnInit, OnDestro
   isDragOver = signal(false);
   migrating = signal(false);
   private readonly documentService = inject(DocumentService);
+  private readonly snackBar = inject(MatSnackBar);
   private readonly dialog = inject(MatDialog);
 
   ngOnInit(): void {
@@ -81,16 +83,18 @@ export class TargetDocumentList extends DocumentList implements OnInit, OnDestro
             },
           });
         },
-        error: () => {
+        error: (err) => {
           this.migrating.set(false);
-          this.dialog.open(DocumentValidationDialogComponent, {
-            width: '800px',
-            maxWidth: '95vw',
-            data: {
-              validation: null,
-              docLabel: document.uid ?? document.id,
-              targetRepo: this.repository(),
-            },
+          const message =
+            err?.status === 403
+              ? "❌ You don't have permission to migrate this document on this repository."
+              : `❌ Network error: ${err.message ?? 'unreachable'}`;
+
+          this.snackBar.open(message, 'Close', {
+            duration: 6000,
+            panelClass: ['snack-error'],
+            horizontalPosition: 'end',
+            verticalPosition: 'top',
           });
         },
       });

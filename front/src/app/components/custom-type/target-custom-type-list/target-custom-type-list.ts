@@ -123,7 +123,12 @@ export class TargetCustomTypeList extends CustomTypeList implements OnInit, OnDe
         },
         error: (err) => {
           this.migrating.set(false);
-          this.snackBar.open(`❌ Network error: ${err.message ?? 'unreachable'}`, 'Close', {
+          const message =
+            err?.status === 403
+              ? "❌ You don't have permission to migrate this custom type on this repository."
+              : `❌ Network error: ${err.message ?? 'unreachable'}`;
+
+          this.snackBar.open(message, 'Close', {
             duration: 6000,
             panelClass: ['snack-error'],
             horizontalPosition: 'end',
