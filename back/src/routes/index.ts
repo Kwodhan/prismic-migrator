@@ -1,4 +1,4 @@
-import {Router} from 'express';
+import {Request, RequestHandler, Router} from 'express';
 import {AssetController} from '../asset/AssetController';
 import {CustomTypeController} from '../custom-type/CustomTypeController';
 import {DocumentController} from '../document/DocumentController';
@@ -7,12 +7,52 @@ import {PrismicMigratorCustomType} from '../custom-type/PrismicMigratorCustomTyp
 import {PrismicMigratorDocument} from '../document/PrismicMigratorDocument';
 import {AxiosInstance} from 'axios';
 import {Environment} from '@shared/types/environment.types';
+import {Permission} from '@shared/types/auth.types';
+import {RbacConfig} from '../index';
+import {createAuthorizationMiddleware} from '../auth/authorization.middleware';
 import _ from 'lodash';
+
+type RepoNameResolver = (req: Request) => string | undefined;
+
+function findRolePrefix(environments: Environment[], repoName: string | undefined): string | undefined {
+  if (!repoName) {
+    return undefined;
+  }
+
+  const env = environments.find((environment) => environment.repoName === repoName);
+  return env?.rolePrefix;
+}
+
+function requirePermissionForEnvironment(
+  rbac: RbacConfig | undefined,
+  environments: Environment[],
+  permissions: Permission[],
+  resolveRepoName: RepoNameResolver,
+): RequestHandler {
+  return (req, res, next) => {
+    // RBAC is disabled when auth is disabled.
+    if (!rbac) {
+      next();
+      return;
+    }
+
+    const repoName = resolveRepoName(req);
+    const rolePrefix = findRolePrefix(environments, repoName);
+    const authorization = createAuthorizationMiddleware(rbac.roleExtractor, permissions, rolePrefix);
+    authorization(req, res, next);
+  };
+}
+
+function readRepoNameFromParams(req: Request): string | undefined {
+  const repoName = req.params.repoName;
+  return typeof repoName === 'string' ? repoName : undefined;
+}
 
 export function buildRouter(
   axiosInstance: AxiosInstance,
   environments: Environment[],
-  proxyUrl?: string
+  proxyUrl?: string,
+  rbac?: RbacConfig,
 ): Router {
   const router = Router();
 
@@ -40,18 +80,46 @@ export function buildRouter(
   router.get('/config', (_req, res) => {
     res.json(environments.map(e => _.pick(e, ['description', 'repoName'])
     ));
-  });
+   });
 
-  router.get('/assets/:repoName', assetController.getAssets);
-  router.post('/assets/migrate', assetController.migrateAsset);
+   // Assets endpoints
+   router.get('/assets/:repoName',
+    requirePermissionForEnvironment(rbac, environments, ['Read'], readRepoNameFromParams),
+    assetController.getAssets
+  );
+  router.post('/assets/migrate',
+    requirePermissionForEnvironment(rbac, environments, ['Asset'], (req) => req.body?.repoNameTarget),
+    assetController.migrateAsset
+  );
 
-  router.get('/custom-types/:repoName', customTypeController.getCustomTypes);
-  router.post('/custom-types/migrate', customTypeController.migrateCustomType);
-  router.put('/custom-types/update', customTypeController.updateCustomType);
+  // Custom types endpoints
+  router.get('/custom-types/:repoName',
+    requirePermissionForEnvironment(rbac, environments, ['Read'], readRepoNameFromParams),
+    customTypeController.getCustomTypes
+  );
+  router.post('/custom-types/migrate',
+    requirePermissionForEnvironment(rbac, environments, ['CustomType'], (req) => req.body?.repoNameTarget),
+    customTypeController.migrateCustomType
+  );
+  router.put('/custom-types/update',
+    requirePermissionForEnvironment(rbac, environments, ['CustomType'], (req) => req.body?.repoNameTarget),
+    customTypeController.updateCustomType
+  );
 
-
-  router.post('/documents/migrate', documentController.migrateDocument);
-  router.get('/documents/migrate', documentController.getReportMigrateDocument);
-  router.get('/documents/:repoName', documentController.getDocuments);
+  // Documents endpoints
+  router.post('/documents/migrate',
+    requirePermissionForEnvironment(rbac, environments, ['Document'], (req) => req.body?.repoNameTarget),
+    documentController.migrateDocument
+  );
+  router.get('/documents/migrate',
+    requirePermissionForEnvironment(rbac, environments, ['Document'], (req) =>
+      typeof req.query.repoNameTarget === 'string' ? req.query.repoNameTarget : undefined),
+    documentController.getReportMigrateDocument
+  );
+  router.get('/documents/:repoName',
+    requirePermissionForEnvironment(rbac, environments, ['Read'], readRepoNameFromParams),
+    documentController.getDocuments
+  );
   return router;
 }
+

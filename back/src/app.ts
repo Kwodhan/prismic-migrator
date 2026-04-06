@@ -5,15 +5,17 @@ import {buildRouter} from './routes';
 import axios from 'axios';
 import {oidcMiddleware} from './auth/oidc.middleware';
 import {Environment} from '@shared/types/environment.types';
-import {OidcConfig, ProxyConfig} from './index';
+import {OidcConfig, ProxyConfig, RbacConfig} from './index';
 import https from 'node:https';
 
 
 export function createApp(
   environments: Environment[],
   oidc: OidcConfig,
+  rbac?: RbacConfig,
   proxy?: ProxyConfig,
   jwksUri?: string,
+
 ): express.Application {
   const app = express();
 
@@ -23,7 +25,6 @@ export function createApp(
   // Serve Angular front-end (production build)
   const frontDistPath = path.resolve(__dirname, '../../public');
   app.use(express.static(frontDistPath));
-
   app.get('/api/auth/config', (_req, res) => {
     res.json({
       issuer: oidc.issuer,
@@ -47,7 +48,7 @@ export function createApp(
     : undefined;
 
   if (oidc && jwksUri) {
-    app.use('/api', oidcMiddleware(jwksUri, oidc.issuer, oidc.audience), buildRouter(axiosInstance, environments, proxyUrl));
+    app.use('/api', oidcMiddleware(jwksUri, oidc.issuer, oidc.audience), buildRouter(axiosInstance, environments, proxyUrl, rbac));
   } else {
     app.use('/api', buildRouter(axiosInstance, environments, proxyUrl));
   }

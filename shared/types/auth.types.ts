@@ -14,3 +14,7 @@ export interface OidcClaims {
   [key: string]: unknown;
 }
 
+export type Permission = 'Read' | 'Asset' | 'CustomType' | 'Document';
+export const PERMISSIONS = ['Read', 'Asset', 'CustomType', 'Document'] as const satisfies Permission[];
+
+export type RolesMap = Record<string, Permission[]>;

@@ -4,6 +4,8 @@ import net from 'node:net';
 import validator from 'validator';
 import {createApp} from './app';
 import {Environment} from '@shared/types/environment.types';
+import {createRoleExtractor, RoleExtractorType} from './auth/adapters';
+import {RoleExtractor} from './auth/adapters/RoleExtractor';
 
 
 dotenv.config({path: path.resolve(__dirname, '../../.env')});
@@ -24,6 +26,10 @@ export type OidcConfig = {
   audience: string;
 };
 
+export type RbacConfig = {
+  roleExtractor: RoleExtractor;
+};
+
 function readEnvironments(): Environment[] {
   const environments: Environment[] = [];
   let i = 0;
@@ -39,6 +45,7 @@ function readEnvironments(): Environment[] {
         description: process.env[`ENV_${i}_DESCRIPTION`],
         writeToken,
         contentToken,
+        rolePrefix: process.env[`ENV_${i}_ROLE_PREFIX`],
       });
     } else {
       console.warn(`[Config] ENV_${i} ignored: missing WRITE_TOKEN and/or CONTENT_TOKEN`);
@@ -63,7 +70,7 @@ function readOidcConfig(): OidcConfig {
     issuer: process.env.OIDC_ISSUER?.trim() ?? '',
     clientId: process.env.OIDC_CLIENT_ID?.trim() ?? '',
     scope: process.env.OIDC_SCOPE?.trim() ?? 'openid profile email',
-    audience: process.env.OIDC_AUDIENTICE_ID?.trim() ?? 'prismic-migrator',
+    audience: process.env.OIDC_AUDIENCE?.trim() ?? 'prismic-migrator',
   };
 }
 
@@ -77,6 +84,18 @@ function getProxyConfig(): ProxyConfig | undefined {
     host,
     port: Number(process.env.PROXY_PORT) || 8080,
     protocol: process.env.PROXY_PROTOCOL || 'http',
+  };
+}
+
+function getRbacConfig(): RbacConfig {
+  const roleExtractorType = (process.env.ROLE_EXTRACTOR) as RoleExtractorType;
+  const clientId = process.env.OIDC_CLIENT_ID;
+  const roleClaim = process.env.ROLE_CLAIM;
+
+  const roleExtractor = createRoleExtractor(roleExtractorType, clientId, roleClaim);
+
+  return {
+    roleExtractor,
   };
 }
 
@@ -121,17 +140,17 @@ async function bootstrap(): Promise<void> {
   const environments = readEnvironments();
   assertMinimumEnvironments(environments);
 
-  const oidc = readOidcConfig();
+  const oidcConfig = readOidcConfig();
 
   let jwksUri: string | undefined;
 
-  if (validator.isURL(oidc.issuer, {
+  if (validator.isURL(oidcConfig.issuer, {
     require_protocol: true,
     protocols: ['http', 'https'],
     host_whitelist: ['localhost', '127.0.0.1', '::1'],
   })) {
     try {
-      jwksUri = await discoverJwksUri(oidc.issuer);
+      jwksUri = await discoverJwksUri(oidcConfig.issuer);
       console.info('[Auth] JWKS URI discovered:', jwksUri);
     } catch (err) {
       console.error('[Auth] Unable to reach the discovery document:', err);
@@ -151,7 +170,10 @@ async function bootstrap(): Promise<void> {
   }
 
 
-  const app = createApp(environments, oidc, proxyConfig, jwksUri);
+  const authEnabled = Boolean(jwksUri);
+  const rbacConfig = authEnabled ? getRbacConfig() : undefined;
+
+  const app = createApp(environments, oidcConfig, rbacConfig, proxyConfig, jwksUri);
   app.listen(PORT, () => {
     console.log(`Server running on http://localhost:${PORT}`);
   });

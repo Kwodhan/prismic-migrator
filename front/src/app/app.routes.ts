@@ -1,5 +1,5 @@
 import { Routes } from '@angular/router';
-import { migrationGuard } from './migration.guard';
+import { migrationGuard } from './guards/migration.guard';
 import { authGuard } from './guards/auth.guard';
 import { EnvironmentPage } from './pages/environment/environment-page.component';
 

@@ -3,4 +3,5 @@ export interface Environment {
     description?: string;
     writeToken: string;
     contentToken: string;
+    rolePrefix?: string;
 }
