@@ -34,19 +34,19 @@ export class AuthService {
       this.manager = new UserManager({
         authority: config.issuer,
         client_id: config.clientId,
-        redirect_uri: window.location.origin,
+        redirect_uri: globalThis.location.origin,
         scope: config.scope,
         userStore: new WebStorageStateStore({ store: sessionStorage }),
       });
 
       // Return from the IdP
-      if (new URLSearchParams(window.location.search).has('code')) {
+      if (new URLSearchParams(globalThis.location.search).has('code')) {
         const user = await this.manager.signinRedirectCallback();
         // Restore the original URL saved in the OIDC state
         const redirect = (user.state as { redirect?: string } | null)?.redirect;
-        const target = new URL(redirect ?? '/', window.location.origin);
+        const target = new URL(redirect ?? '/', globalThis.location.origin);
         target.search = '';
-        window.history.replaceState({}, '', target.toString());
+        globalThis.history.replaceState({}, '', target.toString());
         this.loginRedirectInProgress = false;
         this.applyUser(user);
         return;
@@ -70,7 +70,7 @@ export class AuthService {
     this.loginRedirectInProgress = true;
     void this.manager
       .signinRedirect({
-        state: { redirect: window.location.href },
+        state: { redirect: globalThis.location.href },
       })
       .catch((err) => {
         this.loginRedirectInProgress = false;
@@ -97,7 +97,7 @@ export class AuthService {
   logout(): void {
     this.clearLocalAuthState();
     this.manager?.signoutRedirect({
-      post_logout_redirect_uri: window.location.origin,
+      post_logout_redirect_uri: globalThis.location.origin,
     });
   }
 

@@ -10,7 +10,7 @@ import {PrismicMigratorCustomType} from '../../../../custom-type/PrismicMigrator
  *   const result = await mock.getCustomTypeById('repo', 'blog_post');
  */
 export class MockPrismicMigratorCustomType implements Partial<PrismicMigratorCustomType> {
-  private customTypes = new Map<string, Record<string, any>>();
+  private readonly customTypes = new Map<string, Record<string, any>>();
 
   /**
    * Adds a custom type to the mock.

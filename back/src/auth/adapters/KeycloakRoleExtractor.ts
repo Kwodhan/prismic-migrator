@@ -7,7 +7,7 @@ import {RoleExtractor} from './RoleExtractor';
  * We transform them to nested format based on role prefix
  */
 export class KeycloakRoleExtractor extends RoleExtractor {
-  constructor(private clientId: string) {
+  constructor(private readonly clientId: string) {
     super('resource_access');
   }
 

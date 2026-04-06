@@ -18,8 +18,11 @@ export abstract class RoleExtractor {
     const result: RolesMap = {};
     for (const role of roles) {
       const parts = role.split('_');
+      if(parts.length < 2) {
+        continue;
+      }
       const permission = PERMISSIONS.find(
-        (permission) => permission.toLowerCase() === parts[parts.length - 1].toLowerCase()
+        (permission) => permission.toLowerCase() === parts.at(-1)?.toLowerCase()
       );
       if (!permission) {
         continue;

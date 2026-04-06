@@ -11,7 +11,7 @@ import {AssetFile} from '@shared/types';
  *   const assets = await mock.getAssets('source-repo');
  */
 export class MockPrismicMigratorAssets implements Partial<PrismicMigratorAssets> {
-  private assetsByRepo = new Map<string, AssetFile[]>();
+  private readonly assetsByRepo = new Map<string, AssetFile[]>();
 
   /**
    * Defines the list of assets for a given repository.

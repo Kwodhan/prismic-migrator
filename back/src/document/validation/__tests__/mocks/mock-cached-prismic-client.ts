@@ -11,9 +11,9 @@ import * as prismic from '@prismicio/client';
  *   const result = await mock.getByID(doc1.id);
  */
 export class MockCachedPrismicClient implements Partial<CachedPrismicClient> {
-  private documentsById = new Map<string, prismic.PrismicDocument>();
-  private documentsByType = new Map<string, prismic.PrismicDocument[]>();
-  private documentsByUID = new Map<string, prismic.PrismicDocument>();
+  private readonly documentsById = new Map<string, prismic.PrismicDocument>();
+  private readonly documentsByType = new Map<string, prismic.PrismicDocument[]>();
+  private readonly documentsByUID = new Map<string, prismic.PrismicDocument>();
 
   /**
    * Adds a document to the mock (indexed by ID, type, and UID if present).

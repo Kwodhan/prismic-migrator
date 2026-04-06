@@ -12,8 +12,8 @@ export class DocumentBuilder {
     title: [{ type: 'heading1', text: 'Test Title' }],
     body: [],
   };
-  private lang: string = 'en-US';
-  private tags: string[] = [];
+  private readonly lang: string = 'en-US';
+  private readonly tags: string[] = [];
 
   static create(): DocumentBuilder {
     return new DocumentBuilder();
