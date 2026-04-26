@@ -1,5 +1,5 @@
 import { Component, inject, OnInit, signal } from '@angular/core';
-import { catchError, forkJoin, finalize, of } from 'rxjs';
+import { catchError, finalize, forkJoin, of } from 'rxjs';
 import { ActivatedRoute, Router } from '@angular/router';
 import { SourceAssetList } from '../source-asset-list/source-asset-list';
 import { TargetAssetList } from '../target-asset-list/target-asset-list';
@@ -9,6 +9,7 @@ import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatIconModule } from '@angular/material/icon';
 import { AssetFile } from '@shared/types';
 import { EnvironmentStorageService } from '../../../services/environment-storage.service';
+import { MatProgressSpinner } from '@angular/material/progress-spinner';
 
 @Component({
   selector: 'asset-migration',
@@ -18,6 +19,7 @@ import { EnvironmentStorageService } from '../../../services/environment-storage
     MatProgressBarModule,
     MatToolbarModule,
     MatIconModule,
+    MatProgressSpinner,
   ],
   templateUrl: './asset-migration.html',
   styleUrl: './asset-migration.css',

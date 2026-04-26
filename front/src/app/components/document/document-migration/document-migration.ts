@@ -1,5 +1,5 @@
 import { Component, inject, OnInit, signal } from '@angular/core';
-import { catchError, forkJoin, finalize, of } from 'rxjs';
+import { catchError, finalize, forkJoin, of } from 'rxjs';
 import { ActivatedRoute, Router } from '@angular/router';
 
 import { MatProgressBarModule } from '@angular/material/progress-bar';
@@ -10,10 +10,17 @@ import { DocumentService } from '../../../services/document.service';
 import { DocumentType } from '../document-list/document-list';
 import { PaginatedDocuments, PrismicDocument } from '@shared/types';
 import { EnvironmentStorageService } from '../../../services/environment-storage.service';
+import { MatProgressSpinner } from '@angular/material/progress-spinner';
 
 @Component({
   selector: 'document-migration',
-  imports: [SourceDocumentList, TargetDocumentList, MatProgressBarModule, MatIconModule],
+  imports: [
+    SourceDocumentList,
+    TargetDocumentList,
+    MatProgressBarModule,
+    MatIconModule,
+    MatProgressSpinner,
+  ],
   templateUrl: './document-migration.html',
   styleUrl: './document-migration.css',
 })
@@ -89,24 +96,24 @@ export class DocumentMigration implements OnInit {
     })
       .pipe(finalize(() => this.initialLoading.set(false)))
       .subscribe(
-      ({
-        source,
-        target,
-        sourceTypes,
-        targetTypes,
-      }: {
-        source: PaginatedDocuments;
-        target: PaginatedDocuments;
-        sourceTypes: Record<string, string>;
-        targetTypes: Record<string, string>;
-      }) => {
-        this.applySourceResult(source);
-        this.applyTargetResult(target);
+        ({
+          source,
+          target,
+          sourceTypes,
+          targetTypes,
+        }: {
+          source: PaginatedDocuments;
+          target: PaginatedDocuments;
+          sourceTypes: Record<string, string>;
+          targetTypes: Record<string, string>;
+        }) => {
+          this.applySourceResult(source);
+          this.applyTargetResult(target);
 
-        this.sourceTypes.set(Object.entries(sourceTypes).map(([id, label]) => ({ id, label })));
-        this.targetTypes.set(Object.entries(targetTypes).map(([id, label]) => ({ id, label })));
-      },
-    );
+          this.sourceTypes.set(Object.entries(sourceTypes).map(([id, label]) => ({ id, label })));
+          this.targetTypes.set(Object.entries(targetTypes).map(([id, label]) => ({ id, label })));
+        },
+      );
   }
 
   onSourceSearch(search: string): void {
@@ -116,18 +123,16 @@ export class DocumentMigration implements OnInit {
     this.sourceDocuments.set([]);
     this.sourcePage.set(1);
     this.sourceLoading.set(true);
-    this.documentService
-      .getDocuments(this.sourceRepository(), 1, search)
-      .subscribe({
-        next: (result: PaginatedDocuments) => {
-          this.applySourceResult(result);
-          this.sourceLoading.set(false);
-        },
-        error: (error: { status?: number; message?: string }) => {
-          this.sourceRequestError.set({ status: error.status, message: error.message });
-          this.sourceLoading.set(false);
-        },
-      });
+    this.documentService.getDocuments(this.sourceRepository(), 1, search).subscribe({
+      next: (result: PaginatedDocuments) => {
+        this.applySourceResult(result);
+        this.sourceLoading.set(false);
+      },
+      error: (error: { status?: number; message?: string }) => {
+        this.sourceRequestError.set({ status: error.status, message: error.message });
+        this.sourceLoading.set(false);
+      },
+    });
   }
 
   onTargetSearch(search: string): void {
@@ -137,18 +142,16 @@ export class DocumentMigration implements OnInit {
     this.targetDocuments.set([]);
     this.targetPage.set(1);
     this.targetLoading.set(true);
-    this.documentService
-      .getDocuments(this.targetRepository(), 1, search)
-      .subscribe({
-        next: (result: PaginatedDocuments) => {
-          this.applyTargetResult(result);
-          this.targetLoading.set(false);
-        },
-        error: (error: { status?: number; message?: string }) => {
-          this.targetRequestError.set({ status: error.status, message: error.message });
-          this.targetLoading.set(false);
-        },
-      });
+    this.documentService.getDocuments(this.targetRepository(), 1, search).subscribe({
+      next: (result: PaginatedDocuments) => {
+        this.applyTargetResult(result);
+        this.targetLoading.set(false);
+      },
+      error: (error: { status?: number; message?: string }) => {
+        this.targetRequestError.set({ status: error.status, message: error.message });
+        this.targetLoading.set(false);
+      },
+    });
   }
 
   loadSourcePage(page: number): void {
@@ -156,7 +159,7 @@ export class DocumentMigration implements OnInit {
     this.sourceRequestError.set(null);
     this.sourceLoading.set(true);
     this.documentService
-      .getDocuments(this.sourceRepository(),page, this.sourceSearch())
+      .getDocuments(this.sourceRepository(), page, this.sourceSearch())
       .subscribe({
         next: (result: PaginatedDocuments) => {
           this.sourceDocuments.update((docs) => [...docs, ...result.documents]);
@@ -177,7 +180,7 @@ export class DocumentMigration implements OnInit {
     this.targetRequestError.set(null);
     this.targetLoading.set(true);
     this.documentService
-      .getDocuments(this.targetRepository(),page, this.targetSearch())
+      .getDocuments(this.targetRepository(), page, this.targetSearch())
       .subscribe({
         next: (result: PaginatedDocuments) => {
           this.targetDocuments.update((docs) => [...docs, ...result.documents]);
@@ -197,36 +200,32 @@ export class DocumentMigration implements OnInit {
     this.sourceRequestError.set(null);
     this.sourceDocuments.set([]);
     this.sourceLoading.set(true);
-    this.documentService
-      .getDocuments(this.sourceRepository(),1, this.sourceSearch())
-      .subscribe({
-        next: (result: PaginatedDocuments) => {
-          this.applySourceResult(result);
-          this.sourceLoading.set(false);
-        },
-        error: (error: { status?: number; message?: string }) => {
-          this.sourceRequestError.set({ status: error.status, message: error.message });
-          this.sourceLoading.set(false);
-        },
-      });
+    this.documentService.getDocuments(this.sourceRepository(), 1, this.sourceSearch()).subscribe({
+      next: (result: PaginatedDocuments) => {
+        this.applySourceResult(result);
+        this.sourceLoading.set(false);
+      },
+      error: (error: { status?: number; message?: string }) => {
+        this.sourceRequestError.set({ status: error.status, message: error.message });
+        this.sourceLoading.set(false);
+      },
+    });
   }
 
   refreshTarget(): void {
     this.targetRequestError.set(null);
     this.targetDocuments.set([]);
     this.targetLoading.set(true);
-    this.documentService
-      .getDocuments(this.targetRepository(),1, this.targetSearch())
-      .subscribe({
-        next: (result: PaginatedDocuments) => {
-          this.applyTargetResult(result);
-          this.targetLoading.set(false);
-        },
-        error: (error: { status?: number; message?: string }) => {
-          this.targetRequestError.set({ status: error.status, message: error.message });
-          this.targetLoading.set(false);
-        },
-      });
+    this.documentService.getDocuments(this.targetRepository(), 1, this.targetSearch()).subscribe({
+      next: (result: PaginatedDocuments) => {
+        this.applyTargetResult(result);
+        this.targetLoading.set(false);
+      },
+      error: (error: { status?: number; message?: string }) => {
+        this.targetRequestError.set({ status: error.status, message: error.message });
+        this.targetLoading.set(false);
+      },
+    });
   }
 
   private emptyPaginatedDocuments(): PaginatedDocuments {

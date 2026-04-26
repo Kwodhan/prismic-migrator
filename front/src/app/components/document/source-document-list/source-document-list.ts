@@ -10,10 +10,22 @@ import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatAutocompleteModule } from '@angular/material/autocomplete';
 import { DocumentList } from '../document-list/document-list';
 import {PrismicDocument} from '@shared/types';
+import { MatProgressSpinner } from '@angular/material/progress-spinner';
 
 @Component({
   selector: 'source-document-list',
-  imports: [FormsModule, DatePipe, MatFormFieldModule, MatInputModule, MatIconModule, MatButtonModule, MatTooltipModule, MatProgressBarModule, MatAutocompleteModule],
+  imports: [
+    FormsModule,
+    DatePipe,
+    MatFormFieldModule,
+    MatInputModule,
+    MatIconModule,
+    MatButtonModule,
+    MatTooltipModule,
+    MatProgressBarModule,
+    MatAutocompleteModule,
+    MatProgressSpinner,
+  ],
   templateUrl: './source-document-list.html',
   styleUrl: './source-document-list.css',
 })

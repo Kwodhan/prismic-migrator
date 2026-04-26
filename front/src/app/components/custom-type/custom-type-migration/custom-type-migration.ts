@@ -1,5 +1,5 @@
 import { Component, inject, OnInit, signal } from '@angular/core';
-import { catchError, forkJoin, finalize, of } from 'rxjs';
+import { catchError, finalize, forkJoin, of } from 'rxjs';
 import { ActivatedRoute, Router } from '@angular/router';
 import { CustomTypeService } from '../../../services/custom-type.service';
 import { SourceCustomTypeList } from '../source-custom-type-list/source-custom-type-list';
@@ -8,10 +8,17 @@ import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatIconModule } from '@angular/material/icon';
 import { CustomType } from '@shared/types';
 import { EnvironmentStorageService } from '../../../services/environment-storage.service';
+import { MatProgressSpinner } from '@angular/material/progress-spinner';
 
 @Component({
   selector: 'custom-type-migration',
-  imports: [SourceCustomTypeList, TargetCustomTypeList, MatProgressBarModule, MatIconModule],
+  imports: [
+    SourceCustomTypeList,
+    TargetCustomTypeList,
+    MatProgressBarModule,
+    MatIconModule,
+    MatProgressSpinner,
+  ],
   templateUrl: './custom-type-migration.html',
   styleUrl: './custom-type-migration.css',
 })
@@ -81,31 +88,27 @@ export class CustomTypeMigration implements OnInit {
   }
 
   loadSourceCustomTypes(): void {
-    this.customTypeService
-      .getCustomTypes(this.sourceRepository())
-      .subscribe({
-        next: (ct) => {
-          this.sourceRequestError.set(null);
-          this.sourceCustomTypes.set(ct);
-        },
-        error: (error: { status?: number; message?: string }) => {
-          this.sourceRequestError.set({ status: error.status, message: error.message });
-        },
-      });
+    this.customTypeService.getCustomTypes(this.sourceRepository()).subscribe({
+      next: (ct) => {
+        this.sourceRequestError.set(null);
+        this.sourceCustomTypes.set(ct);
+      },
+      error: (error: { status?: number; message?: string }) => {
+        this.sourceRequestError.set({ status: error.status, message: error.message });
+      },
+    });
   }
 
   loadTargetCustomTypes(): void {
-    this.customTypeService
-      .getCustomTypes(this.targetRepository())
-      .subscribe({
-        next: (ct) => {
-          this.targetRequestError.set(null);
-          this.targetCustomTypes.set(ct);
-        },
-        error: (error: { status?: number; message?: string }) => {
-          this.targetRequestError.set({ status: error.status, message: error.message });
-        },
-      });
+    this.customTypeService.getCustomTypes(this.targetRepository()).subscribe({
+      next: (ct) => {
+        this.targetRequestError.set(null);
+        this.targetCustomTypes.set(ct);
+      },
+      error: (error: { status?: number; message?: string }) => {
+        this.targetRequestError.set({ status: error.status, message: error.message });
+      },
+    });
   }
 
   private updateQueryParams(): void {

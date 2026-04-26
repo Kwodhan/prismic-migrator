@@ -14,6 +14,7 @@ import { DocumentService } from '../../../services/document.service';
 import { DocumentValidationDialogComponent } from '../document-validation-dialog/document-validation-dialog.component';
 import { DocumentMigrationResult } from '@shared/types';
 import { MatSnackBar } from '@angular/material/snack-bar';
+import { MatProgressSpinner } from '@angular/material/progress-spinner';
 
 @Component({
   selector: 'target-document-list',
@@ -27,6 +28,7 @@ import { MatSnackBar } from '@angular/material/snack-bar';
     MatTooltipModule,
     MatProgressBarModule,
     MatAutocompleteModule,
+    MatProgressSpinner,
   ],
   templateUrl: './target-document-list.html',
   styleUrl: './target-document-list.css',
@@ -62,7 +64,7 @@ export class TargetDocumentList extends DocumentList implements OnInit, OnDestro
     const data = event.dataTransfer?.getData('application/json');
     if (!data) return;
 
-    const { repositorySource , document } = JSON.parse(data);
+    const { repositorySource, document } = JSON.parse(data);
     this.migrating.set(true);
 
     this.documentService

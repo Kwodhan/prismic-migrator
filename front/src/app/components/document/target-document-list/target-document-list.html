@@ -1,4 +1,4 @@
-@if (migrating()) {
+ @if (migrating()) {
   <mat-progress-bar mode="indeterminate" class="w-full mb-2" />
 }
 
@@ -91,7 +91,7 @@
 
   @if (loading()) {
     <div class="flex justify-center py-4">
-      <mat-progress-bar mode="indeterminate" class="w-full" />
+      <mat-spinner></mat-spinner>
     </div>
   }
 
