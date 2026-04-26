@@ -49,6 +49,13 @@ export class DocumentValidationDialogComponent {
     return [];
   });
 
+  titleColor = computed<string>(() => {
+    if (this.hasMigrated()) return this.success() ? '#16a34a' : '#dc2626';
+    if (this.blockingIssues().length > 0) return '#dc2626';
+    if (this.warningIssues().length > 0) return '#eab308';
+    return '#111827';
+  });
+
   get pageUrl(): string {
     return `https://${this.data.repoNameTarget}.prismic.io/builder/pages/${this.idTarget()}`;
   }

@@ -19,8 +19,7 @@ import { MatProgressSpinner } from '@angular/material/progress-spinner';
     MatIconModule,
     MatProgressSpinner,
   ],
-  templateUrl: './custom-type-migration.html',
-  styleUrl: './custom-type-migration.css',
+  templateUrl: './custom-type-migration.html'
 })
 export class CustomTypeMigration implements OnInit {
   sourceCustomTypes = signal<CustomType[]>([]);

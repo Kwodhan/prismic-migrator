@@ -26,8 +26,7 @@ import { MatProgressSpinner } from '@angular/material/progress-spinner';
     MatAutocompleteModule,
     MatProgressSpinner,
   ],
-  templateUrl: './source-document-list.html',
-  styleUrl: './source-document-list.css',
+  templateUrl: './source-document-list.html'
 })
 export class SourceDocumentList extends DocumentList {
   onDragStart(event: DragEvent, doc: PrismicDocument): void {

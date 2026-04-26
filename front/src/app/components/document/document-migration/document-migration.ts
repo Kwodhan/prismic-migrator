@@ -21,8 +21,7 @@ import { MatProgressSpinner } from '@angular/material/progress-spinner';
     MatIconModule,
     MatProgressSpinner,
   ],
-  templateUrl: './document-migration.html',
-  styleUrl: './document-migration.css',
+  templateUrl: './document-migration.html'
 })
 export class DocumentMigration implements OnInit {
   sourceDocuments = signal<PrismicDocument[]>([]);

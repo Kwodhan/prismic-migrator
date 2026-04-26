@@ -25,8 +25,7 @@ import { CustomTypeMigrationResult } from '@shared/types';
     MatTooltipModule,
     MatProgressBarModule,
   ],
-  templateUrl: './target-custom-type-list.html',
-  styleUrl: './target-custom-type-list.css',
+  templateUrl: './target-custom-type-list.html'
 })
 export class TargetCustomTypeList extends CustomTypeList implements OnInit, OnDestroy {
   private readonly customTypeService = inject(CustomTypeService);

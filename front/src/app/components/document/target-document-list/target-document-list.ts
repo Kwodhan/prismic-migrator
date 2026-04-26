@@ -30,8 +30,7 @@ import { MatProgressSpinner } from '@angular/material/progress-spinner';
     MatAutocompleteModule,
     MatProgressSpinner,
   ],
-  templateUrl: './target-document-list.html',
-  styleUrl: './target-document-list.css',
+  templateUrl: './target-document-list.html'
 })
 export class TargetDocumentList extends DocumentList implements OnInit, OnDestroy {
   isDragOver = signal(false);

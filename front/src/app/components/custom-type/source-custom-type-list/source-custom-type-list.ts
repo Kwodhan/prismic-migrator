@@ -18,8 +18,7 @@ import { CustomType } from '@shared/types';
     MatButtonModule,
     MatTooltipModule,
   ],
-  templateUrl: './source-custom-type-list.html',
-  styleUrl: './source-custom-type-list.css',
+  templateUrl: './source-custom-type-list.html'
 })
 export class SourceCustomTypeList extends CustomTypeList {
   onDragStart(event: DragEvent, ct: CustomType): void {
