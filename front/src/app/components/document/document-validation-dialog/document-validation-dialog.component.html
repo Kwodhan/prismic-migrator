@@ -3,9 +3,9 @@
   <mat-icon [class.text-green-500]="success()" [class.text-red-500]="!success()">
     {{ success() ? 'check_circle' : 'error' }}
   </mat-icon>
-  {{ success() ? 'Migration successful' : 'Migration failed' }} - {{ data.docLabel }}
+  {{ success() ? 'Migration successful' : 'Migration failed' }} - {{ data.title }}
   } @else {
-  Report Migration - {{ data.docLabel }}
+  Report Migration - {{ data.title }}
   }
 </h2>
 

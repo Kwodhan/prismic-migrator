@@ -14,8 +14,8 @@ import { MatProgressSpinner } from '@angular/material/progress-spinner';
 
 interface DialogData {
   validation: ValidationResult | null;
+  title: string;
   docId: string;
-  docLabel: string;
   repoNameSource: string;
   repoNameTarget: string;
 }

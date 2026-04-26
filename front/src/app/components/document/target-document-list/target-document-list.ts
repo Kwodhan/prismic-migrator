@@ -62,7 +62,7 @@ export class TargetDocumentList extends DocumentList implements OnInit, OnDestro
     const data = event.dataTransfer?.getData('application/json');
     if (!data) return;
 
-    const { repositorySource, document } = JSON.parse(data);
+    const { repositorySource , document } = JSON.parse(data);
     this.migrating.set(true);
 
     this.documentService
@@ -76,7 +76,7 @@ export class TargetDocumentList extends DocumentList implements OnInit, OnDestro
             maxWidth: '95vw',
             data: {
               validation: result.validation,
-              docLabel: document.uid ?? document.id,
+              title: document.title,
               docId: document.id,
               repoNameSource: repositorySource,
               repoNameTarget: this.repository(),
