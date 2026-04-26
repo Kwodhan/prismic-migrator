@@ -9,8 +9,7 @@ COPY package.json package-lock.json ./
 COPY front/package.json ./front/
 COPY back/package.json ./back/
 
-RUN npm ci && npm install lightningcss-linux-x64-gnu @tailwindcss/oxide-linux-x64-gnu
-
+RUN npm ci
 
 
 # ─────────────────────────────────────────────
