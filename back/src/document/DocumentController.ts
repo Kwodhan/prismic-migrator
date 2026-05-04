@@ -38,8 +38,8 @@ export class DocumentController {
     }
 
     const {repoName} = paramsValidation.data;
-    const {type, page} = queryValidation.data;
-    const result = await this.migratorDocument.getDocuments(repoName, page, type);
+    const {type, page, sliceName} = queryValidation.data;
+    const result = await this.migratorDocument.getDocuments(repoName, page, type, sliceName);
     res.json(result);
   };
 

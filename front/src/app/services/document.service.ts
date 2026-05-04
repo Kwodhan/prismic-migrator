@@ -44,10 +44,18 @@ export class DocumentService {
     });
   }
 
-  getDocuments(repoName: string, page = 1, type = ''): Observable<PaginatedDocuments> {
+  getDocuments(
+    repoName: string,
+    page = 1,
+    type = '',
+    sliceName = '',
+  ): Observable<PaginatedDocuments> {
     const params: Record<string, string | number> = { page };
     if (type) {
       params['type'] = type;
+    }
+    if (sliceName) {
+      params['sliceName'] = sliceName;
     }
     return this.http.get<PaginatedDocuments>(`${this.apiUrl}/documents/${repoName}`, { params });
   }

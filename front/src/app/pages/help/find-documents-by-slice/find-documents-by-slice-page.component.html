@@ -1,0 +1,103 @@
+<div class="flex flex-col gap-6 p-6">
+
+  <div>
+    <h2 class="text-xl font-semibold">Search by slice</h2>
+    <p class="text-sm text-gray-500 mt-1">
+      Select an environment then enter the slice name you want to search for.
+    </p>
+  </div>
+
+  <form [formGroup]="searchForm" (ngSubmit)="onSearch()">
+    <mat-card appearance="outlined">
+      <mat-card-content class="flex flex-col gap-4 pt-4">
+
+        <div class="flex flex-row gap-4 items-start">
+
+          <!-- Repo Name -->
+          <mat-form-field appearance="outline" class="flex-1">
+            <mat-label>Environment</mat-label>
+            <mat-icon matPrefix class="mr-2">dns</mat-icon>
+            <input matInput
+                   type="text"
+                   formControlName="repoName"
+                   placeholder="Select an environment"
+                   [matAutocomplete]="autoSource"/>
+            @if (searchForm.get('repoName')?.value) {
+              <button type="button"
+                      matSuffix
+                      mat-icon-button
+                      (mousedown)="$event.preventDefault()"
+                      (click)="onRepoNameCleared()"
+                      matTooltip="Clear">
+                <mat-icon>close</mat-icon>
+              </button>
+            }
+            <mat-autocomplete #autoSource="matAutocomplete"
+                              (optionSelected)="onRepoNameSelected($event.option.value)">
+              @for (environment of environments(); track environment.repoName) {
+                <mat-option [value]="environment.repoName">
+                  <div class="flex items-center gap-2">
+                    <mat-icon class="text-gray-400 text-sm">dns</mat-icon>
+                    <span class="font-medium">{{ environment.repoName }}</span>
+                  </div>
+                </mat-option>
+              }
+            </mat-autocomplete>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="flex-1"
+                          [class.opacity-40]="!searchForm.get('repoName')?.value"
+                          [class.pointer-events-none]="!searchForm.get('repoName')?.value">
+            <mat-label>Slice</mat-label>
+            <mat-icon matPrefix class="mr-2">layers</mat-icon>
+            <input matInput
+                   type="text"
+                   formControlName="sliceName"
+                   placeholder="Slice name"/>
+            @if (searchForm.get('sliceName')?.value) {
+              <button type="button"
+                      matSuffix
+                      mat-icon-button
+                      (mousedown)="$event.preventDefault()"
+                      (click)="onSliceNameCleared()"
+                      matTooltip="Clear">
+                <mat-icon>close</mat-icon>
+              </button>
+            }
+            @if (!searchForm.get('repoName')?.value) {
+              <mat-hint>Select an environment first</mat-hint>
+            }
+          </mat-form-field>
+
+        </div>
+
+        <div class="flex justify-end border-t pt-4">
+          <button mat-raised-button
+                  color="primary"
+                  type="submit"
+                  [disabled]="!searchForm.get('repoName')?.value ||
+                              !searchForm.get('sliceName')?.value ||
+                              loading()">
+            @if (loading()) {
+              <mat-spinner diameter="18" class="mr-2"/>
+            } @else {
+              <mat-icon>search</mat-icon>
+            }
+            Search
+          </button>
+        </div>
+
+      </mat-card-content>
+    </mat-card>
+  </form>
+
+  <documents-by-slice-result
+    [documents]="documents()"
+    [currentPage]="currentPage()"
+    [totalPages]="totalPages()"
+    [loading]="loading()"
+    [repository]="searchForm.get('repoName')?.value"
+    [requestError]="requestError()"
+    (pageNeeded)="loadMoreDocumentPage($event)"/>
+
+</div>

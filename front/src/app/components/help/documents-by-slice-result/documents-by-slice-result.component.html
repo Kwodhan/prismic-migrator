@@ -1,0 +1,48 @@
+@if (hasRequestError() && !loading()) {
+  <div class="flex flex-col items-center justify-center py-12 text-red-400 gap-2">
+    <mat-icon class="text-4xl">error_outline</mat-icon>
+    <span class="text-sm text-center">{{ requestErrorMessage() }}</span>
+  </div>
+} @else if (documents().length === 0 && !loading()) {
+  <div class="flex flex-col items-center justify-center py-12 text-gray-400 gap-2">
+    <mat-icon class="text-4xl">article</mat-icon>
+    <span class="text-sm">No documents available</span>
+  </div>
+} @else {
+  <ul class="flex flex-col gap-2 list-none p-0 m-0">
+    @for (doc of documents(); track doc.id) {
+      <li class="flex items-center justify-between gap-2 px-3 py-2 rounded-lg border border-gray-200 bg-gray-50">
+        <div class="flex items-center gap-2 min-w-0">
+          <mat-icon class="text-blue-400 shrink-0">article</mat-icon>
+          <div class="flex flex-col min-w-0">
+            <span class="text-sm font-medium text-gray-800 truncate">{{ doc.title }}</span>
+            <span class="text-xs text-gray-400 truncate">{{ doc.type }}</span>
+          </div>
+        </div>
+        <div class="flex items-center gap-2 shrink-0">
+          <span class="text-xs px-2 py-0.5 rounded-full bg-blue-100 text-blue-600">
+            {{ doc.type }}
+          </span>
+          <span class="text-xs text-gray-400">{{ doc.last_publication_date | date:'dd/MM/yy' }}</span>
+          <a [href]="'https://' + repository() + '.prismic.io/builder/pages/' + doc.id + '?s=published'"
+             target="_blank" rel="noopener noreferrer"
+             matTooltip="View in Prismic"
+             (click)="$event.stopPropagation()"
+             class="text-gray-400 hover:text-blue-500 leading-none">
+            <mat-icon style="font-size: 14px; width: 14px; height: 14px; line-height: 14px;">open_in_new</mat-icon>
+          </a>
+        </div>
+      </li>
+    }
+  </ul>
+}
+
+@if (loading()) {
+  <div class="flex justify-center py-4">
+    <mat-spinner></mat-spinner>
+  </div>
+}
+
+@if (hasMore() && !loading()) {
+  <div #sentinel class="h-10 w-full"></div>
+}

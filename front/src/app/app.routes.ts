@@ -25,4 +25,13 @@ export const routes: Routes = [
     title: 'Document',
     canActivate: [authGuard, migrationGuard],
   },
+  {
+    path: 'help/find-documents-by-slice',
+    loadComponent: () =>
+      import('./pages/help/find-documents-by-slice/find-documents-by-slice-page.component').then(
+        (m) => m.FindDocumentsBySlicePage,
+      ),
+    title: 'Find Documents by Slice',
+    canActivate: [authGuard, migrationGuard],
+  },
 ];

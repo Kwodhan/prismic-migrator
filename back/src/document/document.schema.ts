@@ -8,6 +8,7 @@ export const createGetDocumentsParamsSchema = (allowedRepoNames: string[]) => z.
 export const getDocumentsQuerySchema = z.object({
   type: z.string().optional(),
   page: z.coerce.number().int().positive().default(1),
+  sliceName: z.string().optional(),
 });
 
 export const createMigrateDocumentSchema = (allowedRepoNames: string[]) => z.object({
