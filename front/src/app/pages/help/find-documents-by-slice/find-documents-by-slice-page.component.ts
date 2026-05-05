@@ -5,7 +5,14 @@ import { DocumentsBySliceResultComponent } from '../../../components/help/docume
 import { ActivatedRoute, Router } from '@angular/router';
 import { EnvironmentService } from '../../../services/environment.service';
 import { MatAutocomplete, MatAutocompleteTrigger, MatOption } from '@angular/material/autocomplete';
-import { MatFormField, MatHint, MatInput, MatLabel, MatPrefix, MatSuffix } from '@angular/material/input';
+import {
+  MatFormField,
+  MatHint,
+  MatInput,
+  MatLabel,
+  MatPrefix,
+  MatSuffix,
+} from '@angular/material/input';
 import { MatIcon } from '@angular/material/icon';
 import { MatButton, MatIconButton } from '@angular/material/button';
 import { MatTooltip } from '@angular/material/tooltip';
@@ -46,8 +53,6 @@ export class FindDocumentsBySlicePage implements OnInit {
   requestError = signal<{ status?: number; message?: string } | null>(null);
   environments = signal<Environment[]>([]);
 
-  private repoJustSelected = false;
-
   searchForm: FormGroup;
 
   private readonly documentService = inject(DocumentService);
@@ -78,10 +83,8 @@ export class FindDocumentsBySlicePage implements OnInit {
   }
 
   onRepoNameSelected(repoName: string): void {
-    this.repoJustSelected = true;
     this.searchForm.patchValue({ repoName, sliceName: '' });
     this.resetResults();
-    setTimeout(() => (this.repoJustSelected = false), 0);
   }
 
   onRepoNameCleared(): void {
@@ -96,8 +99,6 @@ export class FindDocumentsBySlicePage implements OnInit {
   }
 
   onSearch(): void {
-    if (this.repoJustSelected) return;
-
     const { repoName, sliceName } = this.searchForm.value;
     if (!repoName || !sliceName) return;
 

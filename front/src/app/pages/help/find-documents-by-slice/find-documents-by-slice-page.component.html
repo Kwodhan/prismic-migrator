@@ -33,7 +33,8 @@
               </button>
             }
             <mat-autocomplete #autoSource="matAutocomplete"
-                              (optionSelected)="onRepoNameSelected($event.option.value)">
+                              (optionSelected)="onRepoNameSelected($event.option.value)"
+                              (keydown.enter)="$event.preventDefault()">
               @for (environment of environments(); track environment.repoName) {
                 <mat-option [value]="environment.repoName">
                   <div class="flex items-center gap-2">

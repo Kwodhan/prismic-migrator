@@ -1,25 +1,13 @@
 import * as prismic from '@prismicio/client';
 import {fetch, ProxyAgent} from 'undici';
-import axios, {AxiosInstance} from 'axios';
-import {ValidationPipeline,} from './validation';
+import {AxiosInstance} from 'axios';
 import {PrismicMigratorAssets} from "../asset/PrismicMigratorAssets";
 import {PrismicMigratorCustomType} from "../custom-type/PrismicMigratorCustomType";
-import {DocumentMigrationResult, PaginatedDocuments, ReportMigrationResult, ValidationResult} from "@shared/types";
-import {
-  AssetValidator,
-  CustomTypeValidator,
-  ExactlySameDocumentValidator,
-  LinkDocumentValidator,
-  LinkMediaValidator,
-  SameStateCustomType,
-  SameUIDDocumentValidator
-} from "./validation/validators";
-import {CachedPrismicClient} from "./validation/CachedPrismicClient";
+import {DocumentMigrationResult, PaginatedDocuments, ReportMigrationResult} from "@shared/types";
 import {Environment} from '@shared/types/environment.types';
+import {DocumentFetcher} from './DocumentFetcher';
+import {DocumentMigrator} from './DocumentMigrator';
 
-
-const PAGE_SIZE = 30;
-const MIGRATION_API_URL = 'https://migration.prismic.io';
 
 
 export class PrismicMigratorDocument {
@@ -28,6 +16,8 @@ export class PrismicMigratorDocument {
   private readonly axiosInstance: AxiosInstance;
   private readonly migratorAsset: PrismicMigratorAssets;
   private readonly migratorCustomType: PrismicMigratorCustomType;
+  private readonly documentFetcher: DocumentFetcher;
+  private readonly documentMigrator: DocumentMigrator;
 
   constructor(environments: Environment[], axiosInstance: AxiosInstance, proxyUrl?: string) {
     this.environments = environments;
@@ -41,7 +31,6 @@ export class PrismicMigratorDocument {
       axiosInstance
     );
 
-
     const fetchFn = proxyUrl
       ? (url: string, init?: Parameters<typeof fetch>[1]) =>
         fetch(url, {...init, dispatcher: new ProxyAgent(proxyUrl)})
@@ -54,289 +43,29 @@ export class PrismicMigratorDocument {
 
     this.environments.forEach(env => {
       this.prismicClients[env.repoName] = prismic.createClient(env.repoName, clientOptions(env.contentToken));
-    })
+    });
+
+    this.documentFetcher = new DocumentFetcher(this.migratorCustomType);
+    this.documentMigrator = new DocumentMigrator(
+      environments,
+      this.prismicClients,
+      axiosInstance,
+      this.migratorAsset,
+      this.migratorCustomType
+    );
   }
 
   async getDocuments(repoName: string, page: number, type?: string, sliceName?: string): Promise<PaginatedDocuments> {
-
-    return sliceName ? this.fetchDocumentsBySlice(repoName, this.prismicClients[repoName], page, sliceName) : this.fetchDocuments(this.prismicClients[repoName], page, type);
+    return sliceName
+      ? this.documentFetcher.fetchDocumentsBySlice(repoName, this.prismicClients[repoName], page, sliceName)
+      : this.documentFetcher.fetchDocuments(this.prismicClients[repoName], page, type);
   }
 
-  /**
-   * Run the validation pipeline for a given document ID and return the validation result without migrating the document.
-   * This can be used to report validation issues to the user before attempting migration.
-   * @param id
-   */
   async reportMigrateDocument(repoNameSource: string, repoNameTarget: string, id: string): Promise<ReportMigrationResult> {
-    const prismicClientSource = this.prismicClients[repoNameSource];
-    const prismicClientTarget = this.prismicClients[repoNameTarget];
-    if (!prismicClientSource || !prismicClientTarget) {
-      return {
-        validation: {
-          valid: false,
-          issues: [
-            {
-              severity: 'BLOCKING',
-              code: 'ENV_NOT_FOUND',
-              fixable: false,
-              message: 'Environment not found',
-              validator: this.constructor.name
-            }
-          ],
-        }
-      }
-    }
-    const doc = await prismicClientSource.getByID(id);
-    const {result: validation} = await this.buildValidationPipeline(repoNameSource, repoNameTarget, prismicClientSource, prismicClientTarget).runWithFix(doc);
-    return {validation};
+    return this.documentMigrator.reportMigrateDocument(repoNameSource, repoNameTarget, id);
   }
 
   async migrateDocument(repoNameSource: string, repoNameTarget: string, id: string): Promise<DocumentMigrationResult> {
-    let validationResult: ValidationResult | undefined;
-    const envSource = this.environments.find(e => e.repoName === repoNameSource);
-    const envTarget = this.environments.find(e => e.repoName === repoNameTarget);
-    const prismicClientSource = this.prismicClients[repoNameSource];
-    const prismicClientTarget = this.prismicClients[repoNameTarget];
-    if (!envSource || !envTarget || !prismicClientSource || !prismicClientTarget) {
-      return {
-        success: false,
-        error: "Environment not found",
-        id,
-        validation: {
-          valid: false,
-          issues: [{
-            severity: 'BLOCKING',
-            code: 'ENV_NOT_FOUND',
-            fixable: false,
-            message: 'Environment not found',
-            validator: this.constructor.name
-          }]
-        }
-
-      }
-    }
-    try {
-      const doc = await prismicClientSource.getByID(id);
-
-      const {
-        result: validation,
-        doc: fixedDoc
-      } = await this.buildValidationPipeline(repoNameSource, repoNameTarget, prismicClientSource, prismicClientTarget).runWithFix(doc);
-      validationResult = validation;
-
-      // Reject only if BLOCKING issues remain after fixes
-      if (!validationResult.valid) {
-        return {success: false, id: null, error: 'VALIDATION_FAILED', validation: validationResult};
-      }
-      const body = {
-        title: this.getAnyTitle(doc),
-        type: fixedDoc.type,
-        uid: fixedDoc.uid ?? undefined,
-        lang: fixedDoc.lang,
-        data: fixedDoc.data,
-      };
-
-      const {data} = await this.axiosInstance.post<{ id: string }>(
-        `${MIGRATION_API_URL}/documents`,
-        body,
-        {
-          headers: {
-            'Content-Type': 'application/json',
-            'repository': envTarget.repoName,
-            'authorization': `Bearer ${envTarget.writeToken}`,
-          },
-        }
-      );
-
-      return {success: true, id: data.id, validation: validationResult, error: null};
-    } catch (error) {
-      const errorMessage = axios.isAxiosError(error)
-        ? `${error.response?.status} - ${JSON.stringify(error.response?.data)}`
-        : String(error);
-
-      const failedValidation: ValidationResult = {
-        valid: false,
-        issues: [
-          ...(validationResult?.issues ?? []),
-          {
-            severity: 'BLOCKING',
-            code: 'MIGRATION_API_ERROR',
-            validator: 'MigrationAPI',
-            message: errorMessage,
-            fixable: false,
-          },
-        ],
-      };
-
-      return {success: false, id: null, error: 'MIGRATION_API_ERROR', validation: failedValidation};
-    }
-  }
-
-  private async fetchDocuments(client: prismic.Client, page: number, type?: string): Promise<PaginatedDocuments> {
-
-    if (!client) {
-      return {
-        documents: [],
-        page: 0,
-        totalDocuments: 0,
-        totalPages: 0,
-      }
-    }
-
-    const filters = type ? [prismic.filter.at('document.type', type)] : [];
-    const response = await client.get({pageSize: PAGE_SIZE, page, filters});
-
-    return {
-      documents: response.results.map(doc => ({
-        id: doc.id,
-        uid: doc.uid ?? null,
-        title: this.getAnyTitle(doc),
-        type: doc.type,
-        url: doc.url ?? null,
-        first_publication_date: doc.first_publication_date,
-        last_publication_date: doc.last_publication_date,
-      })),
-      page: response.page,
-      totalPages: response.total_pages,
-      totalDocuments: response.total_results_size,
-    };
-  }
-
-  /**
-   * A document's title is not provided by Prismic Content API. We'll try to find a title
-   * for the document by probing common fields, falling back to the ID if none found.
-   * @param doc
-   * @private
-   */
-  private getAnyTitle(doc: prismic.PrismicDocument): string {
-    if (doc.uid) {
-      return doc.uid;
-    }
-
-    const candidates = [
-      'nom_du_contenu_prismic',
-      'nom_prismic',
-      'title',
-      'titre',
-      'label',
-    ];
-
-    const data = (doc as any).data;
-
-    if (!data || typeof data !== 'object') return doc.id;
-
-    const found = candidates
-      .map(key => {
-        if (!Object.hasOwn(data, key)) return null;
-        const v = data[key];
-        if (v == null) return null;
-        if (typeof v === 'string') {
-          const t = v.trim();
-          return t.length ? t : null;
-        }
-        if (typeof v === 'number' || typeof v === 'boolean') return String(v);
-        return null;
-      })
-      .filter((v): v is string => typeof v === 'string' && v.length > 0);
-
-    if (found.length === 0) {
-      return doc.id;
-    }
-
-    found.sort((a, b) => b.length - a.length);
-    return found[0];
-
-  }
-
-  private buildValidationPipeline(repoNameSource: string, repoNameTarget: string, prismicClientSource: prismic.Client, prismicClientTarget: prismic.Client): ValidationPipeline {
-    const cachedSourceClient = new CachedPrismicClient(prismicClientSource);
-    const cachedTargetClient = new CachedPrismicClient(prismicClientTarget);
-
-    return new ValidationPipeline([
-      new CustomTypeValidator(repoNameTarget, this.migratorCustomType),
-      new AssetValidator(repoNameSource, repoNameTarget, this.migratorAsset),
-      new LinkDocumentValidator(
-        cachedSourceClient,
-        cachedTargetClient
-      ),
-      new LinkMediaValidator(repoNameTarget, this.migratorAsset),
-      new ExactlySameDocumentValidator(
-        cachedSourceClient,
-        cachedTargetClient),
-      new SameUIDDocumentValidator(cachedTargetClient),
-      new SameStateCustomType(repoNameSource, repoNameTarget, this.migratorCustomType)
-    ]);
-  }
-
-  private async fetchFullDocumentsByType(client: prismic.Client, page: number, type?: string): Promise<prismic.PrismicDocument[]> {
-    const filters = type ? [prismic.filter.at('document.type', type)] : [];
-    const response = await client.get({pageSize: PAGE_SIZE, page, filters});
-    return response.results;
-  }
-
-  private hasSliceInCustomType(json: Record<string, unknown>, sliceName: string): boolean {
-    for (const tab of Object.values(json)) {
-      if (typeof tab === 'object' && tab) {
-        for (const field of Object.values(tab as Record<string, unknown>)) {
-          if (typeof field === 'object' && field && 'type' in field && (field as any).type === 'Slices' && 'config' in field && typeof (field as any).config === 'object' && (field as any).config && 'choices' in (field as any).config && typeof (field as any).config.choices === 'object' && (field as any).config.choices && sliceName in (field as any).config.choices) {
-            return true;
-          }
-        }
-      }
-    }
-    return false;
-  }
-
-  private hasSliceInDocument(doc: prismic.PrismicDocument, sliceName: string): boolean {
-    const data = doc.data as any;
-    for (const key of Object.keys(data)) {
-      const field = data[key];
-      if (Array.isArray(field)) {
-        if (field.some((slice: any) => slice.slice_type === sliceName)) {
-          return true;
-        }
-      }
-    }
-    return false;
-  }
-
-  private async fetchDocumentsBySlice(repoName: string, client: prismic.Client, page: number, sliceName: string): Promise<PaginatedDocuments> {
-    if (!client) {
-      return {
-        documents: [],
-        page: 0,
-        totalDocuments: 0,
-        totalPages: 0,
-      };
-    }
-
-    const customTypes = await this.migratorCustomType.getCustomTypes(repoName);
-    const typesWithSlice = customTypes.filter(ct => this.hasSliceInCustomType(ct.json, sliceName));
-
-    const allDocs: prismic.PrismicDocument[] = [];
-    for (const ct of typesWithSlice) {
-      const docs = await this.fetchFullDocumentsByType(client, 1, ct.id);
-      const docsWithSlice = docs.filter(doc => this.hasSliceInDocument(doc, sliceName));
-      allDocs.push(...docsWithSlice);
-    }
-
-    const start = (page - 1) * PAGE_SIZE;
-    const end = start + PAGE_SIZE;
-    const pageDocs = allDocs.slice(start, end);
-
-    return {
-      documents: pageDocs.map(doc => ({
-        id: doc.id,
-        uid: doc.uid ?? null,
-        title: this.getAnyTitle(doc),
-        type: doc.type,
-        url: doc.url ?? null,
-        first_publication_date: doc.first_publication_date,
-        last_publication_date: doc.last_publication_date,
-      })),
-      page,
-      totalPages: Math.ceil(allDocs.length / PAGE_SIZE),
-      totalDocuments: allDocs.length,
-    };
+    return this.documentMigrator.migrateDocument(repoNameSource, repoNameTarget, id);
   }
 }
