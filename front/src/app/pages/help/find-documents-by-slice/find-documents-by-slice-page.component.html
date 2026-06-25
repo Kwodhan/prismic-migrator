@@ -1,4 +1,4 @@
-<div class="flex flex-col gap-6 p-6">
+<div class="flex flex-col gap-6 p-6 h-full min-h-0">
 
   <div>
     <h2 class="text-xl font-semibold">Search by slice</h2>
@@ -79,11 +79,7 @@
                   [disabled]="!searchForm.get('repoName')?.value ||
                               !searchForm.get('sliceName')?.value ||
                               loading()">
-            @if (loading()) {
-              <mat-spinner diameter="18" class="mr-2"/>
-            } @else {
               <mat-icon>search</mat-icon>
-            }
             Search
           </button>
         </div>
@@ -92,13 +88,15 @@
     </mat-card>
   </form>
 
-  <documents-by-slice-result
-    [documents]="documents()"
-    [currentPage]="currentPage()"
-    [totalPages]="totalPages()"
-    [loading]="loading()"
-    [repository]="searchForm.get('repoName')?.value"
-    [requestError]="requestError()"
-    (pageNeeded)="loadMoreDocumentPage($event)"/>
+  <div class="flex-1 min-h-0 overflow-y-auto">
+    <documents-by-slice-result
+      [documents]="documents()"
+      [currentPage]="currentPage()"
+      [totalPages]="totalPages()"
+      [loading]="loading()"
+      [repository]="searchForm.get('repoName')?.value"
+      [requestError]="requestError()"
+      (pageNeeded)="loadMoreDocumentPage($event)"/>
+  </div>
 
 </div>

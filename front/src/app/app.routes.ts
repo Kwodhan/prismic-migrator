@@ -32,6 +32,6 @@ export const routes: Routes = [
         (m) => m.FindDocumentsBySlicePage,
       ),
     title: 'Find Documents by Slice',
-    canActivate: [authGuard, migrationGuard],
+    canActivate: [authGuard],
   },
 ];

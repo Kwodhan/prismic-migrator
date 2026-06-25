@@ -17,7 +17,6 @@ import { MatIcon } from '@angular/material/icon';
 import { MatButton, MatIconButton } from '@angular/material/button';
 import { MatTooltip } from '@angular/material/tooltip';
 import { FormBuilder, FormGroup, ReactiveFormsModule } from '@angular/forms';
-import { MatProgressSpinner } from '@angular/material/progress-spinner';
 import { MatCard, MatCardContent } from '@angular/material/card';
 
 @Component({
@@ -38,7 +37,6 @@ import { MatCard, MatCardContent } from '@angular/material/card';
     ReactiveFormsModule,
     MatButton,
     MatHint,
-    MatProgressSpinner,
     MatCardContent,
     MatCard,
   ],
