@@ -22,7 +22,7 @@
     "deep-object-diff": "^1.1.9",
     "jsondiffpatch": "^0.7.3",
     "oidc-client-ts": "^3.5.0",
-    "postcss": "^8.5.12",
+    "postcss": "^8.5.25",
     "rxjs": "~7.8.2",
     "tailwindcss": "^4.2.2",
     "tslib": "^2.8.1"
