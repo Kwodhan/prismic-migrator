@@ -20,7 +20,7 @@
     "@angular/router": "^22.0.2",
     "@tailwindcss/postcss": "^4.2.2",
     "deep-object-diff": "^1.1.9",
-    "jsondiffpatch": "^0.7.3",
+    "jsondiffpatch": "^0.7.6",
     "oidc-client-ts": "^3.5.0",
     "postcss": "^8.5.12",
     "rxjs": "~7.8.2",
