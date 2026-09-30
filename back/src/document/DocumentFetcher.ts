@@ -3,7 +3,7 @@ import { PrismicMigratorCustomType } from '../custom-type/PrismicMigratorCustomT
 import { PaginatedDocuments } from '@shared/types';
 import { getAnyTitle } from './document.utils';
 
-const PAGE_SIZE = 30;
+const PAGE_SIZE = 100;
 
 export class DocumentFetcher {
   private readonly migratorCustomType: PrismicMigratorCustomType;
@@ -56,7 +56,7 @@ export class DocumentFetcher {
 
     const allDocs: prismic.PrismicDocument[] = [];
     for (const ct of typesWithSlice) {
-      const docs = await this.fetchFullDocumentsByType(client, 1, ct.id);
+      const docs = await this.fetchFullDocumentsByType(client, ct.id);
       const docsWithSlice = docs.filter(doc => this.hasSliceInDocument(doc, sliceName));
       allDocs.push(...docsWithSlice);
     }
@@ -81,10 +81,17 @@ export class DocumentFetcher {
     };
   }
 
-  private async fetchFullDocumentsByType(client: prismic.Client, page: number, type?: string): Promise<prismic.PrismicDocument[]> {
+  private async fetchFullDocumentsByType(client: prismic.Client, type?: string): Promise<prismic.PrismicDocument[]> {
     const filters = type ? [prismic.filter.at('document.type', type)] : [];
-    const response = await client.get({ pageSize: PAGE_SIZE, page, filters });
-    return response.results;
+    let response = await client.get({ pageSize: PAGE_SIZE, page: 1, filters });
+    const documents = [...response.results];
+
+    while (response.page < response.total_pages) {
+      response = await client.get({ pageSize: PAGE_SIZE, page: response.page + 1, filters });
+      documents.push(...response.results);
+    }
+
+    return documents;
   }
 
   private hasSliceInCustomType(json: Record<string, unknown>, sliceName: string): boolean {
@@ -102,9 +109,11 @@ export class DocumentFetcher {
 
   private hasSliceInDocument(doc: prismic.PrismicDocument, sliceName: string): boolean {
     const data = doc.data as any;
+    console.log(doc.uid);
     for (const key of Object.keys(data)) {
       const field = data[key];
       if (Array.isArray(field)) {
+        console.log(field);
         if (field.some((slice: any) => slice.slice_type === sliceName)) {
           return true;
         }

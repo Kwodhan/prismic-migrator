@@ -112,7 +112,7 @@ export class PrismicMigratorAssets {
       const {data} = await this.axiosInstance.get<{ items: AssetFile[]; total: number; cursor: string; }>(
         `https://asset-api.prismic.io/assets`,
         {
-          params: {limit: 99999, cursor: cursor},
+          params: {limit: 500, cursor: cursor},
           headers: {
             Authorization: `Bearer ${token}`,
             repository: repositoryName,
