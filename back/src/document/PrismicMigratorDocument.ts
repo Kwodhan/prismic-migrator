@@ -3,7 +3,7 @@ import {fetch, ProxyAgent} from 'undici';
 import {AxiosInstance} from 'axios';
 import {PrismicMigratorAssets} from "../asset/PrismicMigratorAssets";
 import {PrismicMigratorCustomType} from "../custom-type/PrismicMigratorCustomType";
-import {DocumentMigrationResult, PaginatedDocuments, ReportMigrationResult} from "@shared/types";
+import {DocumentMigrationResult, DocumentReferenceType, PaginatedDocuments, ReportMigrationResult} from "@shared/types";
 import {Environment} from '@shared/types/environment.types';
 import {DocumentFetcher} from './DocumentFetcher';
 import {DocumentMigrator} from './DocumentMigrator';
@@ -59,6 +59,18 @@ export class PrismicMigratorDocument {
     return sliceName
       ? this.documentFetcher.fetchDocumentsBySlice(repoName, this.prismicClients[repoName], page, sliceName)
       : this.documentFetcher.fetchDocuments(this.prismicClients[repoName], page, type);
+  }
+
+  async findDocumentsByReference(
+    repoName: string,
+    referenceType: DocumentReferenceType,
+    reference: string,
+  ): Promise<PaginatedDocuments> {
+    return this.documentFetcher.findDocumentsByReference(
+      this.prismicClients[repoName],
+      referenceType,
+      reference,
+    );
   }
 
   async reportMigrateDocument(repoNameSource: string, repoNameTarget: string, id: string): Promise<ReportMigrationResult> {

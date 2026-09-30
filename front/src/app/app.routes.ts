@@ -34,4 +34,13 @@ export const routes: Routes = [
     title: 'Find Documents by Slice',
     canActivate: [authGuard],
   },
+  {
+    path: 'help/find-documents-by-reference',
+    loadComponent: () =>
+      import('./pages/help/find-documents-by-reference/find-documents-by-reference-page.component').then(
+        (m) => m.FindDocumentsByReferencePage,
+      ),
+    title: 'Find Documents by Reference',
+    canActivate: [authGuard],
+  },
 ];

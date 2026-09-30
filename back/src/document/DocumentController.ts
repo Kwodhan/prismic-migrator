@@ -1,6 +1,6 @@
 import {Request, Response} from 'express';
 import {PrismicMigratorDocument} from './PrismicMigratorDocument';
-import {createGetDocumentsParamsSchema, createMigrateDocumentSchema, getDocumentsQuerySchema,} from './document.schema';
+import {createGetDocumentsParamsSchema, createMigrateDocumentSchema, findDocumentsByReferenceQuerySchema, getDocumentsQuerySchema,} from './document.schema';
 import {z} from 'zod';
 
 export class DocumentController {
@@ -40,6 +40,35 @@ export class DocumentController {
     const {repoName} = paramsValidation.data;
     const {type, page, sliceName} = queryValidation.data;
     const result = await this.migratorDocument.getDocuments(repoName, page, type, sliceName);
+    res.json(result);
+  };
+
+  findDocumentsByReference = async (req: Request, res: Response): Promise<void> => {
+    const paramsValidation = this.getDocumentsParamsSchema.safeParse(req.params);
+    if (!paramsValidation.success) {
+      res.status(400).json({
+        error: 'Invalid request parameters',
+        details: z.treeifyError(paramsValidation.error),
+      });
+      return;
+    }
+
+    const queryValidation = findDocumentsByReferenceQuerySchema.safeParse(req.query);
+    if (!queryValidation.success) {
+      res.status(400).json({
+        error: 'Invalid query parameters',
+        details: z.treeifyError(queryValidation.error),
+      });
+      return;
+    }
+
+    const {repoName} = paramsValidation.data;
+    const {referenceType, reference} = queryValidation.data;
+    const result = await this.migratorDocument.findDocumentsByReference(
+      repoName,
+      referenceType,
+      reference,
+    );
     res.json(result);
   };
 
