@@ -18,12 +18,12 @@ export class LinkMediaValidator implements DocumentValidator {
     if (links.size === 0) return ValidationResultUtils.ok();
 
     const targetAssets = await this.prismicMigratorAssets.getAssets(this.repoNameTarget);
-    const targetFileName = new Set(targetAssets.map(a => a.filename));
+    const targetFileId = new Set(targetAssets.map(a => a.id));
 
     const issues: ValidationIssue[] = [];
 
     for (const link of links.values()) {
-      if (!targetFileName.has(link.name)) {
+      if (!targetFileId.has(link.id)) {
         issues.push({
           severity: 'WARNING',
           code: 'LINKED_MEDIA_NOT_FOUND',

@@ -109,21 +109,7 @@ export class PrismicMigratorAssets {
     let cursor = '';
     console.log(`[fetchAssets] on ${repositoryName}`);
     while (hasMore) {
-      const {data} = await this.axiosInstance.get<{ items: AssetFile[]; total: number; cursor: string; }>(
-        `https://asset-api.prismic.io/assets`,
-        {
-          params: {limit: 500, cursor: cursor},
-          headers: {
-            Authorization: `Bearer ${token}`,
-            repository: repositoryName,
-          },
-        }
-      ).catch(error => {
-        if (axios.isAxiosError(error)) {
-          console.error(`[fetchAssets] ${error.response?.status}`, JSON.stringify(error.response?.data, null, 2));
-        }
-        throw error;
-      });
+      const {data} = await this.getAssetsPage(repositoryName, token, cursor);
 
       assets.push(...data.items);
       hasMore = assets.length < data.total;
@@ -134,4 +120,37 @@ export class PrismicMigratorAssets {
     return assets;
   }
 
+
+  /**
+   * Fetch one page of assets, retrying on HTTP 429 (honors Retry-After, default 1s).
+   */
+  private async getAssetsPage(repositoryName: string, token: string, cursor: string) {
+    const maxRetries = 5;
+    for (let attempt = 0; ; attempt++) {
+      try {
+        return await this.axiosInstance.get<{ items: AssetFile[]; total: number; cursor: string; }>(
+          `https://asset-api.prismic.io/assets`,
+          {
+            params: {limit: 9000, cursor: cursor},
+            headers: {
+              Authorization: `Bearer ${token}`,
+              repository: repositoryName,
+            },
+          }
+        );
+      } catch (error) {
+        if (axios.isAxiosError(error)) {
+          if (error.response?.status === 429 && attempt < maxRetries) {
+            const retryAfter = Number(error.response.headers?.['retry-after']);
+            const delayMs = retryAfter > 0 ? retryAfter * 1000 : 1000;
+            console.warn(`[fetchAssets] 429, retry ${attempt + 1}/${maxRetries} in ${delayMs}ms`);
+            await new Promise(resolve => setTimeout(resolve, delayMs));
+            continue;
+          }
+          console.error(`[fetchAssets] ${error.response?.status}`, JSON.stringify(error.response?.data, null, 2));
+        }
+        throw error;
+      }
+    }
+  }
 }

@@ -81,14 +81,22 @@ describe('LinkDocumentValidator', () => {
       .withId('source-linked-doc')
       .withType('article')
       .withUid(null)
-      .withData({title: 'Same', nested: {id: 'source-id', key: 'source-key', value: 1}})
+      .withData({
+        title: 'Same',
+        icon: 'source-icon',
+        nested: {id: 'source-id', key: 'source-key', href: '/source', value: 1},
+      })
       .build();
 
     const linkedDestinationDoc = DocumentBuilder.create()
       .withId('target-linked-doc')
       .withType('article')
       .withUid(null)
-      .withData({title: 'Same', nested: {id: 'target-id', key: 'target-key', value: 1}})
+      .withData({
+        title: 'Same',
+        icon: 'target-icon',
+        nested: {id: 'target-id', key: 'target-key', href: '/target', value: 1},
+      })
       .build();
 
     mockSourceClient.addDocument(linkedSourceDoc);
@@ -117,4 +125,3 @@ describe('LinkDocumentValidator', () => {
     expect(issues[0].fixed).toBe(true);
   });
 });
-
