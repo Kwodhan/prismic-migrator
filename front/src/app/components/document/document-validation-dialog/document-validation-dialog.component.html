@@ -1,10 +1,15 @@
-<h2 mat-dialog-title class="flex items-center gap-2" [style.color]="titleColor()">
-  @if (hasMigrated()) {
-    {{ success() ? 'Migration successful' : 'Migration failed' }} - {{ data.title }}
-  } @else {
-    Report Migration - {{ data.title }}
-  }
-</h2>
+<div class="flex items-center justify-between">
+  <h2 mat-dialog-title class="flex items-center gap-2" [style.color]="titleColor()">
+    @if (hasMigrated()) {
+      {{ success() ? 'Migration successful' : 'Migration failed' }} - {{ data.title }}
+    } @else {
+      Report Migration - {{ data.title }}
+    }
+  </h2>
+  <button mat-icon-button mat-dialog-close aria-label="Close" class="mr-2">
+    <mat-icon>close</mat-icon>
+  </button>
+</div>
 
 <mat-dialog-content class="flex flex-col gap-4 py-4">
 
