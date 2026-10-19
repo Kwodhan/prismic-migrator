@@ -11,6 +11,23 @@ export const getDocumentsQuerySchema = z.object({
   sliceName: z.string().optional(),
 });
 
+export const findDocumentsByReferenceQuerySchema = z.object({
+  referenceType: z.enum(['document', 'media', 'url']),
+  reference: z.string().trim().min(1),
+}).superRefine(({referenceType, reference}, context) => {
+  if (referenceType === 'url') {
+    try {
+      new URL(reference);
+    } catch {
+      context.addIssue({
+        code: 'custom',
+        path: ['reference'],
+        message: 'A valid URL is required for URL references',
+      });
+    }
+  }
+});
+
 export const createMigrateDocumentSchema = (allowedRepoNames: string[]) => z.object({
   idSource: z.string().min(1, 'idSource is required'),
   repoNameSource: createRepoNameSchema(allowedRepoNames, 'repoNameSource'),

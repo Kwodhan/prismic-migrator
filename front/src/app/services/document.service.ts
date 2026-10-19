@@ -1,7 +1,7 @@
 import { inject, Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { map, Observable } from 'rxjs';
-import { DocumentMigrationResult, PaginatedDocuments } from '@shared/types';
+import { DocumentMigrationResult, DocumentReferenceType, PaginatedDocuments } from '@shared/types';
 import { API_BASE_URL } from '../app.config';
 
 interface CustomType {
@@ -58,5 +58,17 @@ export class DocumentService {
       params['sliceName'] = sliceName;
     }
     return this.http.get<PaginatedDocuments>(`${this.apiUrl}/documents/${repoName}`, { params });
+  }
+
+  findDocumentsByReference(
+    repoName: string,
+    referenceType: DocumentReferenceType,
+    reference: string,
+  ): Observable<PaginatedDocuments> {
+    const params = { referenceType, reference };
+    return this.http.get<PaginatedDocuments>(
+      `${this.apiUrl}/documents/${repoName}/references`,
+      { params },
+    );
   }
 }

@@ -23,7 +23,7 @@ describe('LinkMediaValidator', () => {
 
   it('should create warning issue for each missing media link id', async () => {
 	mockAssets.setAssets('target-repo', [{
-	  id: 'asset-ok',
+	  id: 'media-existing',
 	  url: 'https://images.prismic.io/target-repo/existing.pdf',
 	  filename: 'existing.pdf',
 	  kind: 'document',

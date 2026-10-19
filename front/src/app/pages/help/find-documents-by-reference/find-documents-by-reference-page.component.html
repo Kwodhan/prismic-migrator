@@ -1,0 +1,93 @@
+<div class="flex flex-col gap-6 p-6 h-full min-h-0">
+  <div>
+    <h2 class="text-xl font-semibold">Find Documents by Reference</h2>
+    <p class="text-sm text-gray-500 mt-1">
+      Find documents that link to a Prismic document, media item, or URL.
+    </p>
+  </div>
+
+  <form [formGroup]="searchForm" (ngSubmit)="onSearch()">
+    <mat-card appearance="outlined">
+      <mat-card-content class="flex flex-col gap-4 pt-4">
+        <div class="flex flex-row gap-4 items-start">
+          <mat-form-field appearance="outline" class="flex-1">
+            <mat-label>Environment</mat-label>
+            <mat-select formControlName="repoName" [disabled]="loading()" (selectionChange)="clearResults()">
+              @for (environment of environments(); track environment.repoName) {
+                <mat-option [value]="environment.repoName">{{ environment.repoName }}</mat-option>
+              }
+            </mat-select>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="flex-1">
+            <mat-label>Reference type</mat-label>
+            <mat-select formControlName="referenceType" [disabled]="loading()" (selectionChange)="clearResults()">
+              <mat-option value="document">Prismic document</mat-option>
+              <mat-option value="media">Media</mat-option>
+              <mat-option value="url">URL</mat-option>
+            </mat-select>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="flex-[2]">
+            <mat-label>
+              @switch (searchForm.get('referenceType')?.value) {
+                @case ('document') { Document ID }
+                @case ('media') { Media ID or URL }
+                @case ('url') { URL }
+              }
+            </mat-label>
+            <input
+              matInput
+              formControlName="reference"
+              [disabled]="loading()"
+              [type]="searchForm.get('referenceType')?.value === 'url' ? 'url' : 'text'"
+              [placeholder]="searchForm.get('referenceType')?.value === 'document'
+                ? 'Prismic document ID'
+                : searchForm.get('referenceType')?.value === 'media'
+                  ? 'Prismic media ID or https://...'
+                  : 'https://example.com/page'"
+              (input)="clearResults()"
+            />
+          </mat-form-field>
+        </div>
+
+        <div class="flex justify-end border-t pt-4">
+          <button
+            mat-raised-button
+            color="primary"
+            type="submit"
+            [disabled]="!searchForm.get('repoName')?.value ||
+              !searchForm.get('reference')?.value?.trim() ||
+              loading()"
+          >
+            <mat-icon>search</mat-icon>
+            Search
+          </button>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  </form>
+
+  <div class="flex-1 min-h-0 overflow-y-auto">
+    @if (requestError(); as error) {
+      <div class="py-6 text-center text-red-500">
+        {{ error.status ? 'Failed to load data (HTTP ' + error.status + ').' : error.message }}
+      </div>
+    } @else if (!loading() && documents().length === 0 && repository()) {
+      <div class="py-6 text-center text-gray-400">No documents reference this value.</div>
+    } @else if (!loading() && !repository()) {
+      <div class="py-6 text-center text-gray-400">
+        Select an environment and enter a reference to start searching.
+      </div>
+    } @else {
+      <documents-by-slice-result
+        [documents]="documents()"
+        [currentPage]="1"
+        [totalPages]="1"
+        [loading]="loading()"
+        [repository]="repository()"
+        [requestError]="null"
+      />
+    }
+  </div>
+</div>

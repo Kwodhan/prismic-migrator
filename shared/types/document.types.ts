@@ -17,6 +17,8 @@ export interface PaginatedDocuments {
   totalDocuments: number;
 }
 
+export type DocumentReferenceType = 'document' | 'media' | 'url';
+
 export interface ReportMigrationResult {
   validation: ValidationResult;
 }
@@ -26,4 +28,3 @@ export interface DocumentMigrationResult extends ReportMigrationResult{
   id: string| null;
   error: string | null;
 }
-

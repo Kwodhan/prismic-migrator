@@ -1,7 +1,12 @@
-<h2 mat-dialog-title class="flex items-center gap-2">
-  <mat-icon>compare_arrows</mat-icon>
-  Differences - {{ data.source.label }}
-</h2>
+<div class="flex items-center justify-between">
+  <h2 mat-dialog-title class="flex items-center gap-2">
+    <mat-icon>compare_arrows</mat-icon>
+    Differences - {{ data.source.label }}
+  </h2>
+  <button mat-icon-button [mat-dialog-close]="null" aria-label="Close" class="mr-2">
+    <mat-icon>close</mat-icon>
+  </button>
+</div>
 
 <mat-dialog-content>
   <mat-tab-group>

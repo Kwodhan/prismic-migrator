@@ -120,6 +120,9 @@ export function buildRouter(
     requirePermissionForEnvironment(rbac, environments, ['Read'], readRepoNameFromParams),
     documentController.getDocuments
   );
+  router.get('/documents/:repoName/references',
+    requirePermissionForEnvironment(rbac, environments, ['Read'], readRepoNameFromParams),
+    documentController.findDocumentsByReference
+  );
   return router;
 }
-
